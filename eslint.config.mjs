@@ -1,14 +1,14 @@
 import { fixupConfigRules, fixupPluginRules } from '@eslint/compat';
-import react from 'eslint-plugin-react';
+import { FlatCompat } from '@eslint/eslintrc';
+import js from '@eslint/js';
 import typescriptEslint from '@typescript-eslint/eslint-plugin';
+import tsParser from '@typescript-eslint/parser';
 import jsxA11Y from 'eslint-plugin-jsx-a11y';
 import prettier from 'eslint-plugin-prettier';
+import react from 'eslint-plugin-react';
 import globals from 'globals';
-import tsParser from '@typescript-eslint/parser';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import js from '@eslint/js';
-import { FlatCompat } from '@eslint/eslintrc';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -69,7 +69,31 @@ export default [
       'no-unused-vars': 'error',
       'no-undef': 'error',
       'prefer-const': 'error',
+      'prefer-destructuring': 'error',
+      'prefer-object-spread': 'error',
       'no-console': 'warn',
+      'no-await-in-loop': 'error',
+      'no-cond-assign': 'error',
+      'no-const-assign': 'error',
+      'no-dupe-args': 'error',
+      'no-dupe-else-if': 'error',
+      'no-dupe-keys': 'error',
+      'no-duplicate-case': 'error',
+      'no-duplicate-imports': 'error',
+      'arrow-body-style': 'error',
+      'block-scoped-var': 'error',
+      'consistent-return': 'error',
+      'default-case-last': 'error',
+      'default-param-last': 'error',
+      'no-magic-numbers': 'error',
+      'require-await': 'error',
+      'sort-keys': 'error',
+      'sort-vars': 'error',
+      'func-style': ['error', 'expression'],
+      curly: 'error',
+      camelcase: 'error',
+      complexity: ['error', 20],
+      eqeqeq: 'error',
     },
   },
 ];
