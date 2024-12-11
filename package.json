@@ -6,9 +6,12 @@
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
     "@mui/material": "^6.1.10",
+    "axios": "^1.7.9",
     "globals": "^15.13.0",
+    "http-status-codes": "^2.3.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-router-dom": "^7.0.2",
     "react-scripts": "5.0.1",
     "recharts": "^2.14.1",
     "web-vitals": "^2.1.0"

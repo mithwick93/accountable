@@ -13,10 +13,11 @@ import { fileURLToPath } from 'node:url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const compat = new FlatCompat({
+  allConfig: js.configs.all,
   baseDirectory: __dirname,
   recommendedConfig: js.configs.recommended,
-  allConfig: js.configs.all,
 });
+const MAX_COMPLEXITY = 20;
 
 export default [
   {
@@ -34,66 +35,66 @@ export default [
     ),
   ),
   {
-    plugins: {
-      react: fixupPluginRules(react),
-      '@typescript-eslint': fixupPluginRules(typescriptEslint),
-      'jsx-a11y': fixupPluginRules(jsxA11Y),
-      prettier: fixupPluginRules(prettier),
-    },
-
     languageOptions: {
+      ecmaVersion: 12,
+
       globals: {
         ...globals.browser,
         ...globals.node,
       },
-
       parser: tsParser,
-      ecmaVersion: 12,
-      sourceType: 'module',
-
       parserOptions: {
         ecmaFeatures: {
           jsx: true,
         },
       },
+
+      sourceType: 'module',
     },
 
-    settings: {
-      react: {
-        version: 'detect',
-      },
+    plugins: {
+      '@typescript-eslint': fixupPluginRules(typescriptEslint),
+      'jsx-a11y': fixupPluginRules(jsxA11Y),
+      prettier: fixupPluginRules(prettier),
+      react: fixupPluginRules(react),
     },
 
     rules: {
-      'prettier/prettier': 'error',
-      'no-unused-vars': 'error',
-      'no-undef': 'error',
-      'prefer-const': 'error',
-      'prefer-destructuring': 'error',
-      'prefer-object-spread': 'error',
-      'no-console': 'warn',
+      'arrow-body-style': 'error',
+      'block-scoped-var': 'error',
+      camelcase: 'error',
+      complexity: ['error', MAX_COMPLEXITY],
+      'consistent-return': 'error',
+      curly: 'error',
+      'default-case-last': 'error',
+      'default-param-last': 'error',
+      eqeqeq: 'error',
+      'func-style': ['error', 'expression'],
       'no-await-in-loop': 'error',
       'no-cond-assign': 'error',
+      'no-console': 'warn',
       'no-const-assign': 'error',
       'no-dupe-args': 'error',
       'no-dupe-else-if': 'error',
       'no-dupe-keys': 'error',
       'no-duplicate-case': 'error',
       'no-duplicate-imports': 'error',
-      'arrow-body-style': 'error',
-      'block-scoped-var': 'error',
-      'consistent-return': 'error',
-      'default-case-last': 'error',
-      'default-param-last': 'error',
       'no-magic-numbers': 'error',
+      'no-undef': 'error',
+      'no-unused-vars': 'error',
+      'prefer-const': 'error',
+      'prefer-destructuring': 'error',
+      'prefer-object-spread': 'error',
+      'prettier/prettier': 'error',
       'require-await': 'error',
       'sort-keys': 'error',
       'sort-vars': 'error',
-      'func-style': ['error', 'expression'],
-      curly: 'error',
-      camelcase: 'error',
-      complexity: ['error', 20],
-      eqeqeq: 'error',
+    },
+
+    settings: {
+      react: {
+        version: 'detect',
+      },
     },
   },
 ];
