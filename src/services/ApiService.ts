@@ -3,8 +3,10 @@ import { StatusCodes } from 'http-status-codes';
 import { TokenStorage } from '../utils/TokenStorage';
 import { AuthService } from './AuthService';
 
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+
 const apiClient = axios.create({
-  baseURL: 'http://localhost:8080/api',
+  baseURL: API_BASE_URL,
 });
 
 apiClient.interceptors.request.use((config) => {
