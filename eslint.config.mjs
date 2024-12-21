@@ -87,8 +87,6 @@ export default [
       'prefer-object-spread': 'error',
       'prettier/prettier': 'error',
       'require-await': 'error',
-      'sort-keys': 'error',
-      'sort-vars': 'error',
     },
 
     settings: {
