@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  react-app:
+    container_name: accountable-ui
+    build:
+      context: ../
+      dockerfile: ./infrastructure/Dockerfile
+    networks:
+      - accountable-ui-app-network
+    ports:
+      - '3443:3443'
+    environment:
+      - NGINX_HOST=localhost
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: '2G'
+        reservations:
+          cpus: '0.5'
+          memory: '1G'
+
+networks:
+  accountable-ui-app-network:
