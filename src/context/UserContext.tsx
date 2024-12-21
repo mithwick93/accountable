@@ -6,12 +6,12 @@ import React, {
   useEffect,
   useState,
 } from 'react';
-import { User } from '../types/User';
+import { LoggedInUser } from '../types/LoggedInUser';
 import { TokenStorage } from '../utils/TokenStorage';
 
 interface UserContextType {
-  user: User | null;
-  setUser: React.Dispatch<React.SetStateAction<User | null>>;
+  loggedInUser: LoggedInUser | null;
+  setLoggedInUser: React.Dispatch<React.SetStateAction<LoggedInUser | null>>;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -21,15 +21,15 @@ interface UserProviderProps {
 }
 
 export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [loggedInUser, setLoggedInUser] = useState<LoggedInUser | null>(null);
 
   useEffect(() => {
     const fetchUser = () => {
       const accessToken = TokenStorage.getAccessToken();
       if (accessToken) {
         try {
-          const decodedToken: User = jwtDecode(accessToken);
-          setUser(decodedToken);
+          const decodedToken: LoggedInUser = jwtDecode(accessToken);
+          setLoggedInUser(decodedToken);
         } catch (error) {
           console.error('Failed to decode token:', error);
         }
@@ -40,7 +40,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   }, []);
 
   return (
-    <UserContext.Provider value={{ setUser, user }}>
+    <UserContext.Provider value={{ setLoggedInUser, loggedInUser }}>
       {children}
     </UserContext.Provider>
   );

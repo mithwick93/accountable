@@ -21,7 +21,7 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
-  const { user } = useUser();
+  const { loggedInUser } = useUser();
   const { isDarkMode, toggleTheme } = useTheme();
   const [currentTime, setCurrentTime] = useState<string>(
     new Date().toLocaleString([], {
@@ -64,7 +64,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
           <MenuIcon />
         </IconButton>
         <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-          Welcome, {user?.firstName} {user?.lastName}!
+          Welcome, {loggedInUser?.firstName} {loggedInUser?.lastName}!
         </Typography>
         <Typography variant="body1" sx={{ marginRight: 2 }}>
           Current time: {currentTime}
