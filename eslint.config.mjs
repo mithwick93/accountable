@@ -3,6 +3,7 @@ import { FlatCompat } from '@eslint/eslintrc';
 import js from '@eslint/js';
 import typescriptEslint from '@typescript-eslint/eslint-plugin';
 import tsParser from '@typescript-eslint/parser';
+import jest from 'eslint-plugin-jest';
 import jsxA11Y from 'eslint-plugin-jsx-a11y';
 import prettier from 'eslint-plugin-prettier';
 import react from 'eslint-plugin-react';
@@ -25,22 +26,21 @@ export default [
   },
   ...fixupConfigRules(
     compat.extends(
-      // 'react-app',
-      // 'react-app/jest',
       'eslint:recommended',
       'plugin:react/recommended',
       'plugin:@typescript-eslint/recommended',
       'plugin:jsx-a11y/recommended',
       'plugin:prettier/recommended',
+      'plugin:jest/recommended',
     ),
   ),
   {
     languageOptions: {
       ecmaVersion: 12,
-
       globals: {
         ...globals.browser,
         ...globals.node,
+        ...globals.jest,
       },
       parser: tsParser,
       parserOptions: {
@@ -48,17 +48,15 @@ export default [
           jsx: true,
         },
       },
-
       sourceType: 'module',
     },
-
     plugins: {
       '@typescript-eslint': fixupPluginRules(typescriptEslint),
       'jsx-a11y': fixupPluginRules(jsxA11Y),
       prettier: fixupPluginRules(prettier),
       react: fixupPluginRules(react),
+      jest: fixupPluginRules(jest),
     },
-
     rules: {
       'arrow-body-style': 'error',
       'block-scoped-var': 'error',
@@ -88,7 +86,6 @@ export default [
       'prettier/prettier': 'error',
       'require-await': 'error',
     },
-
     settings: {
       react: {
         version: 'detect',
