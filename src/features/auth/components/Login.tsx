@@ -1,15 +1,9 @@
-import {
-  Alert,
-  Box,
-  Button,
-  Switch,
-  TextField,
-  Typography,
-} from '@mui/material';
-import React, { useState } from 'react';
+import { Alert, Box, Button, TextField, Typography } from '@mui/material';
+import { useColorScheme } from '@mui/material/styles';
+import React, { useEffect, useState } from 'react';
 import logoDark from '../../../assets/logo-dark.svg';
 import logoLight from '../../../assets/logo-light.svg';
-import { useTheme } from '../../../context/ThemeContext';
+import ThemeSwitcher from '../../../components/common/ThemeSwitcher';
 import { AuthService } from '../../../services/AuthService';
 import log from '../../../utils/logger';
 import './Login.css';
@@ -18,7 +12,7 @@ const Login = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const { isDarkMode, toggleTheme } = useTheme();
+  const [resolvedMode, setResolvedMode] = useState<'light' | 'dark'>('light');
 
   const handleLogin = async () => {
     try {
@@ -30,12 +24,20 @@ const Login = () => {
     }
   };
 
+  const { mode } = useColorScheme();
+
+  useEffect(() => {
+    if (mode === 'system') {
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      setResolvedMode(mediaQuery.matches ? 'dark' : 'light');
+    } else if (mode !== undefined) {
+      setResolvedMode(mode);
+    }
+  }, [mode]);
+
   return (
     <>
-      <Box display="flex" justifyContent="flex-end" alignItems="center" p={2}>
-        <Typography>{isDarkMode ? 'Dark Mode' : 'Light Mode'}</Typography>
-        <Switch checked={isDarkMode} onChange={toggleTheme} />
-      </Box>
+      <ThemeSwitcher />
       <Box
         display="flex"
         flexDirection="column"
@@ -46,7 +48,7 @@ const Login = () => {
         px={3}
       >
         <img
-          src={isDarkMode ? logoLight : logoDark}
+          src={resolvedMode === 'dark' ? logoLight : logoDark}
           className="App-logo"
           alt="logo"
         />
