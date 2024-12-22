@@ -7,6 +7,7 @@ import React, {
   useState,
 } from 'react';
 import { LoggedInUser } from '../types/LoggedInUser';
+import log from '../utils/logger';
 import { TokenStorage } from '../utils/TokenStorage';
 
 interface UserContextType {
@@ -27,7 +28,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
           const decodedToken: LoggedInUser = jwtDecode(accessToken);
           setLoggedInUser(decodedToken);
         } catch (error) {
-          console.error('Failed to decode token:', error);
+          log.error('Failed to decode token:', error);
         }
       }
     };

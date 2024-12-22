@@ -11,6 +11,7 @@ import logoDark from '../../../assets/logo-dark.svg';
 import logoLight from '../../../assets/logo-light.svg';
 import { useTheme } from '../../../context/ThemeContext';
 import { AuthService } from '../../../services/AuthService';
+import log from '../../../utils/logger';
 import './Login.css';
 
 const Login = () => {
@@ -25,7 +26,7 @@ const Login = () => {
       window.location.href = '/';
     } catch (e) {
       setError('Invalid username or password');
-      console.error('Login error: ' + e);
+      log.error('Login error: ' + e);
     }
   };
 
