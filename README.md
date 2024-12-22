@@ -23,7 +23,16 @@ This project was bootstrapped with [Create React App](https://github.com/faceboo
 
 3. For https requests, provide your own SSL _.crt and _.key files in the infrastructure/ssl folder
 
-4. Deploy docker
+4. Define env variable in .env file
+
+   ```
+   REACT_APP_API_URL=https://localhost:3001
+   HTTPS=true
+   SSL_CRT_FILE=./infrastructure/ssl/server.crt
+   SSL_KEY_FILE=./infrastructure/ssl/server.key
+   ```
+
+5. Deploy docker
    ```
    docker-compose -p accountable-ui -f infrastructure/docker-compose.yml build --no-cache && docker-compose -p accountable-ui -f infrastructure/docker-compose.yml up --force-recreate -d && docker image prune -a -f
    ```
