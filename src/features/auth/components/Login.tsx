@@ -7,12 +7,13 @@ import {
   Typography,
 } from '@mui/material';
 import React, { useState } from 'react';
-import logo from '../../../assets/logo.svg';
+import logoDark from '../../../assets/logo-dark.svg';
+import logoLight from '../../../assets/logo-light.svg';
 import { useTheme } from '../../../context/ThemeContext';
 import { AuthService } from '../../../services/AuthService';
 import './Login.css';
 
-const Login: React.FC = () => {
+const Login = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -22,8 +23,9 @@ const Login: React.FC = () => {
     try {
       await AuthService.login(username, password);
       window.location.href = '/';
-    } catch {
+    } catch (e) {
       setError('Invalid username or password');
+      console.error('Login error: ' + e);
     }
   };
 
@@ -42,7 +44,11 @@ const Login: React.FC = () => {
         bgcolor="background.default"
         px={3}
       >
-        <img src={logo} className="App-logo" alt="logo" />
+        <img
+          src={isDarkMode ? logoLight : logoDark}
+          className="App-logo"
+          alt="logo"
+        />
         <Typography variant="h2" gutterBottom>
           AccountAble
         </Typography>

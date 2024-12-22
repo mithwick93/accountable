@@ -15,20 +15,14 @@ export const useTheme = () => {
   return context;
 };
 
-interface ThemeContextProviderProps {
-  children: ReactNode;
-}
-
-export const ThemeContextProvider: React.FC<ThemeContextProviderProps> = ({
-  children,
-}) => {
-  const [isDarkMode, setIsDarkMode] = useState(() => {
+export const ThemeContextProvider = ({ children }: { children: ReactNode }) => {
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
     const savedTheme = localStorage.getItem('isDarkMode');
     return savedTheme ? JSON.parse(savedTheme) : false;
   });
 
   const toggleTheme = () => {
-    setIsDarkMode((prevMode: boolean) => {
+    setIsDarkMode((prevMode) => {
       const newMode = !prevMode;
       localStorage.setItem('isDarkMode', JSON.stringify(newMode));
       return newMode;
