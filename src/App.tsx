@@ -33,7 +33,7 @@ const NAVIGATION: Navigation = [
 
 const BRANDING = {
   logo: <img src={logoLight} className="App-logo" alt="logo" />,
-  title: 'Accountable',
+  title: 'AccountAble',
   homeUrl: '/',
 };
 
