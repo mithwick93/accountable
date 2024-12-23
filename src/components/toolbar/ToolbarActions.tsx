@@ -106,6 +106,7 @@ const ToolbarActions = () => {
         displayEmpty
         inputProps={{ 'aria-label': 'Select currency' }}
         sx={{ m: 1, minWidth: 80 }}
+        size="small"
       >
         {currencies?.map((currency) => (
           <MenuItem key={currency.code} value={currency.code}>
