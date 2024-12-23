@@ -1,4 +1,12 @@
-import { Avatar, Menu, MenuItem, Tooltip, Typography } from '@mui/material';
+import {
+  Avatar,
+  Menu,
+  MenuItem,
+  Tooltip,
+  Typography,
+  useMediaQuery,
+  useTheme,
+} from '@mui/material';
 import Stack from '@mui/material/Stack';
 import { ThemeSwitcher } from '@toolpad/core/DashboardLayout';
 import React, { useEffect, useState } from 'react';
@@ -45,6 +53,9 @@ const ToolbarActions = () => {
     }),
   );
 
+  const theme = useTheme();
+  const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
+
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(
@@ -78,7 +89,7 @@ const ToolbarActions = () => {
 
   return (
     <Stack direction="row" spacing={1} alignItems="center">
-      <Typography>{currentTime}</Typography>
+      {!isSmallScreen && <Typography>{currentTime}</Typography>}
       <ThemeSwitcher />
       <Tooltip title={userNames}>
         <Avatar
