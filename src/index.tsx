@@ -5,6 +5,7 @@ import App from './App';
 import MainLayout from './layouts/MainLayout';
 import AssetsPage from './pages/AssetsPage';
 import DashboardPage from './pages/DashboardPage';
+import LiabilitiesPage from './pages/LiabilitiesPage';
 import LoginPage from './pages/LoginPage';
 import NotFoundPage from './pages/NotFoundPage';
 import reportWebVitals from './reportWebVitals';
@@ -25,6 +26,10 @@ const router = createBrowserRouter([
           {
             path: '/assets',
             Component: AssetsPage,
+          },
+          {
+            path: '/liabilities',
+            Component: LiabilitiesPage,
           },
         ],
       },

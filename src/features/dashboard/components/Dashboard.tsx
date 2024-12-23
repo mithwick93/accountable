@@ -3,13 +3,14 @@ import Grid from '@mui/material/Grid2';
 import React, { useEffect, useState } from 'react';
 import apiClient from '../../../services/ApiService';
 import { Asset } from '../../../types/Asset';
+import { formatCurrency } from '../../../utils/common';
 import log from '../../../utils/logger';
 
 const Dashboard: React.FC = () => {
   const [totals, setTotals] = useState<{ [currency: string]: number }>({});
 
   useEffect(() => {
-    const fetchAssets = async () => {
+    const fetchAssetTotals = async () => {
       try {
         const response = await apiClient.get('/assets');
         const assetsData = response.data;
@@ -27,11 +28,8 @@ const Dashboard: React.FC = () => {
       }
     };
 
-    fetchAssets();
+    fetchAssetTotals();
   }, []);
-
-  const formatBalance = (balance: number) =>
-    new Intl.NumberFormat('en-US', { style: 'decimal' }).format(balance);
 
   return (
     <>
@@ -46,7 +44,7 @@ const Dashboard: React.FC = () => {
                 <CardContent>
                   <Typography variant="h6">{currency}</Typography>
                   <Typography color="textSecondary">
-                    Total: {formatBalance(totals[currency])} {currency}
+                    Total: {formatCurrency(totals[currency])} {currency}
                   </Typography>
                 </CardContent>
               </Card>

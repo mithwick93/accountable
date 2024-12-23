@@ -3,6 +3,7 @@ import Grid from '@mui/material/Grid2';
 import React, { useEffect, useState } from 'react';
 import apiClient from '../../../services/ApiService';
 import { Asset } from '../../../types/Asset';
+import { formatCurrency } from '../../../utils/common';
 import log from '../../../utils/logger';
 
 const Assets: React.FC = () => {
@@ -22,9 +23,6 @@ const Assets: React.FC = () => {
     fetchAssets();
   }, []);
 
-  const formatBalance = (balance: number) =>
-    new Intl.NumberFormat('en-US', { style: 'decimal' }).format(balance);
-
   return (
     <>
       <Box sx={{ flexGrow: 1 }}>
@@ -38,10 +36,7 @@ const Assets: React.FC = () => {
                     Type: {asset.type}
                   </Typography>
                   <Typography color="textSecondary">
-                    Description: {asset.description}
-                  </Typography>
-                  <Typography color="textSecondary">
-                    Balance: {formatBalance(asset.balance)} {asset.currency}
+                    Balance: {formatCurrency(asset.balance)} {asset.currency}
                   </Typography>
                 </CardContent>
               </Card>
