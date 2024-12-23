@@ -1,17 +1,31 @@
+import DashboardIcon from '@mui/icons-material/Dashboard';
+import type { Navigation } from '@toolpad/core';
+import { AppProvider } from '@toolpad/core/react-router-dom';
 import React from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import LoginPage from './pages/LoginPage';
-import NotFoundPage from './pages/NotFoundPage';
-import ProtectedRoute from './routes/ProtectedRoute';
+import { Outlet } from 'react-router-dom';
+import logoLight from './assets/logo-light.svg';
+import { theme } from './theme/theme';
+
+const NAVIGATION: Navigation = [
+  {
+    kind: 'header',
+    title: 'Main items',
+  },
+  {
+    title: 'Dashboard',
+    icon: <DashboardIcon />,
+  },
+];
+
+const BRANDING = {
+  logo: <img src={logoLight} className="App-logo" alt="logo" />,
+  title: 'Accountable',
+  homeUrl: '/',
+};
 
 const App = () => (
-  <Router>
-    <Routes>
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/" element={<ProtectedRoute />} />
-      <Route path="*" element={<NotFoundPage />} />
-    </Routes>
-  </Router>
+  <AppProvider navigation={NAVIGATION} branding={BRANDING} theme={theme}>
+    <Outlet />
+  </AppProvider>
 );
-
 export default App;

@@ -1,9 +1,6 @@
 import { Alert, Box, Button, TextField, Typography } from '@mui/material';
-import { useColorScheme } from '@mui/material/styles';
-import React, { useEffect, useState } from 'react';
-import logoDark from '../../../assets/logo-dark.svg';
+import React, { useState } from 'react';
 import logoLight from '../../../assets/logo-light.svg';
-import ThemeSwitcher from '../../../components/common/ThemeSwitcher';
 import { AuthService } from '../../../services/AuthService';
 import log from '../../../utils/logger';
 import './Login.css';
@@ -12,7 +9,6 @@ const Login = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [resolvedMode, setResolvedMode] = useState<'light' | 'dark'>('light');
 
   const handleLogin = async () => {
     try {
@@ -24,20 +20,8 @@ const Login = () => {
     }
   };
 
-  const { mode } = useColorScheme();
-
-  useEffect(() => {
-    if (mode === 'system') {
-      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-      setResolvedMode(mediaQuery.matches ? 'dark' : 'light');
-    } else if (mode !== undefined) {
-      setResolvedMode(mode);
-    }
-  }, [mode]);
-
   return (
     <>
-      <ThemeSwitcher />
       <Box
         display="flex"
         flexDirection="column"
@@ -47,11 +31,7 @@ const Login = () => {
         bgcolor="background.default"
         px={3}
       >
-        <img
-          src={resolvedMode === 'dark' ? logoLight : logoDark}
-          className="App-logo"
-          alt="logo"
-        />
+        <img src={logoLight} className="App-logo" alt="logo" />
         <Typography variant="h2" gutterBottom>
           AccountAble
         </Typography>
