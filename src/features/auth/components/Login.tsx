@@ -1,5 +1,6 @@
 import { Alert, Box, Button, TextField, Typography } from '@mui/material';
 import React, { useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import logoLight from '../../../assets/logo-light.svg';
 import { AuthService } from '../../../services/AuthService';
 import log from '../../../utils/logger';
@@ -9,11 +10,14 @@ const Login = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const navigate = useNavigate();
+  const location = useLocation();
+  const from = location.state?.from?.pathname || '/';
 
   const handleLogin = async () => {
     try {
       await AuthService.login(username, password);
-      window.location.href = '/';
+      navigate(from, { replace: true });
     } catch (e) {
       setError('Invalid username or password');
       log.error('Login error: ' + e);
