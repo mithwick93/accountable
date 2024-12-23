@@ -60,12 +60,19 @@ export const StaticDataProvider: React.FC<StaticDataProviderProps> = ({
         ]);
 
         setStaticData({
-          currencies: currencies.data,
-          transactionTypes: transactionTypes.data,
-          liabilityStatuses: liabilityStatuses.data,
-          liabilityTypes: liabilityTypes.data,
-          installmentPlanStatuses: installmentPlanStatuses.data,
-          assetTypes: assetTypes.data,
+          currencies: currencies.data.sort((a: Currency, b: Currency) =>
+            a.code.localeCompare(b.code),
+          ),
+          transactionTypes: transactionTypes.data.sort(),
+          liabilityStatuses: liabilityStatuses.data.sort(),
+          liabilityTypes: liabilityTypes.data.sort(
+            (a: LiabilityType, b: LiabilityType) =>
+              a.name.localeCompare(b.name),
+          ),
+          installmentPlanStatuses: installmentPlanStatuses.data.sort(),
+          assetTypes: assetTypes.data.sort((a: AssetType, b: AssetType) =>
+            a.name.localeCompare(b.name),
+          ),
         });
       } catch (error) {
         log.error('Failed to fetch static data:', error);
