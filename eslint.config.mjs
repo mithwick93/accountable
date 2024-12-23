@@ -77,7 +77,6 @@ export default [
       'no-dupe-keys': 'error',
       'no-duplicate-case': 'error',
       'no-duplicate-imports': 'error',
-      'no-magic-numbers': 'error',
       'no-undef': 'error',
       'no-unused-vars': 'error',
       'prefer-const': 'error',
