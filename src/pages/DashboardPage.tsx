@@ -1,5 +1,5 @@
 import React from 'react';
-import Dashboard from '../features/dashboard/Dashboard';
+import Dashboard from '../features/dashboard/components/Dashboard';
 
 const DashboardPage: React.FC = () => (
   <>

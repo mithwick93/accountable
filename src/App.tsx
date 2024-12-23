@@ -1,3 +1,4 @@
+import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import type { Navigation } from '@toolpad/core';
 import { AppProvider } from '@toolpad/core/react-router-dom';
@@ -14,6 +15,12 @@ const NAVIGATION: Navigation = [
   {
     title: 'Dashboard',
     icon: <DashboardIcon />,
+  },
+  {
+    segment: 'assets',
+    title: 'Assets',
+    icon: <AccountBalanceIcon />,
+    pattern: 'assets{/:assetId}*',
   },
 ];
 

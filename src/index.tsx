@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import App from './App';
 import MainLayout from './layouts/MainLayout';
+import AssetsPage from './pages/AssetsPage';
 import DashboardPage from './pages/DashboardPage';
 import LoginPage from './pages/LoginPage';
 import NotFoundPage from './pages/NotFoundPage';
@@ -20,6 +21,10 @@ const router = createBrowserRouter([
           {
             path: '/',
             Component: DashboardPage,
+          },
+          {
+            path: '/assets',
+            Component: AssetsPage,
           },
         ],
       },
