@@ -2,6 +2,8 @@ import {
   Avatar,
   Menu,
   MenuItem,
+  Select,
+  SelectChangeEvent,
   Tooltip,
   Typography,
   useMediaQuery,
@@ -10,6 +12,8 @@ import {
 import Stack from '@mui/material/Stack';
 import { ThemeSwitcher } from '@toolpad/core/DashboardLayout';
 import React, { useEffect, useState } from 'react';
+import { useSettings } from '../../context/SettingsContext';
+import { useStaticData } from '../../context/StaticDataContext';
 import { useUser } from '../../context/UserContext';
 import { AuthService } from '../../services/AuthService';
 
@@ -42,6 +46,8 @@ const stringAvatar = (name: string) => ({
 
 const ToolbarActions = () => {
   const { loggedInUser } = useUser();
+  const { currencies } = useStaticData();
+  const { settings, update } = useSettings();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [currentTime, setCurrentTime] = useState<string>(
     new Date().toLocaleString([], {
@@ -85,11 +91,28 @@ const ToolbarActions = () => {
     handleMenuClose();
   };
 
+  const handleCurrencyChange = (event: SelectChangeEvent) => {
+    update({ ...settings, currency: event.target.value });
+  };
+
   const userNames = `${loggedInUser?.firstName} ${loggedInUser?.lastName}`;
 
   return (
     <Stack direction="row" spacing={1} alignItems="center">
       {!isSmallScreen && <Typography>{currentTime}</Typography>}
+      <Select
+        value={settings?.currency}
+        onChange={handleCurrencyChange}
+        displayEmpty
+        inputProps={{ 'aria-label': 'Select currency' }}
+        sx={{ m: 1, minWidth: 80 }}
+      >
+        {currencies?.map((currency) => (
+          <MenuItem key={currency.code} value={currency.code}>
+            {currency.code}
+          </MenuItem>
+        ))}
+      </Select>
       <ThemeSwitcher />
       <Tooltip title={userNames}>
         <Avatar

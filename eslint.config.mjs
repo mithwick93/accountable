@@ -84,6 +84,7 @@ export default [
       'prefer-object-spread': 'error',
       'prettier/prettier': 'error',
       'require-await': 'error',
+      '@typescript-eslint/no-explicit-any': 'off',
     },
     settings: {
       react: {
