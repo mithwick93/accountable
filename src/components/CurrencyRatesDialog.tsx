@@ -11,6 +11,7 @@ import TableRow from '@mui/material/TableRow';
 import { TransitionProps } from '@mui/material/transitions';
 import React from 'react';
 import { useCurrencyRates } from '../context/CurrencyRatesContext';
+import { useSettings } from '../context/SettingsContext';
 import { formatCurrency } from '../utils/common';
 import { StyledTableCell, StyledTableRow } from './table/Table';
 
@@ -30,6 +31,8 @@ const Transition = React.forwardRef(function Transition(
 
 const CurrencyRatesDialog = ({ onClose, open }: SimpleDialogProps) => {
   const { currencyRates } = useCurrencyRates();
+  const { settings } = useSettings();
+  const baseCurrency = settings?.currency || 'USD';
   const handleClose = () => {
     onClose();
   };
@@ -51,20 +54,22 @@ const CurrencyRatesDialog = ({ onClose, open }: SimpleDialogProps) => {
               <TableHead>
                 <TableRow>
                   <StyledTableCell>Currency</StyledTableCell>
-                  <StyledTableCell align="right">Rate</StyledTableCell>
+                  <StyledTableCell align="right">{`Rate (${baseCurrency})`}</StyledTableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
-                {Object.keys(currencyRates).map((currency) => (
-                  <StyledTableRow key={currency}>
-                    <TableCell component="th" scope="row">
-                      {currency}
-                    </TableCell>
-                    <TableCell align="right">
-                      {formatCurrency(1 / currencyRates[currency])}
-                    </TableCell>
-                  </StyledTableRow>
-                ))}
+                {Object.keys(currencyRates)
+                  .filter((currency) => currency !== baseCurrency)
+                  .map((currency) => (
+                    <StyledTableRow key={currency}>
+                      <TableCell component="th" scope="row">
+                        {currency}
+                      </TableCell>
+                      <TableCell align="right">
+                        {formatCurrency(1 / currencyRates[currency])}
+                      </TableCell>
+                    </StyledTableRow>
+                  ))}
               </TableBody>
             </Table>
           </TableContainer>
