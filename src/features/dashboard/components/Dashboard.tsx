@@ -124,6 +124,7 @@ const Dashboard: React.FC = () => {
   const [currencyRates, setCurrencyRates] = useState<{
     [currency: string]: number;
   }>({});
+  const [netWorth, setNetWorth] = useState<number>(0);
   const { settings } = useSettings();
   const currency = settings?.currency || 'USD';
 
@@ -187,15 +188,47 @@ const Dashboard: React.FC = () => {
     fetchCurrencyRates();
   }, [currency]);
 
+  useEffect(() => {
+    const calculateNetWorth = () => {
+      let totalNetWorth = 0;
+      Object.keys(totals).forEach((assetCurrency) => {
+        const assetTotal = totals[assetCurrency];
+        const exchangeRate = currencyRates[assetCurrency];
+        if (exchangeRate) {
+          totalNetWorth += assetTotal / exchangeRate;
+        }
+      });
+      setNetWorth(totalNetWorth);
+    };
+
+    calculateNetWorth();
+  }, [totals, currencyRates]);
+
   return (
-    <Grid container spacing={2}>
-      <Grid size={{ xs: 12, sm: 6 }}>
-        <AssetSummary totals={totals} />
+    <>
+      <Grid container spacing={2}>
+        <Grid size={{ xs: 12, sm: 3 }}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                Net Worth
+              </Typography>
+              <Typography variant="body1">
+                {formatCurrency(netWorth)} {currency}
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
       </Grid>
-      <Grid size={{ xs: 12, sm: 6 }}>
-        <CurrencyRates currencyRates={currencyRates} />
+      <Grid container spacing={2} size={{ xs: 12, sm: 6 }} sx={{ mt: 2 }}>
+        <Grid size={{ xs: 12, sm: 6 }}>
+          <AssetSummary totals={totals} />
+        </Grid>
+        <Grid size={{ xs: 12, sm: 6 }}>
+          <CurrencyRates currencyRates={currencyRates} />
+        </Grid>
       </Grid>
-    </Grid>
+    </>
   );
 };
 
