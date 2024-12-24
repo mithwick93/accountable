@@ -10,12 +10,118 @@ import {
   Typography,
 } from '@mui/material';
 import Grid from '@mui/material/Grid2';
+import { DefaultizedPieValueType } from '@mui/x-charts/models';
+import { PieChart } from '@mui/x-charts/PieChart';
 import React, { useEffect, useState } from 'react';
 import { useSettings } from '../../../context/SettingsContext';
 import apiClient from '../../../services/ApiService';
 import { Asset } from '../../../types/Asset';
 import { formatCurrency } from '../../../utils/common';
 import log from '../../../utils/logger';
+
+interface NetWorthProps {
+  totals: { [currency: string]: number };
+  currencyRates: {
+    [currency: string]: number;
+  };
+  currency: string;
+}
+
+const NetWorth: React.FC<NetWorthProps> = ({
+  totals,
+  currencyRates,
+  currency,
+}) => {
+  const [netWorth, setNetWorth] = useState<number>(0);
+
+  useEffect(() => {
+    const calculateNetWorth = () => {
+      let totalNetWorth = 0;
+      Object.keys(totals).forEach((assetCurrency) => {
+        const assetTotal = totals[assetCurrency];
+        const exchangeRate = currencyRates[assetCurrency];
+        if (exchangeRate) {
+          totalNetWorth += assetTotal / exchangeRate;
+        }
+      });
+      setNetWorth(totalNetWorth);
+    };
+
+    calculateNetWorth();
+  }, [totals, currencyRates]);
+
+  const getArcLabel = (params: DefaultizedPieValueType) => {
+    const percent = params.value / netWorth;
+    return `${(percent * 100).toFixed(0)}%`;
+  };
+
+  const pieChartData = Object.keys(totals).map((currency) => ({
+    id: currency,
+    value: totals[currency] / currencyRates[currency],
+    label: currency,
+  }));
+
+  return (
+    <Card>
+      <CardContent>
+        <Typography variant="h6" gutterBottom>
+          Net Worth
+        </Typography>
+        <Grid
+          container
+          spacing={2}
+          size={{ xs: 12, sm: 12 }}
+          alignItems="center"
+          justifyContent="center"
+          style={{ height: '100%' }}
+        >
+          <Grid
+            size={{ xs: 12, sm: 6 }}
+            style={{ display: 'flex', justifyContent: 'center' }}
+          >
+            <Typography
+              variant="h5"
+              component="div"
+              style={{ fontWeight: 'bold' }}
+            >
+              {formatCurrency(netWorth)} {currency}
+            </Typography>
+          </Grid>
+          <Grid
+            size={{ xs: 12, sm: 6 }}
+            style={{ display: 'flex', justifyContent: 'center' }}
+          >
+            <PieChart
+              series={[
+                {
+                  data: pieChartData,
+                  arcLabel: getArcLabel,
+                  arcLabelMinAngle: 5,
+                  sortingValues: 'desc',
+                  innerRadius: 0,
+                  outerRadius: 75,
+                  cornerRadius: 3,
+                  highlightScope: { fade: 'global', highlight: 'item' },
+                  faded: {
+                    innerRadius: 30,
+                    additionalRadius: -30,
+                    color: 'gray',
+                  },
+                },
+              ]}
+              width={50}
+              height={150}
+              slotProps={{
+                legend: { hidden: true },
+              }}
+              margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
+            />
+          </Grid>
+        </Grid>
+      </CardContent>
+    </Card>
+  );
+};
 
 interface AssetSummaryProps {
   totals: { [currency: string]: number };
@@ -124,7 +230,6 @@ const Dashboard: React.FC = () => {
   const [currencyRates, setCurrencyRates] = useState<{
     [currency: string]: number;
   }>({});
-  const [netWorth, setNetWorth] = useState<number>(0);
   const { settings } = useSettings();
   const currency = settings?.currency || 'USD';
 
@@ -188,36 +293,15 @@ const Dashboard: React.FC = () => {
     fetchCurrencyRates();
   }, [currency]);
 
-  useEffect(() => {
-    const calculateNetWorth = () => {
-      let totalNetWorth = 0;
-      Object.keys(totals).forEach((assetCurrency) => {
-        const assetTotal = totals[assetCurrency];
-        const exchangeRate = currencyRates[assetCurrency];
-        if (exchangeRate) {
-          totalNetWorth += assetTotal / exchangeRate;
-        }
-      });
-      setNetWorth(totalNetWorth);
-    };
-
-    calculateNetWorth();
-  }, [totals, currencyRates]);
-
   return (
     <>
       <Grid container spacing={2}>
-        <Grid size={{ xs: 12, sm: 3 }}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Net Worth
-              </Typography>
-              <Typography variant="body1">
-                {formatCurrency(netWorth)} {currency}
-              </Typography>
-            </CardContent>
-          </Card>
+        <Grid size={{ xs: 12, sm: 6 }}>
+          <NetWorth
+            totals={totals}
+            currencyRates={currencyRates}
+            currency={currency}
+          />
         </Grid>
       </Grid>
       <Grid container spacing={2} size={{ xs: 12, sm: 6 }} sx={{ mt: 2 }}>
