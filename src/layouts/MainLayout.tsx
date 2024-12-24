@@ -6,6 +6,7 @@ import {
 import { PageContainer } from '@toolpad/core/PageContainer';
 import React from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
+import ErrorBoundary from '../components/ErrorBoundary';
 import ToolbarActions from '../components/toolbar/ToolbarActions';
 import { SettingsProvider } from '../context/SettingsContext';
 import { StaticDataProvider } from '../context/StaticDataContext';
@@ -44,15 +45,17 @@ export default function MainLayout() {
             }}
             defaultSidebarCollapsed
           >
-            <PageContainer
-              sx={{
-                '@media (min-width: 1200px)': {
-                  maxWidth: 'none',
-                },
-              }}
-            >
-              <Outlet />
-            </PageContainer>
+            <ErrorBoundary>
+              <PageContainer
+                sx={{
+                  '@media (min-width: 1200px)': {
+                    maxWidth: 'none',
+                  },
+                }}
+              >
+                <Outlet />
+              </PageContainer>
+            </ErrorBoundary>
           </DashboardLayout>
         </SettingsProvider>
       </StaticDataProvider>
