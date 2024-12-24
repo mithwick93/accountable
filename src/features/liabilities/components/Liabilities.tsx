@@ -48,6 +48,11 @@ const Liabilities: React.FC = () => {
                     Balance: {formatCurrency(liability.balance)}{' '}
                     {liability.currency}
                   </Typography>
+                  <Typography color="textSecondary">
+                    Available to Spend:{' '}
+                    {formatCurrency(liability.amount - liability.balance)}{' '}
+                    {liability.currency}
+                  </Typography>
                   {liability.interestRate !== null &&
                     liability.interestRate !== undefined && (
                       <Typography color="textSecondary">
