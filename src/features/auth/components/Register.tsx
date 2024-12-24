@@ -86,12 +86,7 @@ const Register: React.FC = () => {
 
     try {
       await AuthService.register(formData);
-      toast.success('Registration successful!', {
-        position: 'top-right',
-        autoClose: 3000,
-        closeOnClick: true,
-        theme: 'colored',
-      });
+      toast.success('Registration successful!');
       navigate('/login', { replace: true });
     } catch (e) {
       setGlobalError('Registration failed');

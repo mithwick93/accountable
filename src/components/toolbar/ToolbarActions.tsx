@@ -12,6 +12,7 @@ import {
 import Stack from '@mui/material/Stack';
 import { ThemeSwitcher } from '@toolpad/core/DashboardLayout';
 import React, { useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
 import { useSettings } from '../../context/SettingsContext';
 import { useStaticData } from '../../context/StaticDataContext';
 import { useUser } from '../../context/UserContext';
@@ -70,6 +71,7 @@ const ToolbarActions = () => {
   const handleLogout = async () => {
     await AuthService.logout();
     handleMenuClose();
+    toast.success('Logged out successfully');
   };
   const handleCurrencyChange = (event: SelectChangeEvent) =>
     update({ ...settings, currency: event.target.value });

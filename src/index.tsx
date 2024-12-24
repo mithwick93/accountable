@@ -58,7 +58,12 @@ const root = ReactDOM.createRoot(
 root.render(
   <React.StrictMode>
     <RouterProvider router={router} />
-    <ToastContainer />
+    <ToastContainer
+      position="top-right"
+      autoClose={3000}
+      closeOnClick
+      theme="colored"
+    />
   </React.StrictMode>,
 );
 

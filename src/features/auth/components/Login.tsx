@@ -1,10 +1,14 @@
 import { Alert, Box, Button, Link, TextField, Typography } from '@mui/material';
+import { jwtDecode } from 'jwt-decode';
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import logoLight from '../../../assets/logo-light.svg';
 import { AuthService } from '../../../services/AuthService';
+import { LoggedInUser } from '../../../types/LoggedInUser';
 import log from '../../../utils/logger';
 import './Login.css';
+import { TokenStorage } from '../../../utils/TokenStorage';
 
 const Login = () => {
   const [username, setUsername] = useState('');
@@ -17,6 +21,17 @@ const Login = () => {
   const handleLogin = async () => {
     try {
       await AuthService.login(username, password);
+
+      const accessToken = TokenStorage.getAccessToken();
+      if (accessToken) {
+        const decodedToken: LoggedInUser = jwtDecode(accessToken);
+        toast.success(
+          `Welcome, ${decodedToken.firstName} ${decodedToken.lastName}!`,
+        );
+      } else {
+        toast.success(`Welcome, ${username}!`);
+      }
+
       navigate(from, { replace: true });
     } catch (e) {
       setError('Invalid username or password');
