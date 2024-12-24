@@ -7,6 +7,7 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  Tooltip,
   Typography,
 } from '@mui/material';
 import Grid from '@mui/material/Grid2';
@@ -124,10 +125,11 @@ const NetWorth: React.FC<NetWorthProps> = ({
 };
 
 interface AssetSummaryProps {
+  assets: Asset[];
   totals: { [currency: string]: number };
 }
 
-const AssetSummary: React.FC<AssetSummaryProps> = ({ totals }) => {
+const AssetSummary: React.FC<AssetSummaryProps> = ({ assets, totals }) => {
   if (Object.keys(totals).length === 0) {
     return (
       <Card>
@@ -140,6 +142,15 @@ const AssetSummary: React.FC<AssetSummaryProps> = ({ totals }) => {
       </Card>
     );
   }
+
+  const getAssetBreakdown = (currency: string) =>
+    assets
+      .filter((asset) => asset.currency === currency)
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .map(
+        (asset) =>
+          `${asset.name}: ${formatCurrency(asset.balance)} ${currency}`,
+      );
 
   return (
     <Card>
@@ -162,7 +173,23 @@ const AssetSummary: React.FC<AssetSummaryProps> = ({ totals }) => {
                     {currency}
                   </TableCell>
                   <TableCell align="right">
-                    {formatCurrency(totals[currency])} {currency}
+                    <Tooltip
+                      title={
+                        <React.Fragment>
+                          {getAssetBreakdown(currency).map((line, index) => (
+                            <Typography key={index} variant="body2">
+                              {line}
+                            </Typography>
+                          ))}
+                        </React.Fragment>
+                      }
+                      arrow
+                      followCursor
+                    >
+                      <span>
+                        {formatCurrency(totals[currency])} {currency}
+                      </span>
+                    </Tooltip>
                   </TableCell>
                 </TableRow>
               ))}
@@ -226,6 +253,7 @@ const CurrencyRates: React.FC<CurrencyRatesProps> = ({ currencyRates }) => {
 };
 
 const Dashboard: React.FC = () => {
+  const [assets, setAssets] = useState<Asset[]>([]);
   const [totals, setTotals] = useState<{ [currency: string]: number }>({});
   const [currencyRates, setCurrencyRates] = useState<{
     [currency: string]: number;
@@ -257,6 +285,7 @@ const Dashboard: React.FC = () => {
             {} as { [currency: string]: number },
           );
 
+        setAssets(assetsData);
         setTotals(sortedTotalsData);
       } catch (error) {
         log.error('Error fetching assets:', error);
@@ -306,7 +335,7 @@ const Dashboard: React.FC = () => {
       </Grid>
       <Grid container spacing={2} size={{ xs: 12, sm: 6 }} sx={{ mt: 2 }}>
         <Grid size={{ xs: 12, sm: 6 }}>
-          <AssetSummary totals={totals} />
+          <AssetSummary assets={assets} totals={totals} />
         </Grid>
         <Grid size={{ xs: 12, sm: 6 }}>
           <CurrencyRates currencyRates={currencyRates} />
