@@ -1,9 +1,8 @@
 import { Card, CardContent, Tooltip, Typography } from '@mui/material';
 import Grid from '@mui/material/Grid2';
-import { styled } from '@mui/material/styles';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
-import TableCell, { tableCellClasses } from '@mui/material/TableCell';
+import TableCell from '@mui/material/TableCell';
 import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
@@ -11,6 +10,10 @@ import { DefaultizedPieValueType } from '@mui/x-charts/models';
 import { PieChart } from '@mui/x-charts/PieChart';
 import React, { useEffect, useState } from 'react';
 import LoadingSkeleton from '../../../components/LoadingSkeleton';
+import {
+  StyledTableCell,
+  StyledTableRow,
+} from '../../../components/table/Table';
 import { useCurrencyRates } from '../../../context/CurrencyRatesContext';
 import { useSettings } from '../../../context/SettingsContext';
 import apiClient from '../../../services/ApiService';
@@ -18,22 +21,6 @@ import { Asset } from '../../../types/Asset';
 import { Liability } from '../../../types/Liability';
 import { formatCurrency } from '../../../utils/common';
 import log from '../../../utils/logger';
-
-const StyledTableCell = styled(TableCell)(() => ({
-  [`&.${tableCellClasses.head}`]: {
-    fontWeight: 'bold',
-  },
-}));
-
-const StyledTableRow = styled(TableRow)(({ theme }) => ({
-  '&:nth-of-type(odd)': {
-    backgroundColor: theme.palette.action.hover,
-  },
-  // hide last border
-  '&:last-child td, &:last-child th': {
-    border: 0,
-  },
-}));
 
 interface NetWorthProps {
   totals: { [currency: string]: number };
@@ -302,57 +289,6 @@ const LiabilitySummary: React.FC<LiabilitySummaryProps> = ({ liabilities }) => {
   );
 };
 
-interface CurrencyRatesProps {
-  currencyRates: { [currency: string]: number };
-}
-
-const CurrencyRates: React.FC<CurrencyRatesProps> = ({ currencyRates }) => {
-  if (Object.keys(currencyRates).length === 0) {
-    return (
-      <Card>
-        <CardContent>
-          <Typography variant="h6" gutterBottom>
-            Exchange Rates
-          </Typography>
-          <Typography variant="body1">No exchange rates found.</Typography>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  return (
-    <Card>
-      <CardContent>
-        <Typography variant="h6" gutterBottom>
-          Exchange Rates
-        </Typography>
-        <TableContainer>
-          <Table aria-label="currency rates table">
-            <TableHead>
-              <TableRow>
-                <StyledTableCell>Currency</StyledTableCell>
-                <StyledTableCell align="right">Rate</StyledTableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {Object.keys(currencyRates).map((currency) => (
-                <StyledTableRow key={currency}>
-                  <TableCell component="th" scope="row">
-                    {currency}
-                  </TableCell>
-                  <TableCell align="right">
-                    {formatCurrency(1 / currencyRates[currency])}
-                  </TableCell>
-                </StyledTableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </CardContent>
-    </Card>
-  );
-};
-
 const Dashboard: React.FC = () => {
   const [assets, setAssets] = useState<Asset[]>([]);
   const [totals, setTotals] = useState<{ [currency: string]: number }>({});
@@ -432,9 +368,6 @@ const Dashboard: React.FC = () => {
         </Grid>
         <Grid size={{ xs: 12, sm: 6 }}>
           <LiabilitySummary liabilities={liabilities} />
-        </Grid>
-        <Grid size={{ xs: 12, sm: 6 }}>
-          <CurrencyRates currencyRates={currencyRates} />
         </Grid>
       </Grid>
     </>
