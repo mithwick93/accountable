@@ -1,4 +1,5 @@
 import axios from 'axios';
+import log from '../utils/logger';
 import { TokenStorage } from '../utils/TokenStorage';
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
@@ -13,6 +14,15 @@ export class AuthService {
     const { accessToken, refreshToken } = response.data;
     TokenStorage.setAccessToken(accessToken);
     TokenStorage.setRefreshToken(refreshToken);
+  }
+
+  static async register(data: {
+    username: string;
+    password: string;
+    firstName: string;
+    lastName: string;
+  }): Promise<void> {
+    await axios.post(`${API_BASE_URL}/auth/register`, data);
   }
 
   static async refreshToken(): Promise<string | null> {
@@ -37,7 +47,16 @@ export class AuthService {
     }
   }
 
-  static logout(): void {
+  static async logout(): Promise<void> {
+    try {
+      const accessToken = TokenStorage.getAccessToken();
+      await axios.post(`${API_BASE_URL}/auth/logout`, null, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+    } catch (error) {
+      log.error('Failed to logout: ' + error);
+    }
+
     TokenStorage.clearTokens();
     window.location.href = '/login';
   }

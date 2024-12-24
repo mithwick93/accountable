@@ -1,4 +1,4 @@
-import { Alert, Box, Button, TextField, Typography } from '@mui/material';
+import { Alert, Box, Button, Link, TextField, Typography } from '@mui/material';
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import logoLight from '../../../assets/logo-light.svg';
@@ -67,6 +67,10 @@ const Login = () => {
         >
           Login
         </Button>
+        <Typography variant="body2" sx={{ mt: 2 }}>
+          {`Don't have an account? `}
+          <Link href="/register">Register</Link>
+        </Typography>
       </Box>
     </>
   );

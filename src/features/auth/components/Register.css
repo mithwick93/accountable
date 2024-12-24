@@ -1,0 +1,14 @@
+.App-logo {
+  height: 20vmin;
+  pointer-events: none;
+}
+
+.logo {
+  fill: #1a1a1a;
+}
+
+@media (prefers-color-scheme: dark) {
+  .logo {
+    fill: #ffffff;
+  }
+}

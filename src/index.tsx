@@ -1,6 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import App from './App';
 import MainLayout from './layouts/MainLayout';
 import AssetsPage from './pages/AssetsPage';
@@ -8,6 +10,7 @@ import DashboardPage from './pages/DashboardPage';
 import LiabilitiesPage from './pages/LiabilitiesPage';
 import LoginPage from './pages/LoginPage';
 import NotFoundPage from './pages/NotFoundPage';
+import RegisterPage from './pages/RegisterPage';
 import reportWebVitals from './reportWebVitals';
 import './index.css';
 
@@ -38,6 +41,10 @@ const router = createBrowserRouter([
         Component: LoginPage,
       },
       {
+        path: '/register',
+        Component: RegisterPage,
+      },
+      {
         path: '*',
         Component: NotFoundPage,
       },
@@ -51,6 +58,7 @@ const root = ReactDOM.createRoot(
 root.render(
   <React.StrictMode>
     <RouterProvider router={router} />
+    <ToastContainer />
   </React.StrictMode>,
 );
 

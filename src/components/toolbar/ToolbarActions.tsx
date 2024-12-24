@@ -67,8 +67,8 @@ const ToolbarActions = () => {
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) =>
     setAnchorEl(event.currentTarget);
   const handleMenuClose = () => setAnchorEl(null);
-  const handleLogout = () => {
-    AuthService.logout();
+  const handleLogout = async () => {
+    await AuthService.logout();
     handleMenuClose();
   };
   const handleCurrencyChange = (event: SelectChangeEvent) =>
