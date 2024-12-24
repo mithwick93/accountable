@@ -1980,10 +1980,10 @@
   resolved "https://registry.yarnpkg.com/@mui/core-downloads-tracker/-/core-downloads-tracker-6.3.0.tgz#90e9def06128c58887e4663d8fa6281f9e3a6f50"
   integrity sha512-/d8NwSuC3rMwCjswmGB3oXC4sdDuhIUJ8inVQAxGrADJhf0eq/kmy+foFKvpYhHl2siOZR+MLdFttw6/Bzqtqg==
 
-"@mui/icons-material@^6.2.1":
-  version "6.2.1"
-  resolved "https://registry.yarnpkg.com/@mui/icons-material/-/icons-material-6.2.1.tgz#9f92e0c8f33db871d6afa2232d0e2daa4545dbe3"
-  integrity sha512-bP0XtW+t5KFL+wjfQp2UctN/8CuWqF1qaxbYuCAsJhL+AzproM8gGOh2n8sNBcrjbVckzDNqaXqxdpn+OmoWug==
+"@mui/icons-material@^6.3.0":
+  version "6.3.0"
+  resolved "https://registry.yarnpkg.com/@mui/icons-material/-/icons-material-6.3.0.tgz#f7506f50a8d967efa784e6de9c4a27cb21cf861a"
+  integrity sha512-3uWws6DveDn5KxCS34p+sUNMxehuclQY6OmoJeJJ+Sfg9L7LGBpksY/nX5ywKAqickTZnn+sQyVcp963ep9jvw==
   dependencies:
     "@babel/runtime" "^7.26.0"
 
@@ -2163,6 +2163,19 @@
     "@react-spring/web" "^9.7.5"
     clsx "^2.1.1"
     prop-types "^15.8.1"
+
+"@mui/x-date-pickers@^7.23.3":
+  version "7.23.3"
+  resolved "https://registry.yarnpkg.com/@mui/x-date-pickers/-/x-date-pickers-7.23.3.tgz#0c2b3db6a99e6e38aeb0980bfdf98468f415dded"
+  integrity sha512-bjTYX/QzD5ZhVZNNnastMUS3j2Hy4p4IXmJgPJ0vKvQBvUdfEO+ZF42r3PJNNde0FVT1MmTzkmdTlz0JZ6ukdw==
+  dependencies:
+    "@babel/runtime" "^7.25.7"
+    "@mui/utils" "^5.16.6 || ^6.0.0"
+    "@mui/x-internals" "7.23.0"
+    "@types/react-transition-group" "^4.4.11"
+    clsx "^2.1.1"
+    prop-types "^15.8.1"
+    react-transition-group "^4.4.5"
 
 "@mui/x-internals@7.23.0":
   version "7.23.0"
@@ -2470,6 +2483,37 @@
     "@svgr/plugin-jsx" "^5.5.0"
     "@svgr/plugin-svgo" "^5.5.0"
     loader-utils "^2.0.0"
+
+"@tanstack/match-sorter-utils@8.19.4":
+  version "8.19.4"
+  resolved "https://registry.yarnpkg.com/@tanstack/match-sorter-utils/-/match-sorter-utils-8.19.4.tgz#dacf772b5d94f4684f10dbeb2518cf72dccab8a5"
+  integrity sha512-Wo1iKt2b9OT7d+YGhvEPD3DXvPv2etTusIMhMUoG7fbhmxcXCtIjJDEygy91Y2JFlwGyjqiBPRozme7UD8hoqg==
+  dependencies:
+    remove-accents "0.5.0"
+
+"@tanstack/react-table@8.20.6":
+  version "8.20.6"
+  resolved "https://registry.yarnpkg.com/@tanstack/react-table/-/react-table-8.20.6.tgz#a1f3103327aa59aa621931f4087a7604a21054d0"
+  integrity sha512-w0jluT718MrOKthRcr2xsjqzx+oEM7B7s/XXyfs19ll++hlId3fjTm+B2zrR3ijpANpkzBAr15j1XGVOMxpggQ==
+  dependencies:
+    "@tanstack/table-core" "8.20.5"
+
+"@tanstack/react-virtual@3.11.2":
+  version "3.11.2"
+  resolved "https://registry.yarnpkg.com/@tanstack/react-virtual/-/react-virtual-3.11.2.tgz#d6b9bd999c181f0a2edce270c87a2febead04322"
+  integrity sha512-OuFzMXPF4+xZgx8UzJha0AieuMihhhaWG0tCqpp6tDzlFwOmNBPYMuLOtMJ1Tr4pXLHmgjcWhG6RlknY2oNTdQ==
+  dependencies:
+    "@tanstack/virtual-core" "3.11.2"
+
+"@tanstack/table-core@8.20.5":
+  version "8.20.5"
+  resolved "https://registry.yarnpkg.com/@tanstack/table-core/-/table-core-8.20.5.tgz#3974f0b090bed11243d4107283824167a395cf1d"
+  integrity sha512-P9dF7XbibHph2PFRz8gfBKEXEY/HJPOhym8CHmjF8y3q5mWpKx9xtZapXQUWCgkqvsK0R46Azuz+VaxD4Xl+Tg==
+
+"@tanstack/virtual-core@3.11.2":
+  version "3.11.2"
+  resolved "https://registry.yarnpkg.com/@tanstack/virtual-core/-/virtual-core-3.11.2.tgz#00409e743ac4eea9afe5b7708594d5fcebb00212"
+  integrity sha512-vTtpNt7mKCiZ1pwU9hfKPhpdVO2sVzFQsxoVBGtOSHxlrRRzYr8iQ2TlwbAcRYCcEiZ9ECAM8kBzH0v2+VzfKw==
 
 "@testing-library/dom@^8.5.0":
   version "8.20.1"
@@ -2873,7 +2917,7 @@
   resolved "https://registry.yarnpkg.com/@types/react-dom/-/react-dom-18.3.5.tgz#45f9f87398c5dcea085b715c58ddcf1faf65f716"
   integrity sha512-P4t6saawp+b/dFrUr2cvkVsfvPguwsxtH6dNIYRllMsefqFzkZk5UIjzyDOv5g1dXIPdG4Sp1yCR4Z6RCUsG/Q==
 
-"@types/react-transition-group@^4.4.12":
+"@types/react-transition-group@^4.4.11", "@types/react-transition-group@^4.4.12":
   version "4.4.12"
   resolved "https://registry.yarnpkg.com/@types/react-transition-group/-/react-transition-group-4.4.12.tgz#b5d76568485b02a307238270bfe96cb51ee2a044"
   integrity sha512-8TV6R3h2j7a91c+1DXdJi3Syo69zzIZbz7Lg5tORM5LEJG7X/E6a1V3drRyBRZq7/utz7A+c4OgYLiLcYGHG6w==
@@ -6336,6 +6380,11 @@ he@^1.2.0:
   resolved "https://registry.yarnpkg.com/he/-/he-1.2.0.tgz#84ae65fa7eafb165fddb61566ae14baf05664f0f"
   integrity sha512-F/1DnUGPopORZi0ni+CvrCgHQ5FyEAHRLSApuYWMmrbSwoN2Mn/7k+Gl38gJnR7yyDZk6WLXwiGod1JOWNDKGw==
 
+highlight-words@2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/highlight-words/-/highlight-words-2.0.0.tgz#06853d68f1f7c8e59d6ef2dd072fe2f64fc93936"
+  integrity sha512-If5n+IhSBRXTScE7wl16VPmd+44Vy7kof24EdqhjsZsDuHikpv1OCagVcJFpB4fS4UPUniedlWqrjIO8vWOsIQ==
+
 hoist-non-react-statics@^3.3.1:
   version "3.3.2"
   resolved "https://registry.yarnpkg.com/hoist-non-react-statics/-/hoist-non-react-statics-3.3.2.tgz#ece0acaf71d62c2969c2ec59feff42a4b1a85b45"
@@ -8267,6 +8316,16 @@ makeerror@1.0.12:
   dependencies:
     tmpl "1.0.5"
 
+material-react-table@^3.1.0:
+  version "3.1.0"
+  resolved "https://registry.yarnpkg.com/material-react-table/-/material-react-table-3.1.0.tgz#05830327930fb62fbfa418071fd7b6fbacec0e31"
+  integrity sha512-/zPn38QhxQE7mkwLex4CojX3UP2+/+/u7NVq7CHS5d6P8LdTteJPVYXVzym/uhaXzAzFB1ojsbP7zI/y6iUdtQ==
+  dependencies:
+    "@tanstack/match-sorter-utils" "8.19.4"
+    "@tanstack/react-table" "8.20.6"
+    "@tanstack/react-virtual" "3.11.2"
+    highlight-words "2.0.0"
+
 math-intrinsics@^1.0.0, math-intrinsics@^1.1.0:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/math-intrinsics/-/math-intrinsics-1.1.0.tgz#a0dd74be81e2aa5c2f27e65ce283605ee4e2b7f9"
@@ -9975,6 +10034,11 @@ relateurl@^0.2.7:
   version "0.2.7"
   resolved "https://registry.yarnpkg.com/relateurl/-/relateurl-0.2.7.tgz#54dbf377e51440aca90a4cd274600d3ff2d888a9"
   integrity sha512-G08Dxvm4iDN3MLM0EsP62EDV9IuhXPR6blNz6Utcp7zyV3tr4HVNINt6MpaRWbxoOHT3Q7YN2P+jaHX8vUbgog==
+
+remove-accents@0.5.0:
+  version "0.5.0"
+  resolved "https://registry.yarnpkg.com/remove-accents/-/remove-accents-0.5.0.tgz#77991f37ba212afba162e375b627631315bed687"
+  integrity sha512-8g3/Otx1eJaVD12e31UbJj1YzdtVvzH85HV7t+9MJYk/u3XmkOUJ5Ys9wQrf9PCPK8+xn4ymzqYCiZl6QWKn+A==
 
 renderkid@^3.0.0:
   version "3.0.0"
