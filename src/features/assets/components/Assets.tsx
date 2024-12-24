@@ -8,6 +8,7 @@ import log from '../../../utils/logger';
 
 const Assets: React.FC = () => {
   const [assets, setAssets] = useState<Asset[]>([]);
+  //testHash123
 
   useEffect(() => {
     const fetchAssets = async () => {
