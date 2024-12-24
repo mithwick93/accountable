@@ -225,7 +225,7 @@ const Dashboard: React.FC = () => {
   const getBreakdown = (items: (Asset | Liability)[], currency: string) =>
     items
       .filter((item) => item.currency === currency)
-      .map((item) => `${item.name}: ${item.balance}`);
+      .map((item) => `${item.name}: ${formatCurrency(item.balance)}`);
 
   useEffect(() => {
     const fetchFinancialData = async () => {
