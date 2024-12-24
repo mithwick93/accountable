@@ -8,6 +8,7 @@ import React from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import ErrorBoundary from '../components/ErrorBoundary';
 import ToolbarActions from '../components/toolbar/ToolbarActions';
+import { CurrencyRatesProvider } from '../context/CurrencyRatesContext';
 import { SettingsProvider } from '../context/SettingsContext';
 import { StaticDataProvider } from '../context/StaticDataContext';
 import { UserProvider } from '../context/UserContext';
@@ -38,25 +39,27 @@ export default function MainLayout() {
     <UserProvider>
       <StaticDataProvider>
         <SettingsProvider settingsKey="accountable" defaultValue={userSettings}>
-          <DashboardLayout
-            slots={{
-              toolbarActions: ToolbarActions,
-              sidebarFooter: SidebarFooter,
-            }}
-            defaultSidebarCollapsed
-          >
-            <ErrorBoundary>
-              <PageContainer
-                sx={{
-                  '@media (min-width: 1200px)': {
-                    maxWidth: 'none',
-                  },
-                }}
-              >
-                <Outlet />
-              </PageContainer>
-            </ErrorBoundary>
-          </DashboardLayout>
+          <CurrencyRatesProvider>
+            <DashboardLayout
+              slots={{
+                toolbarActions: ToolbarActions,
+                sidebarFooter: SidebarFooter,
+              }}
+              defaultSidebarCollapsed
+            >
+              <ErrorBoundary>
+                <PageContainer
+                  sx={{
+                    '@media (min-width: 1200px)': {
+                      maxWidth: 'none',
+                    },
+                  }}
+                >
+                  <Outlet />
+                </PageContainer>
+              </ErrorBoundary>
+            </DashboardLayout>
+          </CurrencyRatesProvider>
         </SettingsProvider>
       </StaticDataProvider>
     </UserProvider>

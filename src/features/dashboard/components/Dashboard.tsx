@@ -10,6 +10,8 @@ import TableRow from '@mui/material/TableRow';
 import { DefaultizedPieValueType } from '@mui/x-charts/models';
 import { PieChart } from '@mui/x-charts/PieChart';
 import React, { useEffect, useState } from 'react';
+import LoadingSkeleton from '../../../components/LoadingSkeleton';
+import { useCurrencyRates } from '../../../context/CurrencyRatesContext';
 import { useSettings } from '../../../context/SettingsContext';
 import apiClient from '../../../services/ApiService';
 import { Asset } from '../../../types/Asset';
@@ -38,15 +40,12 @@ interface NetWorthProps {
   currencyRates: {
     [currency: string]: number;
   };
-  currency: string;
 }
 
-const NetWorth: React.FC<NetWorthProps> = ({
-  totals,
-  currencyRates,
-  currency,
-}) => {
+const NetWorth: React.FC<NetWorthProps> = ({ totals, currencyRates }) => {
   const [netWorth, setNetWorth] = useState<number>(0);
+  const { settings } = useSettings();
+  const currency: string = settings?.currency || 'USD';
 
   useEffect(() => {
     const calculateNetWorth = () => {
@@ -358,14 +357,13 @@ const Dashboard: React.FC = () => {
   const [assets, setAssets] = useState<Asset[]>([]);
   const [totals, setTotals] = useState<{ [currency: string]: number }>({});
   const [liabilities, setLiabilities] = useState<Liability[]>([]);
-  const [currencyRates, setCurrencyRates] = useState<{
-    [currency: string]: number;
-  }>({});
-  const { settings } = useSettings();
-  const currency = settings?.currency || 'USD';
+  const [assetsLoading, setAssetsLoading] = useState<boolean>(true);
+  const [liabilitiesLoading, setLiabilitiesLoading] = useState<boolean>(true);
+  const { currencyRates } = useCurrencyRates();
 
   useEffect(() => {
     const fetchAssetTotals = async () => {
+      setAssetsLoading(true);
       try {
         const response = await apiClient.get('/assets');
         const assetsData = response.data;
@@ -392,6 +390,8 @@ const Dashboard: React.FC = () => {
         setTotals(sortedTotalsData);
       } catch (error) {
         log.error('Error fetching assets:', error);
+      } finally {
+        setAssetsLoading(false);
       }
     };
 
@@ -400,54 +400,30 @@ const Dashboard: React.FC = () => {
 
   useEffect(() => {
     const fetchLiabilities = async () => {
+      setLiabilitiesLoading(true);
       try {
         const response = await apiClient.get('/liabilities');
         const liabilitiesData = response.data;
         setLiabilities(liabilitiesData);
       } catch (error) {
         log.error('Error fetching liabilities:', error);
+      } finally {
+        setLiabilitiesLoading(false);
       }
     };
 
     fetchLiabilities();
   }, []);
 
-  useEffect(() => {
-    const fetchCurrencyRates = async () => {
-      try {
-        const response = await apiClient.get(
-          `/exchange-rates?baseCurrency=${currency}&onlySupported=true`,
-        );
-        const currencyRatesData = response.data.conversionRates;
-
-        const sortedCurrencyRatesData = Object.keys(currencyRatesData)
-          .sort()
-          .reduce(
-            (acc, key) => {
-              acc[key] = currencyRatesData[key];
-              return acc;
-            },
-            {} as { [currency: string]: number },
-          );
-
-        setCurrencyRates(sortedCurrencyRatesData);
-      } catch (error) {
-        log.error('Error fetching currency rates:', error);
-      }
-    };
-
-    fetchCurrencyRates();
-  }, [currency]);
+  if (assetsLoading || liabilitiesLoading) {
+    return <LoadingSkeleton />;
+  }
 
   return (
     <>
       <Grid container spacing={2}>
         <Grid size={{ xs: 12, sm: 6 }}>
-          <NetWorth
-            totals={totals}
-            currencyRates={currencyRates}
-            currency={currency}
-          />
+          <NetWorth totals={totals} currencyRates={currencyRates} />
         </Grid>
       </Grid>
       <Grid container spacing={2} size={{ xs: 12, sm: 6 }} sx={{ mt: 2 }}>
