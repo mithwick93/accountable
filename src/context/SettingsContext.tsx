@@ -1,5 +1,4 @@
 /* eslint-disable no-unused-vars */
-import { Backdrop, CircularProgress } from '@mui/material';
 import { AxiosError } from 'axios';
 import { debounce } from 'lodash-es';
 import React, {
@@ -9,6 +8,7 @@ import React, {
   useEffect,
   useState,
 } from 'react';
+import BackdropLoader from '../components/BackdropLoader';
 import apiClient from '../services/ApiService';
 import log from '../utils/logger';
 
@@ -121,14 +121,7 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
   }, [defaultValue, settingsKey]);
 
   if (userSettings.loading) {
-    return (
-      <Backdrop
-        sx={(theme) => ({ color: '#fff', zIndex: theme.zIndex.drawer + 1 })}
-        open={true}
-      >
-        <CircularProgress color="inherit" />
-      </Backdrop>
-    );
+    return <BackdropLoader />;
   }
 
   return (

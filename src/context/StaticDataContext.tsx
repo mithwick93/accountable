@@ -5,6 +5,7 @@ import React, {
   useEffect,
   useState,
 } from 'react';
+import BackdropLoader from '../components/BackdropLoader';
 import apiClient from '../services/ApiService';
 import { AssetType } from '../types/AssetType';
 import { Currency } from '../types/Currency';
@@ -39,9 +40,11 @@ export const StaticDataProvider: React.FC<StaticDataProviderProps> = ({
     installmentPlanStatuses: null,
     assetTypes: null,
   });
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const fetchStaticData = async () => {
+      setLoading(true);
       try {
         const [
           currencies,
@@ -76,11 +79,17 @@ export const StaticDataProvider: React.FC<StaticDataProviderProps> = ({
         });
       } catch (error) {
         log.error('Failed to fetch static data:', error);
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchStaticData();
   }, []);
+
+  if (loading) {
+    return <BackdropLoader />;
+  }
 
   return (
     <StaticDataContext.Provider value={staticData}>

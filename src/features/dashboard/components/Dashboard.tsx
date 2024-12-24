@@ -1,22 +1,24 @@
-import {
-  Card,
-  CardContent,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Tooltip,
-  Typography,
-} from '@mui/material';
+import { Card, CardContent, Tooltip, Typography } from '@mui/material';
 import Grid from '@mui/material/Grid2';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
 import { DefaultizedPieValueType } from '@mui/x-charts/models';
 import { PieChart } from '@mui/x-charts/PieChart';
 import React, { useEffect, useState } from 'react';
+import LoadingSkeleton from '../../../components/LoadingSkeleton';
+import {
+  StyledTableCell,
+  StyledTableRow,
+} from '../../../components/table/Table';
+import { useCurrencyRates } from '../../../context/CurrencyRatesContext';
 import { useSettings } from '../../../context/SettingsContext';
 import apiClient from '../../../services/ApiService';
 import { Asset } from '../../../types/Asset';
+import { Liability } from '../../../types/Liability';
 import { formatCurrency } from '../../../utils/common';
 import log from '../../../utils/logger';
 
@@ -25,15 +27,12 @@ interface NetWorthProps {
   currencyRates: {
     [currency: string]: number;
   };
-  currency: string;
 }
 
-const NetWorth: React.FC<NetWorthProps> = ({
-  totals,
-  currencyRates,
-  currency,
-}) => {
+const NetWorth: React.FC<NetWorthProps> = ({ totals, currencyRates }) => {
   const [netWorth, setNetWorth] = useState<number>(0);
+  const { settings } = useSettings();
+  const currency: string = settings?.currency || 'USD';
 
   useEffect(() => {
     const calculateNetWorth = () => {
@@ -162,13 +161,13 @@ const AssetSummary: React.FC<AssetSummaryProps> = ({ assets, totals }) => {
           <Table aria-label="asset summary table">
             <TableHead>
               <TableRow>
-                <TableCell>Currency</TableCell>
-                <TableCell align="right">Total</TableCell>
+                <StyledTableCell>Currency</StyledTableCell>
+                <StyledTableCell align="right">Total</StyledTableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {Object.keys(totals).map((currency) => (
-                <TableRow key={currency}>
+                <StyledTableRow key={currency}>
                   <TableCell component="th" scope="row">
                     {currency}
                   </TableCell>
@@ -191,7 +190,7 @@ const AssetSummary: React.FC<AssetSummaryProps> = ({ assets, totals }) => {
                       </span>
                     </Tooltip>
                   </TableCell>
-                </TableRow>
+                </StyledTableRow>
               ))}
             </TableBody>
           </Table>
@@ -201,48 +200,86 @@ const AssetSummary: React.FC<AssetSummaryProps> = ({ assets, totals }) => {
   );
 };
 
-interface CurrencyRatesProps {
-  currencyRates: { [currency: string]: number };
+interface LiabilitySummaryProps {
+  liabilities: Liability[];
 }
 
-const CurrencyRates: React.FC<CurrencyRatesProps> = ({ currencyRates }) => {
-  if (Object.keys(currencyRates).length === 0) {
+const LiabilitySummary: React.FC<LiabilitySummaryProps> = ({ liabilities }) => {
+  if (liabilities.length === 0) {
     return (
       <Card>
         <CardContent>
           <Typography variant="h6" gutterBottom>
-            Exchange Rates
+            Liability Summary
           </Typography>
-          <Typography variant="body1">No exchange rates found.</Typography>
+          <Typography variant="body1">No liabilities found.</Typography>
         </CardContent>
       </Card>
     );
   }
 
+  const getLiabilityBreakdown = (currency: string) =>
+    liabilities
+      .filter((liability) => liability.currency === currency)
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .map(
+        (liability) =>
+          `${liability.name}: ${formatCurrency(liability.balance)} ${currency}`,
+      );
+
+  const totals = liabilities.reduce(
+    (acc, liability) => {
+      if (!acc[liability.currency]) {
+        acc[liability.currency] = 0;
+      }
+      acc[liability.currency] += liability.balance;
+      return acc;
+    },
+    {} as { [currency: string]: number },
+  );
+
   return (
     <Card>
       <CardContent>
         <Typography variant="h6" gutterBottom>
-          Exchange Rates
+          Liability Summary
         </Typography>
         <TableContainer>
-          <Table aria-label="currency rates table">
+          <Table aria-label="liability summary table">
             <TableHead>
               <TableRow>
-                <TableCell>Currency</TableCell>
-                <TableCell align="right">Rate</TableCell>
+                <StyledTableCell>Currency</StyledTableCell>
+                <StyledTableCell align="right">Total</StyledTableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {Object.keys(currencyRates).map((currency) => (
-                <TableRow key={currency}>
+              {Object.keys(totals).map((currency) => (
+                <StyledTableRow key={currency}>
                   <TableCell component="th" scope="row">
                     {currency}
                   </TableCell>
                   <TableCell align="right">
-                    {formatCurrency(1 / currencyRates[currency])}
+                    <Tooltip
+                      title={
+                        <React.Fragment>
+                          {getLiabilityBreakdown(currency).map(
+                            (line, index) => (
+                              <Typography key={index} variant="body2">
+                                {line}
+                              </Typography>
+                            ),
+                          )}
+                        </React.Fragment>
+                      }
+                      arrow
+                      followCursor
+                    >
+                      <span>
+                        {formatCurrency(totals[currency])} {currency}
+                      </span>
+                    </Tooltip>
                   </TableCell>
-                </TableRow>
+                </StyledTableRow>
               ))}
             </TableBody>
           </Table>
@@ -255,14 +292,14 @@ const CurrencyRates: React.FC<CurrencyRatesProps> = ({ currencyRates }) => {
 const Dashboard: React.FC = () => {
   const [assets, setAssets] = useState<Asset[]>([]);
   const [totals, setTotals] = useState<{ [currency: string]: number }>({});
-  const [currencyRates, setCurrencyRates] = useState<{
-    [currency: string]: number;
-  }>({});
-  const { settings } = useSettings();
-  const currency = settings?.currency || 'USD';
+  const [liabilities, setLiabilities] = useState<Liability[]>([]);
+  const [assetsLoading, setAssetsLoading] = useState<boolean>(true);
+  const [liabilitiesLoading, setLiabilitiesLoading] = useState<boolean>(true);
+  const { currencyRates } = useCurrencyRates();
 
   useEffect(() => {
     const fetchAssetTotals = async () => {
+      setAssetsLoading(true);
       try {
         const response = await apiClient.get('/assets');
         const assetsData = response.data;
@@ -289,6 +326,8 @@ const Dashboard: React.FC = () => {
         setTotals(sortedTotalsData);
       } catch (error) {
         log.error('Error fetching assets:', error);
+      } finally {
+        setAssetsLoading(false);
       }
     };
 
@@ -296,41 +335,31 @@ const Dashboard: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const fetchCurrencyRates = async () => {
+    const fetchLiabilities = async () => {
+      setLiabilitiesLoading(true);
       try {
-        const response = await apiClient.get(
-          `/exchange-rates?baseCurrency=${currency}&onlySupported=true`,
-        );
-        const currencyRatesData = response.data.conversionRates;
-
-        const sortedCurrencyRatesData = Object.keys(currencyRatesData)
-          .sort()
-          .reduce(
-            (acc, key) => {
-              acc[key] = currencyRatesData[key];
-              return acc;
-            },
-            {} as { [currency: string]: number },
-          );
-
-        setCurrencyRates(sortedCurrencyRatesData);
+        const response = await apiClient.get('/liabilities');
+        const liabilitiesData = response.data;
+        setLiabilities(liabilitiesData);
       } catch (error) {
-        log.error('Error fetching currency rates:', error);
+        log.error('Error fetching liabilities:', error);
+      } finally {
+        setLiabilitiesLoading(false);
       }
     };
 
-    fetchCurrencyRates();
-  }, [currency]);
+    fetchLiabilities();
+  }, []);
+
+  if (assetsLoading || liabilitiesLoading) {
+    return <LoadingSkeleton />;
+  }
 
   return (
     <>
       <Grid container spacing={2}>
         <Grid size={{ xs: 12, sm: 6 }}>
-          <NetWorth
-            totals={totals}
-            currencyRates={currencyRates}
-            currency={currency}
-          />
+          <NetWorth totals={totals} currencyRates={currencyRates} />
         </Grid>
       </Grid>
       <Grid container spacing={2} size={{ xs: 12, sm: 6 }} sx={{ mt: 2 }}>
@@ -338,7 +367,7 @@ const Dashboard: React.FC = () => {
           <AssetSummary assets={assets} totals={totals} />
         </Grid>
         <Grid size={{ xs: 12, sm: 6 }}>
-          <CurrencyRates currencyRates={currencyRates} />
+          <LiabilitySummary liabilities={liabilities} />
         </Grid>
       </Grid>
     </>

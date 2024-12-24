@@ -1,5 +1,5 @@
+import { Box, Paper, Typography } from '@mui/material';
 import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { Box, Typography, Paper } from '@mui/material';
 import log from '../utils/logger';
 
 interface ErrorBoundaryProps {
