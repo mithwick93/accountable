@@ -1,24 +1,37 @@
-import {
-  Card,
-  CardContent,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Tooltip,
-  Typography,
-} from '@mui/material';
+import { Card, CardContent, Tooltip, Typography } from '@mui/material';
 import Grid from '@mui/material/Grid2';
+import { styled } from '@mui/material/styles';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell, { tableCellClasses } from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
 import { DefaultizedPieValueType } from '@mui/x-charts/models';
 import { PieChart } from '@mui/x-charts/PieChart';
 import React, { useEffect, useState } from 'react';
 import { useSettings } from '../../../context/SettingsContext';
 import apiClient from '../../../services/ApiService';
 import { Asset } from '../../../types/Asset';
+import { Liability } from '../../../types/Liability';
 import { formatCurrency } from '../../../utils/common';
 import log from '../../../utils/logger';
+
+const StyledTableCell = styled(TableCell)(() => ({
+  [`&.${tableCellClasses.head}`]: {
+    fontWeight: 'bold',
+  },
+}));
+
+const StyledTableRow = styled(TableRow)(({ theme }) => ({
+  '&:nth-of-type(odd)': {
+    backgroundColor: theme.palette.action.hover,
+  },
+  // hide last border
+  '&:last-child td, &:last-child th': {
+    border: 0,
+  },
+}));
 
 interface NetWorthProps {
   totals: { [currency: string]: number };
@@ -162,13 +175,13 @@ const AssetSummary: React.FC<AssetSummaryProps> = ({ assets, totals }) => {
           <Table aria-label="asset summary table">
             <TableHead>
               <TableRow>
-                <TableCell>Currency</TableCell>
-                <TableCell align="right">Total</TableCell>
+                <StyledTableCell>Currency</StyledTableCell>
+                <StyledTableCell align="right">Total</StyledTableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {Object.keys(totals).map((currency) => (
-                <TableRow key={currency}>
+                <StyledTableRow key={currency}>
                   <TableCell component="th" scope="row">
                     {currency}
                   </TableCell>
@@ -191,7 +204,96 @@ const AssetSummary: React.FC<AssetSummaryProps> = ({ assets, totals }) => {
                       </span>
                     </Tooltip>
                   </TableCell>
-                </TableRow>
+                </StyledTableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </CardContent>
+    </Card>
+  );
+};
+
+interface LiabilitySummaryProps {
+  liabilities: Liability[];
+}
+
+const LiabilitySummary: React.FC<LiabilitySummaryProps> = ({ liabilities }) => {
+  if (liabilities.length === 0) {
+    return (
+      <Card>
+        <CardContent>
+          <Typography variant="h6" gutterBottom>
+            Liability Summary
+          </Typography>
+          <Typography variant="body1">No liabilities found.</Typography>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const getLiabilityBreakdown = (currency: string) =>
+    liabilities
+      .filter((liability) => liability.currency === currency)
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .map(
+        (liability) =>
+          `${liability.name}: ${formatCurrency(liability.balance)} ${currency}`,
+      );
+
+  const totals = liabilities.reduce(
+    (acc, liability) => {
+      if (!acc[liability.currency]) {
+        acc[liability.currency] = 0;
+      }
+      acc[liability.currency] += liability.balance;
+      return acc;
+    },
+    {} as { [currency: string]: number },
+  );
+
+  return (
+    <Card>
+      <CardContent>
+        <Typography variant="h6" gutterBottom>
+          Liability Summary
+        </Typography>
+        <TableContainer>
+          <Table aria-label="liability summary table">
+            <TableHead>
+              <TableRow>
+                <StyledTableCell>Currency</StyledTableCell>
+                <StyledTableCell align="right">Total</StyledTableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {Object.keys(totals).map((currency) => (
+                <StyledTableRow key={currency}>
+                  <TableCell component="th" scope="row">
+                    {currency}
+                  </TableCell>
+                  <TableCell align="right">
+                    <Tooltip
+                      title={
+                        <React.Fragment>
+                          {getLiabilityBreakdown(currency).map(
+                            (line, index) => (
+                              <Typography key={index} variant="body2">
+                                {line}
+                              </Typography>
+                            ),
+                          )}
+                        </React.Fragment>
+                      }
+                      arrow
+                      followCursor
+                    >
+                      <span>
+                        {formatCurrency(totals[currency])} {currency}
+                      </span>
+                    </Tooltip>
+                  </TableCell>
+                </StyledTableRow>
               ))}
             </TableBody>
           </Table>
@@ -229,20 +331,20 @@ const CurrencyRates: React.FC<CurrencyRatesProps> = ({ currencyRates }) => {
           <Table aria-label="currency rates table">
             <TableHead>
               <TableRow>
-                <TableCell>Currency</TableCell>
-                <TableCell align="right">Rate</TableCell>
+                <StyledTableCell>Currency</StyledTableCell>
+                <StyledTableCell align="right">Rate</StyledTableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {Object.keys(currencyRates).map((currency) => (
-                <TableRow key={currency}>
+                <StyledTableRow key={currency}>
                   <TableCell component="th" scope="row">
                     {currency}
                   </TableCell>
                   <TableCell align="right">
                     {formatCurrency(1 / currencyRates[currency])}
                   </TableCell>
-                </TableRow>
+                </StyledTableRow>
               ))}
             </TableBody>
           </Table>
@@ -255,6 +357,7 @@ const CurrencyRates: React.FC<CurrencyRatesProps> = ({ currencyRates }) => {
 const Dashboard: React.FC = () => {
   const [assets, setAssets] = useState<Asset[]>([]);
   const [totals, setTotals] = useState<{ [currency: string]: number }>({});
+  const [liabilities, setLiabilities] = useState<Liability[]>([]);
   const [currencyRates, setCurrencyRates] = useState<{
     [currency: string]: number;
   }>({});
@@ -293,6 +396,20 @@ const Dashboard: React.FC = () => {
     };
 
     fetchAssetTotals();
+  }, []);
+
+  useEffect(() => {
+    const fetchLiabilities = async () => {
+      try {
+        const response = await apiClient.get('/liabilities');
+        const liabilitiesData = response.data;
+        setLiabilities(liabilitiesData);
+      } catch (error) {
+        log.error('Error fetching liabilities:', error);
+      }
+    };
+
+    fetchLiabilities();
   }, []);
 
   useEffect(() => {
@@ -336,6 +453,9 @@ const Dashboard: React.FC = () => {
       <Grid container spacing={2} size={{ xs: 12, sm: 6 }} sx={{ mt: 2 }}>
         <Grid size={{ xs: 12, sm: 6 }}>
           <AssetSummary assets={assets} totals={totals} />
+        </Grid>
+        <Grid size={{ xs: 12, sm: 6 }}>
+          <LiabilitySummary liabilities={liabilities} />
         </Grid>
         <Grid size={{ xs: 12, sm: 6 }}>
           <CurrencyRates currencyRates={currencyRates} />
