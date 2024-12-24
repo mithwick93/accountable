@@ -19,29 +19,31 @@ import { AuthService } from '../../services/AuthService';
 
 const clockUpdateInterval = 60000;
 
-const stringToColor = (string: string) => {
+const formatDate = () =>
+  new Date().toLocaleString([], {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+
+const stringToColor = (input: string) => {
   let hash = 0;
-  let i;
-
-  for (i = 0; i < string.length; i += 1) {
-    hash = string.charCodeAt(i) + ((hash << 3) - hash);
+  for (let i = 0; i < input.length; i++) {
+    hash = input.charCodeAt(i) + ((hash << 3) - hash);
   }
-
-  let color = '#';
-
-  for (i = 0; i < 3; i += 1) {
-    const value = (hash >> (i * 8)) & 0xff;
-    color += `00${value.toString(16)}`.slice(-2);
-  }
-
-  return color;
+  return `#${[0, 1, 2]
+    .map((i) => `00${((hash >> (i * 8)) & 0xff).toString(16)}`.slice(-2))
+    .join('')}`;
 };
 
-const stringAvatar = (name: string) => ({
-  sx: {
-    bgcolor: stringToColor(name),
-  },
-  children: `${name.split(' ')[0][0]}${name.split(' ')[1][0]}`,
+const generateAvatarProps = (name: string) => ({
+  sx: { bgcolor: stringToColor(name) },
+  children: name
+    .split(' ')
+    .map((part) => part[0])
+    .join(''),
 });
 
 const ToolbarActions = () => {
@@ -49,77 +51,54 @@ const ToolbarActions = () => {
   const { currencies } = useStaticData();
   const { settings, update } = useSettings();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [currentTime, setCurrentTime] = useState<string>(
-    new Date().toLocaleString([], {
-      day: '2-digit',
-      month: 'long',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    }),
-  );
+  const [currentTime, setCurrentTime] = useState<string>(formatDate());
 
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(
-        new Date().toLocaleString([], {
-          day: '2-digit',
-          month: 'long',
-          year: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit',
-        }),
-      );
-    }, clockUpdateInterval);
-
+    const timer = setInterval(
+      () => setCurrentTime(formatDate()),
+      clockUpdateInterval,
+    );
     return () => clearInterval(timer);
   }, []);
 
-  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) =>
     setAnchorEl(event.currentTarget);
-  };
-
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-  };
-
+  const handleMenuClose = () => setAnchorEl(null);
   const handleLogout = () => {
     AuthService.logout();
     handleMenuClose();
   };
-
-  const handleCurrencyChange = (event: SelectChangeEvent) => {
+  const handleCurrencyChange = (event: SelectChangeEvent) =>
     update({ ...settings, currency: event.target.value });
-  };
 
-  const userNames = `${loggedInUser?.firstName} ${loggedInUser?.lastName}`;
+  const userNames =
+    `${loggedInUser?.firstName || ''} ${loggedInUser?.lastName || ''}`.trim();
 
   return (
     <Stack direction="row" spacing={1} alignItems="center">
       {!isSmallScreen && <Typography>{currentTime}</Typography>}
       <Select
-        value={settings?.currency}
+        value={settings?.currency || ''}
         onChange={handleCurrencyChange}
         displayEmpty
         inputProps={{ 'aria-label': 'Select currency' }}
         sx={{ m: 1, minWidth: 80 }}
         size="small"
       >
-        {currencies?.map((currency) => (
-          <MenuItem key={currency.code} value={currency.code}>
-            {currency.code}
+        {currencies?.map(({ code }) => (
+          <MenuItem key={code} value={code}>
+            {code}
           </MenuItem>
         ))}
       </Select>
       <ThemeSwitcher />
-      <Tooltip title={userNames}>
+      <Tooltip title={userNames || 'User'}>
         <Avatar
-          {...stringAvatar(userNames)}
+          {...generateAvatarProps(userNames || 'User')}
           onClick={handleMenuOpen}
-          style={{ cursor: 'pointer' }}
         />
       </Tooltip>
       <Menu
