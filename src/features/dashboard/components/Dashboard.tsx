@@ -21,71 +21,103 @@ interface AssetSummaryProps {
   totals: { [currency: string]: number };
 }
 
-const AssetSummary: React.FC<AssetSummaryProps> = ({ totals }) => (
-  <Card>
-    <CardContent>
-      <Typography variant="h6" gutterBottom>
-        Asset Summary
-      </Typography>
-      <TableContainer>
-        <Table aria-label="asset summary table">
-          <TableHead>
-            <TableRow>
-              <TableCell>Currency</TableCell>
-              <TableCell align="right">Total</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {Object.keys(totals).map((currency) => (
-              <TableRow key={currency}>
-                <TableCell component="th" scope="row">
-                  {currency}
-                </TableCell>
-                <TableCell align="right">
-                  {formatCurrency(totals[currency])} {currency}
-                </TableCell>
+const AssetSummary: React.FC<AssetSummaryProps> = ({ totals }) => {
+  if (Object.keys(totals).length === 0) {
+    return (
+      <Card>
+        <CardContent>
+          <Typography variant="h6" gutterBottom>
+            Asset Summary
+          </Typography>
+          <Typography variant="body1">No assets found.</Typography>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card>
+      <CardContent>
+        <Typography variant="h6" gutterBottom>
+          Asset Summary
+        </Typography>
+        <TableContainer>
+          <Table aria-label="asset summary table">
+            <TableHead>
+              <TableRow>
+                <TableCell>Currency</TableCell>
+                <TableCell align="right">Total</TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
-    </CardContent>
-  </Card>
-);
+            </TableHead>
+            <TableBody>
+              {Object.keys(totals).map((currency) => (
+                <TableRow key={currency}>
+                  <TableCell component="th" scope="row">
+                    {currency}
+                  </TableCell>
+                  <TableCell align="right">
+                    {formatCurrency(totals[currency])} {currency}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </CardContent>
+    </Card>
+  );
+};
 
 interface CurrencyRatesProps {
   currencyRates: { [currency: string]: number };
 }
 
-const CurrencyRates: React.FC<CurrencyRatesProps> = ({ currencyRates }) => (
-  <Card>
-    <CardContent>
-      <Typography variant="h6" gutterBottom>
-        Exchange Rates
-      </Typography>
-      <TableContainer>
-        <Table aria-label="currency rates table">
-          <TableHead>
-            <TableRow>
-              <TableCell>Currency</TableCell>
-              <TableCell align="right">Rate</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {Object.keys(currencyRates).map((currency) => (
-              <TableRow key={currency}>
-                <TableCell component="th" scope="row">
-                  {currency}
-                </TableCell>
-                <TableCell align="right">{currencyRates[currency]}</TableCell>
+const CurrencyRates: React.FC<CurrencyRatesProps> = ({ currencyRates }) => {
+  if (Object.keys(currencyRates).length === 0) {
+    return (
+      <Card>
+        <CardContent>
+          <Typography variant="h6" gutterBottom>
+            Exchange Rates
+          </Typography>
+          <Typography variant="body1">No exchange rates found.</Typography>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card>
+      <CardContent>
+        <Typography variant="h6" gutterBottom>
+          Exchange Rates
+        </Typography>
+        <TableContainer>
+          <Table aria-label="currency rates table">
+            <TableHead>
+              <TableRow>
+                <TableCell>Currency</TableCell>
+                <TableCell align="right">Rate</TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
-    </CardContent>
-  </Card>
-);
+            </TableHead>
+            <TableBody>
+              {Object.keys(currencyRates).map((currency) => (
+                <TableRow key={currency}>
+                  <TableCell component="th" scope="row">
+                    {currency}
+                  </TableCell>
+                  <TableCell align="right">
+                    {formatCurrency(1 / currencyRates[currency])}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </CardContent>
+    </Card>
+  );
+};
 
 const Dashboard: React.FC = () => {
   const [totals, setTotals] = useState<{ [currency: string]: number }>({});
