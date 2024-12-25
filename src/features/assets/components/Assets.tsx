@@ -17,6 +17,7 @@ import log from '../../../utils/logger';
 
 const Assets: React.FC = () => {
   const [assets, setAssets] = useState<Asset[]>([]);
+  const [loading, setLoading] = useState(true);
   const columns = useMemo<MRT_ColumnDef<MRT_RowData>[]>(
     () => [
       {
@@ -71,12 +72,15 @@ const Assets: React.FC = () => {
 
   useEffect(() => {
     const fetchAssets = async () => {
+      setLoading(true);
       try {
         const response = await apiClient.get('/assets');
         const assetsData = response.data;
         setAssets(assetsData);
       } catch (error) {
         log.error('Error fetching assets:', error);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -109,6 +113,9 @@ const Assets: React.FC = () => {
         pageIndex: 0,
         pageSize: 20,
       },
+    },
+    state: {
+      isLoading: loading,
     },
     renderDetailPanel: ({ row }) => (
       <Box

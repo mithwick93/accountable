@@ -53,6 +53,7 @@ const getDueDateColor = (dueDateString: string, palateMode: PaletteMode) => {
 
 const Liabilities: React.FC = () => {
   const [liabilities, setLiabilities] = useState<Liability[]>([]);
+  const [loading, setLoading] = useState(true);
   const columns = useMemo<MRT_ColumnDef<MRT_RowData>[]>(
     () => [
       {
@@ -187,12 +188,15 @@ const Liabilities: React.FC = () => {
 
   useEffect(() => {
     const fetchLiabilities = async () => {
+      setLoading(true);
       try {
         const response = await apiClient.get('/liabilities');
         const liabilitiesData = response.data;
         setLiabilities(liabilitiesData);
       } catch (error) {
         log.error('Error fetching liabilities:', error);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -225,6 +229,9 @@ const Liabilities: React.FC = () => {
         pageIndex: 0,
         pageSize: 20,
       },
+    },
+    state: {
+      isLoading: loading,
     },
     renderDetailPanel: ({ row }) => {
       const formattedStatus = formatLiabilityStatus(row.original.status);

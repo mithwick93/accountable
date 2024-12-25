@@ -13,6 +13,7 @@ import log from '../../../utils/logger';
 
 const TransactionCategories: React.FC = () => {
   const [categories, setCategories] = useState<TransactionCategory[]>([]);
+  const [loading, setLoading] = useState(true);
   const columns = useMemo<MRT_ColumnDef<MRT_RowData>[]>(
     () => [
       {
@@ -47,12 +48,15 @@ const TransactionCategories: React.FC = () => {
 
   useEffect(() => {
     const fetchCategories = async () => {
+      setLoading(true);
       try {
         const response = await apiClient.get('/transactions/categories');
         const categoriesData = response.data;
         setCategories(categoriesData);
       } catch (error) {
         log.error('Error fetching transaction categories:', error);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -79,6 +83,9 @@ const TransactionCategories: React.FC = () => {
         pageIndex: 0,
         pageSize: 20,
       },
+    },
+    state: {
+      isLoading: loading,
     },
   });
 
