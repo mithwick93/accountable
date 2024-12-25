@@ -3,7 +3,7 @@ import Grid from '@mui/material/Grid2';
 import React, { useEffect, useState } from 'react';
 import apiClient from '../../../services/ApiService';
 import { Liability } from '../../../types/Liability';
-import { formatCurrency } from '../../../utils/common';
+import { formatNumber } from '../../../utils/common';
 import log from '../../../utils/logger';
 
 const Liabilities: React.FC = () => {
@@ -41,16 +41,16 @@ const Liabilities: React.FC = () => {
                     </Typography>
                   )}
                   <Typography color="textSecondary">
-                    Amount: {formatCurrency(liability.amount)}{' '}
+                    Amount: {formatNumber(liability.amount)}{' '}
                     {liability.currency}
                   </Typography>
                   <Typography color="textSecondary">
-                    Balance: {formatCurrency(liability.balance)}{' '}
+                    Balance: {formatNumber(liability.balance)}{' '}
                     {liability.currency}
                   </Typography>
                   <Typography color="textSecondary">
                     Available to Spend:{' '}
-                    {formatCurrency(liability.amount - liability.balance)}{' '}
+                    {formatNumber(liability.amount - liability.balance)}{' '}
                     {liability.currency}
                   </Typography>
                   {liability.interestRate !== null &&

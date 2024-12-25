@@ -12,7 +12,7 @@ import { TransitionProps } from '@mui/material/transitions';
 import React from 'react';
 import { useCurrencyRates } from '../context/CurrencyRatesContext';
 import { useSettings } from '../context/SettingsContext';
-import { formatCurrency } from '../utils/common';
+import { formatNumber } from '../utils/common';
 import { StyledTableCell, StyledTableRow } from './table/Table';
 
 export interface SimpleDialogProps {
@@ -66,7 +66,7 @@ const CurrencyRatesDialog = ({ onClose, open }: SimpleDialogProps) => {
                         {currency}
                       </TableCell>
                       <TableCell align="right">
-                        {formatCurrency(1 / currencyRates[currency])}
+                        {formatNumber(1 / currencyRates[currency])}
                       </TableCell>
                     </StyledTableRow>
                   ))}

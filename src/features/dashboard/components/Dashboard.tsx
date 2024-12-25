@@ -18,7 +18,7 @@ import { useSettings } from '../../../context/SettingsContext';
 import apiClient from '../../../services/ApiService';
 import { Asset } from '../../../types/Asset';
 import { Liability } from '../../../types/Liability';
-import { formatCurrency } from '../../../utils/common';
+import { formatNumber } from '../../../utils/common';
 import log from '../../../utils/logger';
 
 interface NetSummeryProps {
@@ -86,7 +86,7 @@ const NetSummary: React.FC<NetSummeryProps> = ({
               component="div"
               style={{ fontWeight: 'bold' }}
             >
-              {formatCurrency(netValue)} {currency}
+              {formatNumber(netValue)} {currency}
             </Typography>
           </Grid>
           <Grid
@@ -185,7 +185,7 @@ const SummaryCard: React.FC<SummaryCardProps> = ({
                       followCursor
                     >
                       <span>
-                        {formatCurrency(totals[currency])} {currency}
+                        {formatNumber(totals[currency])} {currency}
                       </span>
                     </Tooltip>
                   </TableCell>
@@ -225,7 +225,7 @@ const Dashboard: React.FC = () => {
   const getBreakdown = (items: (Asset | Liability)[], currency: string) =>
     items
       .filter((item) => item.currency === currency)
-      .map((item) => `${item.name}: ${formatCurrency(item.balance)}`);
+      .map((item) => `${item.name}: ${formatNumber(item.balance)}`);
 
   useEffect(() => {
     const fetchFinancialData = async () => {

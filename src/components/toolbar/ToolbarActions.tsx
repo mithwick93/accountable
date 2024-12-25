@@ -17,6 +17,7 @@ import { useSettings } from '../../context/SettingsContext';
 import { useStaticData } from '../../context/StaticDataContext';
 import { useUser } from '../../context/UserContext';
 import { AuthService } from '../../services/AuthService';
+import { stringToColor } from '../../utils/common';
 
 const clockUpdateInterval = 60000;
 
@@ -29,18 +30,8 @@ const formatDate = () =>
     minute: '2-digit',
   });
 
-const stringToColor = (input: string) => {
-  let hash = 0;
-  for (let i = 0; i < input.length; i++) {
-    hash = input.charCodeAt(i) + ((hash << 3) - hash);
-  }
-  return `#${[0, 1, 2]
-    .map((i) => `00${((hash >> (i * 8)) & 0xff).toString(16)}`.slice(-2))
-    .join('')}`;
-};
-
-const generateAvatarProps = (name: string) => ({
-  sx: { bgcolor: stringToColor(name) },
+const generateAvatarProps = (name: string, isDarkTheme: boolean) => ({
+  sx: { bgcolor: stringToColor(name, isDarkTheme) },
   children: name
     .split(' ')
     .map((part) => part[0])
@@ -99,7 +90,10 @@ const ToolbarActions = () => {
       <ThemeSwitcher />
       <Tooltip title={userNames || 'User'}>
         <Avatar
-          {...generateAvatarProps(userNames || 'User')}
+          {...generateAvatarProps(
+            userNames || 'User',
+            theme.palette.mode === 'dark',
+          )}
           onClick={handleMenuOpen}
         />
       </Tooltip>
