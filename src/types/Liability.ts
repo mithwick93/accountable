@@ -1,13 +1,13 @@
 export interface Liability {
   id: number;
   name: string;
-  description: string | undefined | null;
+  description?: string;
   type: string;
   currency: string;
   amount: number;
   balance: number;
-  interestRate: number | undefined | null;
-  statementDay: string | undefined | null;
+  interestRate?: number;
+  statementDay?: string;
   dueDay: string;
   status: string;
 }

@@ -30,6 +30,7 @@ const Assets: React.FC = () => {
       },
       {
         accessorFn: (row) => formatAssetType(row.type),
+        accessorKey: 'type',
         header: 'Type',
         muiTableHeadCellProps: {
           align: 'center',
@@ -89,12 +90,12 @@ const Assets: React.FC = () => {
     initialState: {
       sorting: [
         {
-          id: 'currency',
+          id: 'type',
           desc: false,
         },
         {
-          id: 'type',
-          desc: true,
+          id: 'currency',
+          desc: false,
         },
         {
           id: 'name',

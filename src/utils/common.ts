@@ -1,19 +1,7 @@
-export const formatNumber = (amount: number) =>
-  new Intl.NumberFormat('en-US', {
-    style: 'decimal',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 4,
-  }).format(amount);
-
-export const formatCurrency = (amount: number, currency: string) => {
-  if (currency === 'G24') {
-    return `G24 ${formatNumber(amount)}`;
-  }
-
-  return amount.toLocaleString('en-US', {
-    style: 'currency',
-    currency,
-  });
+export const alertColors = {
+  green: { dark: '#81C784', light: '#388E3C' },
+  orange: { dark: '#FFB74D', light: '#F57C00' },
+  red: { dark: '#E57373', light: '#D32F2F' },
 };
 
 export const formatAssetType = (type: string | undefined) => {
@@ -24,6 +12,52 @@ export const formatAssetType = (type: string | undefined) => {
       return 'Saving Account';
     default:
       return type;
+  }
+};
+
+export const formatLiabilityType = (type: string | undefined) => {
+  switch (type) {
+    case 'CREDIT_CARD':
+      return 'Credit Card';
+    case 'PERSONAL_LOAN':
+      return 'Personal Loan';
+    case 'MORTGAGE':
+      return 'Mortgage';
+    case 'AUTO_LOAN':
+      return 'Auto Loan';
+    case 'STUDENT_LOAN':
+      return 'Student Loan';
+    case 'LINE_OF_CREDIT':
+      return 'Line of Credit';
+    case 'BUSINESS_LOAN':
+      return 'Business Loan';
+    default:
+      return type;
+  }
+};
+
+export const formatLiabilityStatus = (status: string | undefined) => {
+  switch (status) {
+    case 'ACTIVE':
+      return 'Active';
+    case 'PAID_OFF':
+      return 'Paid Off';
+    case 'OVERDUE':
+      return 'Overdue';
+    case 'SETTLED':
+      return 'Settled';
+    case 'DEFAULTED':
+      return 'Defaulted';
+    case 'CLOSED':
+      return 'Closed';
+    case 'IN_DISPUTE':
+      return 'In Dispute';
+    case 'SUSPENDED':
+      return 'Suspended';
+    case 'PENDING_ACTIVATION':
+      return 'Pending Activation';
+    default:
+      return status;
   }
 };
 
@@ -46,4 +80,22 @@ export const stringToColor = (input: string, isDarkTheme: boolean) => {
   return `#${adjustedColor
     .map((c) => `00${c.toString(16)}`.slice(-2))
     .join('')}`;
+};
+
+export const formatNumber = (amount: number) =>
+  new Intl.NumberFormat('en-US', {
+    style: 'decimal',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 4,
+  }).format(amount);
+
+export const formatCurrency = (amount: number, currency: string) => {
+  if (currency === 'G24') {
+    return `G24 ${formatNumber(amount)}`;
+  }
+
+  return amount.toLocaleString('en-US', {
+    style: 'currency',
+    currency,
+  });
 };
