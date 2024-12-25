@@ -87,7 +87,7 @@ export default function MainLayout() {
                   slots={{ header: CustomPageHeader }}
                   sx={{
                     '@media (min-width: 1200px)': {
-                      maxWidth: 'none',
+                      maxWidth: '2400px',
                     },
                   }}
                 >
