@@ -85,6 +85,7 @@ export default [
       'prettier/prettier': 'error',
       'require-await': 'error',
       '@typescript-eslint/no-explicit-any': 'off',
+      'react/prop-types': 'off',
     },
     settings: {
       react: {

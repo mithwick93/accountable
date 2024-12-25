@@ -29,7 +29,6 @@ const TransactionCategories: React.FC = () => {
         accessorFn: (row) => formatTransactionType(row.type),
         accessorKey: 'type',
         header: 'Type',
-        // eslint-disable-next-line react/prop-types
         Cell: ({ renderedCellValue }) => (
           <Chip
             label={renderedCellValue}

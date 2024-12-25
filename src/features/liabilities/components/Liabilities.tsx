@@ -1,5 +1,4 @@
 import { Box, Chip, Typography } from '@mui/material';
-import { PaletteMode } from '@mui/material/styles/createPalette';
 import {
   MaterialReactTable,
   type MRT_ColumnDef,
@@ -10,46 +9,15 @@ import React, { useEffect, useMemo, useState } from 'react';
 import apiClient from '../../../services/ApiService';
 import { Liability } from '../../../types/Liability';
 import {
-  alertColors,
   formatCurrency,
   formatLiabilityStatus,
   formatLiabilityType,
+  getCreditUtilizationColor,
+  getDueDateColor,
   stringToColor,
 } from '../../../utils/common';
 import { calculateLiabilityDates } from '../../../utils/date';
 import log from '../../../utils/logger';
-
-const getCreditUtilizationColor = (
-  utilized: number,
-  limit: number,
-  palateMode: PaletteMode,
-) => {
-  const utilizationPercentage = (utilized / limit) * 100;
-
-  if (utilizationPercentage < 30) {
-    return alertColors.green[palateMode];
-  } else if (utilizationPercentage < 70) {
-    return alertColors.orange[palateMode];
-  } else {
-    return alertColors.red[palateMode];
-  }
-};
-
-const getDueDateColor = (dueDateString: string, palateMode: PaletteMode) => {
-  const [day, month, year] = dueDateString.split('/');
-  const dueDate = new Date(Number(year), Number(month) - 1, Number(day));
-  const today = new Date();
-  const timeDiff = dueDate.getTime() - today.getTime();
-  const daysRemaining = Math.ceil(timeDiff / (1000 * 3600 * 24));
-
-  if (daysRemaining <= 7) {
-    return alertColors.red[palateMode];
-  } else if (daysRemaining <= 14) {
-    return alertColors.orange[palateMode];
-  } else {
-    return alertColors.green[palateMode];
-  }
-};
 
 const Liabilities: React.FC = () => {
   const [liabilities, setLiabilities] = useState<Liability[]>([]);
@@ -75,7 +43,6 @@ const Liabilities: React.FC = () => {
         muiTableBodyCellProps: {
           align: 'center',
         },
-        // eslint-disable-next-line react/prop-types
         Cell: ({ renderedCellValue }) => (
           <Chip
             label={renderedCellValue}
@@ -111,7 +78,6 @@ const Liabilities: React.FC = () => {
         muiTableBodyCellProps: {
           align: 'right',
         },
-        /* eslint-disable react/prop-types */
         Cell: ({ renderedCellValue }) => (
           <Box
             component="span"
@@ -125,7 +91,6 @@ const Liabilities: React.FC = () => {
             {renderedCellValue}
           </Box>
         ),
-        /* eslint-enable react/prop-types */
       },
       {
         accessorFn: (row) => formatCurrency(row.balance, row.currency),
@@ -136,7 +101,6 @@ const Liabilities: React.FC = () => {
         muiTableBodyCellProps: {
           align: 'right',
         },
-        /* eslint-disable react/prop-types */
         Cell: ({ row }) => {
           const utilized = row.original.balance;
           const limit = row.original.amount;
@@ -155,7 +119,6 @@ const Liabilities: React.FC = () => {
             </Box>
           );
         },
-        /* eslint-enable react/prop-types */
       },
       {
         accessorFn: (row) =>

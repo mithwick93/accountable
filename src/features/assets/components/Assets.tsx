@@ -39,7 +39,6 @@ const Assets: React.FC = () => {
         muiTableBodyCellProps: {
           align: 'center',
         },
-        // eslint-disable-next-line react/prop-types
         Cell: ({ renderedCellValue }) => (
           <Chip
             label={renderedCellValue}

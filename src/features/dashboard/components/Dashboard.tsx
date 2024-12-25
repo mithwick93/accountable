@@ -1,24 +1,35 @@
-import { Card, CardContent, Tooltip, Typography } from '@mui/material';
-import Grid from '@mui/material/Grid2';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import { PieChart } from '@mui/x-charts/PieChart';
-import React, { useEffect, useState } from 'react';
-import LoadingSkeleton from '../../../components/LoadingSkeleton';
 import {
-  StyledTableCell,
-  StyledTableRow,
-} from '../../../components/table/Table';
+  Box,
+  Card,
+  CardContent,
+  CardHeader,
+  Chip,
+  Typography,
+} from '@mui/material';
+import Grid from '@mui/material/Grid2';
+import { PieChart } from '@mui/x-charts/PieChart';
+import {
+  MaterialReactTable,
+  MRT_ColumnDef,
+  MRT_RowData,
+  useMaterialReactTable,
+} from 'material-react-table';
+import React, { useEffect, useMemo, useState } from 'react';
+import LoadingSkeleton from '../../../components/LoadingSkeleton';
 import { useCurrencyRates } from '../../../context/CurrencyRatesContext';
 import { useSettings } from '../../../context/SettingsContext';
 import apiClient from '../../../services/ApiService';
 import { Asset } from '../../../types/Asset';
 import { Liability } from '../../../types/Liability';
-import { formatNumber } from '../../../utils/common';
+import {
+  formatCurrency,
+  formatLiabilityType,
+  formatNumber,
+  getCreditUtilizationColor,
+  getDueDateColor,
+  stringToColor,
+} from '../../../utils/common';
+import { calculateLiabilityDates } from '../../../utils/date';
 import log from '../../../utils/logger';
 
 interface NetSummeryProps {
@@ -26,6 +37,7 @@ interface NetSummeryProps {
   totals: { [currency: string]: number };
   currencyRates: { [currency: string]: number };
   currency: string;
+  isLoading: boolean;
 }
 
 const NetSummary: React.FC<NetSummeryProps> = ({
@@ -33,6 +45,7 @@ const NetSummary: React.FC<NetSummeryProps> = ({
   totals,
   currencyRates,
   currency,
+  isLoading,
 }) => {
   const [netValue, setNetValue] = useState<number>(0);
 
@@ -63,12 +76,14 @@ const NetSummary: React.FC<NetSummeryProps> = ({
     label: key,
   }));
 
+  if (isLoading) {
+    return <LoadingSkeleton />;
+  }
+
   return (
     <Card>
+      <CardHeader title={title} />
       <CardContent>
-        <Typography variant="h6" gutterBottom>
-          {title}
-        </Typography>
         <Grid
           container
           spacing={2}
@@ -125,80 +140,6 @@ const NetSummary: React.FC<NetSummeryProps> = ({
   );
 };
 
-/* eslint-disable no-unused-vars */
-interface SummaryCardProps {
-  title: string;
-  totals: { [currency: string]: number };
-  breakdownFn: (currency: string) => string[];
-}
-
-const SummaryCard: React.FC<SummaryCardProps> = ({
-  title,
-  totals,
-  breakdownFn,
-}) => {
-  if (Object.keys(totals).length === 0) {
-    return (
-      <Card>
-        <CardContent>
-          <Typography variant="h6" gutterBottom>
-            {title}
-          </Typography>
-          <Typography variant="body1">No data found.</Typography>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  return (
-    <Card>
-      <CardContent>
-        <Typography variant="h6" gutterBottom>
-          {title}
-        </Typography>
-        <TableContainer>
-          <Table aria-label={`${title} table`}>
-            <TableHead>
-              <TableRow>
-                <StyledTableCell>Currency</StyledTableCell>
-                <StyledTableCell align="right">Total</StyledTableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {Object.keys(totals).map((currency) => (
-                <StyledTableRow key={currency}>
-                  <TableCell component="th" scope="row">
-                    {currency}
-                  </TableCell>
-                  <TableCell align="right">
-                    <Tooltip
-                      title={
-                        <React.Fragment>
-                          {breakdownFn(currency).map((line, index) => (
-                            <Typography key={index} variant="body2">
-                              {line}
-                            </Typography>
-                          ))}
-                        </React.Fragment>
-                      }
-                      arrow
-                      followCursor
-                    >
-                      <span>
-                        {formatNumber(totals[currency])} {currency}
-                      </span>
-                    </Tooltip>
-                  </TableCell>
-                </StyledTableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </CardContent>
-    </Card>
-  );
-};
-
 const Dashboard: React.FC = () => {
   const [assets, setAssets] = useState<Asset[]>([]);
   const [liabilities, setLiabilities] = useState<Liability[]>([]);
@@ -222,10 +163,210 @@ const Dashboard: React.FC = () => {
       {} as { [currency: string]: number },
     );
 
-  const getBreakdown = (items: (Asset | Liability)[], currency: string) =>
-    items
-      .filter((item) => item.currency === currency)
-      .map((item) => `${item.name}: ${formatNumber(item.balance)}`);
+  const assetsColumns = useMemo<MRT_ColumnDef<MRT_RowData>[]>(
+    () => [
+      {
+        accessorKey: 'currency',
+        header: 'Currency',
+        size: 50,
+      },
+      {
+        accessorKey: 'type',
+        header: 'Type',
+        muiTableHeadCellProps: {
+          align: 'center',
+        },
+        muiTableBodyCellProps: {
+          align: 'center',
+        },
+        size: 200,
+        Cell: ({ renderedCellValue }) => (
+          <Chip
+            label={renderedCellValue}
+            sx={(theme) => ({
+              backgroundColor: stringToColor(
+                renderedCellValue as string,
+                theme.palette.mode === 'dark',
+              ),
+            })}
+          />
+        ),
+      },
+      {
+        accessorFn: (row) => row.balance,
+        header: 'Balance',
+        muiTableHeadCellProps: {
+          align: 'right',
+        },
+        muiTableBodyCellProps: {
+          align: 'right',
+        },
+        aggregationFn: 'sum',
+        Cell: ({ row }) => (
+          <Box component="span">
+            {formatCurrency(row.original.balance, row.original.currency)}
+          </Box>
+        ),
+        AggregatedCell: ({ cell }) => (
+          <span>
+            {formatCurrency(
+              cell.getValue<number>(),
+              cell.row.original.currency,
+            )}
+          </span>
+        ),
+      },
+      {
+        accessorKey: 'name',
+        header: 'Name',
+        muiTableBodyCellProps: {
+          sx: {
+            textTransform: 'capitalize',
+          },
+        },
+      },
+    ],
+    [],
+  );
+
+  const liabilitiesColumns = useMemo<MRT_ColumnDef<MRT_RowData>[]>(
+    () => [
+      {
+        accessorKey: 'currency',
+        header: 'Currency',
+        size: 50,
+      },
+      {
+        accessorFn: (row) => formatLiabilityType(row.type),
+        accessorKey: 'type',
+        header: 'Type',
+        muiTableHeadCellProps: {
+          align: 'center',
+        },
+        muiTableBodyCellProps: {
+          align: 'center',
+        },
+        size: 200,
+        Cell: ({ renderedCellValue }) => (
+          <Chip
+            label={renderedCellValue}
+            sx={(theme) => ({
+              backgroundColor: stringToColor(
+                renderedCellValue as string,
+                theme.palette.mode === 'dark',
+              ),
+            })}
+          />
+        ),
+      },
+      {
+        // accessorFn: (row) => formatCurrency(row.balance, row.currency),
+        accessorFn: (row) => row.balance,
+        header: 'Utilized',
+        muiTableHeadCellProps: {
+          align: 'right',
+        },
+        muiTableBodyCellProps: {
+          align: 'right',
+        },
+        aggregationFn: 'sum',
+        Cell: ({ row }) => {
+          const utilized = row.original.balance;
+          const limit = row.original.amount;
+          return (
+            <Box
+              component="span"
+              sx={(theme) => ({
+                color: getCreditUtilizationColor(
+                  utilized,
+                  limit,
+                  theme.palette.mode,
+                ),
+              })}
+            >
+              {formatCurrency(utilized, row.original.currency)}
+            </Box>
+          );
+        },
+        AggregatedCell: ({ cell }) => (
+          <span>
+            {formatCurrency(
+              cell.getValue<number>(),
+              cell.row.original.currency,
+            )}
+          </span>
+        ),
+      },
+      {
+        accessorKey: 'name',
+        header: 'Name',
+        muiTableBodyCellProps: {
+          sx: {
+            textTransform: 'capitalize',
+          },
+        },
+      },
+      {
+        accessorFn: (row) =>
+          calculateLiabilityDates(new Date(), row.dueDay, row.statementDay)
+            .statementDate,
+        header: 'Statement Date',
+        muiTableHeadCellProps: {
+          align: 'right',
+        },
+        muiTableBodyCellProps: {
+          align: 'right',
+        },
+      },
+      {
+        accessorFn: (row) =>
+          calculateLiabilityDates(new Date(), row.dueDay, row.statementDay)
+            .dueDate,
+        header: 'Due Date',
+        muiTableHeadCellProps: {
+          align: 'right',
+        },
+        muiTableBodyCellProps: {
+          align: 'right',
+        },
+        Cell: ({ renderedCellValue }) => (
+          <Box
+            component="span"
+            sx={(theme) => ({
+              color: getDueDateColor(
+                renderedCellValue as string,
+                theme.palette.mode,
+              ),
+            })}
+          >
+            {renderedCellValue}
+          </Box>
+        ),
+      },
+      {
+        accessorFn: (row) =>
+          formatCurrency(row.amount - row.balance, row.currency),
+        header: 'Available',
+        muiTableHeadCellProps: {
+          align: 'right',
+        },
+        muiTableBodyCellProps: {
+          align: 'right',
+        },
+      },
+      {
+        accessorFn: (row) => formatCurrency(row.amount, row.currency),
+        header: 'Limit',
+        muiTableHeadCellProps: {
+          align: 'right',
+        },
+        muiTableBodyCellProps: {
+          align: 'right',
+        },
+      },
+    ],
+    [],
+  );
 
   useEffect(() => {
     const fetchFinancialData = async () => {
@@ -249,9 +390,65 @@ const Dashboard: React.FC = () => {
     fetchFinancialData();
   }, []);
 
-  if (loading) {
-    return <LoadingSkeleton />;
-  }
+  const assetsTable = useMaterialReactTable({
+    columns: assetsColumns,
+    data: assets,
+    enableGrouping: true,
+    enablePagination: false,
+    enableColumnDragging: false,
+    enableStickyHeader: true,
+    groupedColumnMode: false,
+    initialState: {
+      grouping: ['currency', 'type'],
+      sorting: [
+        {
+          id: 'currency',
+          desc: false,
+        },
+        {
+          id: 'type',
+          desc: false,
+        },
+        {
+          id: 'name',
+          desc: false,
+        },
+      ],
+    },
+    state: {
+      isLoading: loading,
+    },
+  });
+
+  const liabilitiesTable = useMaterialReactTable({
+    columns: liabilitiesColumns,
+    data: liabilities,
+    enableGrouping: true,
+    enablePagination: false,
+    enableColumnDragging: false,
+    enableStickyHeader: true,
+    groupedColumnMode: false,
+    initialState: {
+      grouping: ['currency', 'type'],
+      sorting: [
+        {
+          id: 'currency',
+          desc: false,
+        },
+        {
+          id: 'type',
+          desc: false,
+        },
+        {
+          id: 'name',
+          desc: false,
+        },
+      ],
+    },
+    state: {
+      isLoading: loading,
+    },
+  });
 
   return (
     <Grid container spacing={2}>
@@ -261,6 +458,7 @@ const Dashboard: React.FC = () => {
           totals={assetTotals}
           currencyRates={currencyRates}
           currency={currency}
+          isLoading={loading}
         />
       </Grid>
       <Grid size={{ xs: 12, sm: 6 }}>
@@ -269,23 +467,30 @@ const Dashboard: React.FC = () => {
           totals={liabilityTotals}
           currencyRates={currencyRates}
           currency={currency}
+          isLoading={loading}
         />
       </Grid>
-      <Grid container spacing={2} size={{ xs: 12, sm: 12 }} sx={{ mt: 2 }}>
-        <Grid size={{ xs: 12, sm: 6 }}>
-          <SummaryCard
-            title="Assets Summary"
-            totals={assetTotals}
-            breakdownFn={(currency) => getBreakdown(assets, currency)}
-          />
-        </Grid>
-        <Grid size={{ xs: 12, sm: 6 }}>
-          <SummaryCard
-            title="Liabilities Summary"
-            totals={liabilityTotals}
-            breakdownFn={(currency) => getBreakdown(liabilities, currency)}
-          />
-        </Grid>
+      <Grid
+        container
+        spacing={2}
+        size={{ xs: 12, sm: 12 }}
+        sx={{ mt: 2 }}
+      ></Grid>
+      <Grid size={{ xs: 12, sm: 6 }}>
+        <Card>
+          <CardHeader title="Assets Summery" />
+          <CardContent>
+            <MaterialReactTable table={assetsTable} />
+          </CardContent>
+        </Card>
+      </Grid>
+      <Grid size={{ xs: 12, sm: 6 }}>
+        <Card>
+          <CardHeader title="Liabilities Summery" />
+          <CardContent>
+            <MaterialReactTable table={liabilitiesTable} />
+          </CardContent>
+        </Card>
       </Grid>
     </Grid>
   );

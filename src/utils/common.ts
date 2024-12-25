@@ -1,3 +1,5 @@
+import { PaletteMode } from '@mui/material/styles/createPalette';
+
 export const alertColors = {
   green: { dark: '#81C784', light: '#388E3C' },
   orange: { dark: '#FFB74D', light: '#F57C00' },
@@ -93,6 +95,41 @@ export const stringToColor = (input: string, isDarkTheme: boolean) => {
   return `#${adjustedColor
     .map((c) => `00${c.toString(16)}`.slice(-2))
     .join('')}`;
+};
+
+export const getCreditUtilizationColor = (
+  utilized: number,
+  limit: number,
+  palateMode: PaletteMode,
+) => {
+  const utilizationPercentage = (utilized / limit) * 100;
+
+  if (utilizationPercentage < 30) {
+    return alertColors.green[palateMode];
+  } else if (utilizationPercentage < 70) {
+    return alertColors.orange[palateMode];
+  } else {
+    return alertColors.red[palateMode];
+  }
+};
+
+export const getDueDateColor = (
+  dueDateString: string,
+  palateMode: PaletteMode,
+) => {
+  const [day, month, year] = dueDateString.split('/');
+  const dueDate = new Date(Number(year), Number(month) - 1, Number(day));
+  const today = new Date();
+  const timeDiff = dueDate.getTime() - today.getTime();
+  const daysRemaining = Math.ceil(timeDiff / (1000 * 3600 * 24));
+
+  if (daysRemaining <= 7) {
+    return alertColors.red[palateMode];
+  } else if (daysRemaining <= 14) {
+    return alertColors.orange[palateMode];
+  } else {
+    return alertColors.green[palateMode];
+  }
 };
 
 export const formatNumber = (amount: number) =>
