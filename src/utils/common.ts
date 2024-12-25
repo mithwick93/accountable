@@ -61,6 +61,19 @@ export const formatLiabilityStatus = (status: string | undefined) => {
   }
 };
 
+export const formatTransactionType = (type: string | undefined) => {
+  switch (type) {
+    case 'INCOME':
+      return 'Income';
+    case 'EXPENSE':
+      return 'Expense';
+    case 'TRANSFER':
+      return 'Transfer';
+    default:
+      return type;
+  }
+};
+
 export const stringToColor = (input: string, isDarkTheme: boolean) => {
   let hash = 0;
   for (let i = 0; i < input.length; i++) {

@@ -50,6 +50,7 @@ const CustomPageToolbar = () => {
         variant="outlined"
         startIcon={<CurrencyExchangeIcon />}
         onClick={handleClickOpen}
+        size="small"
       >
         Exchange Rates
       </Button>

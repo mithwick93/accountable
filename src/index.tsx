@@ -41,7 +41,7 @@ const router = createBrowserRouter([
             Component: TransactionsPage,
           },
           {
-            path: '/transactions/transaction-categories',
+            path: '/transaction-categories',
             Component: TransactionCategoriesPage,
           },
         ],

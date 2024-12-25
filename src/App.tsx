@@ -35,13 +35,11 @@ const NAVIGATION: Navigation = [
     segment: 'transactions',
     title: 'Transactions',
     icon: <ReceiptIcon />,
-    children: [
-      {
-        segment: 'transaction-categories',
-        title: 'Transaction Categories',
-        icon: <CategoryIcon />,
-      },
-    ],
+  },
+  {
+    segment: 'transaction-categories',
+    title: 'Transaction Categories',
+    icon: <CategoryIcon />,
   },
 ];
 
