@@ -11,6 +11,8 @@ import LiabilitiesPage from './pages/LiabilitiesPage';
 import LoginPage from './pages/LoginPage';
 import NotFoundPage from './pages/NotFoundPage';
 import RegisterPage from './pages/RegisterPage';
+import TransactionCategoriesPage from './pages/TransactionCategoriesPage';
+import TransactionsPage from './pages/TransactionsPage';
 import reportWebVitals from './reportWebVitals';
 import './index.css';
 
@@ -33,6 +35,14 @@ const router = createBrowserRouter([
           {
             path: '/liabilities',
             Component: LiabilitiesPage,
+          },
+          {
+            path: '/transactions',
+            Component: TransactionsPage,
+          },
+          {
+            path: '/transactions/transaction-categories',
+            Component: TransactionCategoriesPage,
           },
         ],
       },
