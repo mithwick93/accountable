@@ -60,7 +60,7 @@ export default [
     rules: {
       'arrow-body-style': 'error',
       'block-scoped-var': 'error',
-      camelcase: 'error',
+      camelcase: ['error', { allow: ['MRT_ColumnDef', 'MRT_RowData'] }],
       complexity: ['error', MAX_COMPLEXITY],
       'consistent-return': 'error',
       curly: 'error',
