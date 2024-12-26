@@ -76,6 +76,19 @@ export const formatTransactionType = (type: string | undefined) => {
   }
 };
 
+export const getOriginalTransactionType = (type: string | undefined) => {
+  switch (type) {
+    case 'Income':
+      return 'INCOME';
+    case 'Expense':
+      return 'EXPENSE';
+    case 'Transfer':
+      return 'TRANSFER';
+    default:
+      return type;
+  }
+};
+
 export const stringToColor = (input: string, isDarkTheme: boolean) => {
   let hash = 0;
   for (let i = 0; i < input.length; i++) {
