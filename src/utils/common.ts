@@ -28,6 +28,16 @@ export const getOriginalAssetType = (type: string | undefined) => {
   }
 };
 
+export const getLiabilityTypeOptions = () => [
+  'Credit Card',
+  'Personal Loan',
+  'Mortgage',
+  'Auto Loan',
+  'Student Loan',
+  'Line of Credit',
+  'Business Loan',
+];
+
 export const formatLiabilityType = (type: string | undefined) => {
   switch (type) {
     case 'CREDIT_CARD':
@@ -69,6 +79,18 @@ export const getOriginalLiabilityType = (type: string | undefined) => {
       return type;
   }
 };
+
+export const getLiabilityStatusOptions = () => [
+  'Active',
+  'Paid Off',
+  'Overdue',
+  'Settled',
+  'Defaulted',
+  'Closed',
+  'In Dispute',
+  'Suspended',
+  'Pending Activation',
+];
 
 export const formatLiabilityStatus = (status: string | undefined) => {
   switch (status) {
