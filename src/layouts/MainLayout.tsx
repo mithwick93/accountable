@@ -1,5 +1,5 @@
 import CurrencyExchangeIcon from '@mui/icons-material/CurrencyExchange';
-import Button from '@mui/material/Button';
+import { IconButton } from '@mui/material';
 import Typography from '@mui/material/Typography';
 import {
   DashboardLayout,
@@ -46,14 +46,9 @@ const CustomPageToolbar = () => {
 
   return (
     <PageHeaderToolbar>
-      <Button
-        variant="outlined"
-        startIcon={<CurrencyExchangeIcon />}
-        onClick={handleClickOpen}
-        size="small"
-      >
-        Exchange Rates
-      </Button>
+      <IconButton onClick={handleClickOpen} color="primary">
+        <CurrencyExchangeIcon />
+      </IconButton>
       <CurrencyRatesDialog open={open} onClose={handleClose} />
     </PageHeaderToolbar>
   );

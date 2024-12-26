@@ -1,3 +1,4 @@
+import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import {
@@ -214,12 +215,13 @@ const TransactionCategories: React.FC = () => {
     onCreatingRowCancel: () => setValidationErrors({}),
     renderTopToolbarCustomActions: ({ table }) => (
       <Button
-        variant="contained"
+        variant="outlined"
         onClick={() => {
           table.setCreatingRow(true);
         }}
+        startIcon={<AddIcon />}
       >
-        Create New Category
+        Create
       </Button>
     ),
     renderCreateRowDialogContent: ({ table, row, internalEditComponents }) => (
