@@ -10,6 +10,7 @@ import DashboardPage from './pages/DashboardPage';
 import LiabilitiesPage from './pages/LiabilitiesPage';
 import LoginPage from './pages/LoginPage';
 import NotFoundPage from './pages/NotFoundPage';
+import PaymentSystemsPage from './pages/PaymentSystemsPage';
 import RegisterPage from './pages/RegisterPage';
 import TransactionCategoriesPage from './pages/TransactionCategoriesPage';
 import TransactionsPage from './pages/TransactionsPage';
@@ -35,6 +36,10 @@ const router = createBrowserRouter([
           {
             path: '/liabilities',
             Component: LiabilitiesPage,
+          },
+          {
+            path: '/payment-systems',
+            Component: PaymentSystemsPage,
           },
           {
             path: '/transactions',

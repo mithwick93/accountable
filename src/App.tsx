@@ -2,6 +2,7 @@ import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import CategoryIcon from '@mui/icons-material/Category';
 import CreditCardIcon from '@mui/icons-material/CreditCard';
 import DashboardIcon from '@mui/icons-material/Dashboard';
+import PaymentsIcon from '@mui/icons-material/Payments';
 import ReceiptIcon from '@mui/icons-material/Receipt';
 import type { Navigation } from '@toolpad/core';
 import { AppProvider } from '@toolpad/core/react-router-dom';
@@ -23,13 +24,16 @@ const NAVIGATION: Navigation = [
     segment: 'assets',
     title: 'Assets',
     icon: <AccountBalanceWalletIcon />,
-    pattern: 'assets{/:assetId}*',
   },
   {
     segment: 'liabilities',
     title: 'Liabilities',
     icon: <CreditCardIcon />,
-    pattern: 'liabilities{/:liabilityId}*',
+  },
+  {
+    segment: 'payment-systems',
+    title: 'Payment Systems',
+    icon: <PaymentsIcon />,
   },
   {
     segment: 'transactions',
