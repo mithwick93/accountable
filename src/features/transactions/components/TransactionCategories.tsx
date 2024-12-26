@@ -152,7 +152,7 @@ const TransactionCategories: React.FC = () => {
       });
       setCategories(categories.map((c) => (c.id === id ? category : c)));
     } catch (error) {
-      log.error('Error updating transaction category:', error);
+      log.error('Error updating transaction category: ', error);
     } finally {
       setUpdating(false);
     }
@@ -165,7 +165,7 @@ const TransactionCategories: React.FC = () => {
       await apiClient.delete(`/transactions/categories/${id}`);
       setCategories(categories.filter((category) => category.id !== id));
     } catch (error) {
-      log.error('Error deleting transaction category:', error);
+      log.error('Error deleting transaction category: ', error);
     } finally {
       setDeleting(false);
     }

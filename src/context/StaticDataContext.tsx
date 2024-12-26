@@ -14,10 +14,7 @@ import log from '../utils/logger';
 
 interface StaticDataContextType {
   currencies: Currency[] | null;
-  transactionTypes: string[] | null;
-  liabilityStatuses: string[] | null;
   liabilityTypes: LiabilityType[] | null;
-  installmentPlanStatuses: string[] | null;
   assetTypes: AssetType[] | null;
 }
 
@@ -34,10 +31,7 @@ export const StaticDataProvider: React.FC<StaticDataProviderProps> = ({
 }) => {
   const [staticData, setStaticData] = useState<StaticDataContextType>({
     currencies: null,
-    transactionTypes: null,
-    liabilityStatuses: null,
     liabilityTypes: null,
-    installmentPlanStatuses: null,
     assetTypes: null,
   });
   const [loading, setLoading] = useState<boolean>(true);
@@ -46,19 +40,9 @@ export const StaticDataProvider: React.FC<StaticDataProviderProps> = ({
     const fetchStaticData = async () => {
       setLoading(true);
       try {
-        const [
-          currencies,
-          transactionTypes,
-          liabilityStatuses,
-          liabilityTypes,
-          installmentPlanStatuses,
-          assetTypes,
-        ] = await Promise.all([
+        const [currencies, liabilityTypes, assetTypes] = await Promise.all([
           apiClient.get('/currencies'),
-          apiClient.get('/transactions/types'),
-          apiClient.get('/liabilities/statuses'),
           apiClient.get('/liabilities/types'),
-          apiClient.get('/installment-plans/statuses'),
           apiClient.get('/assets/types'),
         ]);
 
@@ -66,13 +50,10 @@ export const StaticDataProvider: React.FC<StaticDataProviderProps> = ({
           currencies: currencies.data.sort((a: Currency, b: Currency) =>
             a.code.localeCompare(b.code),
           ),
-          transactionTypes: transactionTypes.data.sort(),
-          liabilityStatuses: liabilityStatuses.data.sort(),
           liabilityTypes: liabilityTypes.data.sort(
             (a: LiabilityType, b: LiabilityType) =>
               a.name.localeCompare(b.name),
           ),
-          installmentPlanStatuses: installmentPlanStatuses.data.sort(),
           assetTypes: assetTypes.data.sort((a: AssetType, b: AssetType) =>
             a.name.localeCompare(b.name),
           ),

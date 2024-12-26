@@ -17,6 +17,17 @@ export const formatAssetType = (type: string | undefined) => {
   }
 };
 
+export const getOriginalAssetType = (type: string | undefined) => {
+  switch (type) {
+    case 'Investment':
+      return 'INVESTMENT';
+    case 'Saving Account':
+      return 'SAVINGS_ACCOUNT';
+    default:
+      return type;
+  }
+};
+
 export const formatLiabilityType = (type: string | undefined) => {
   switch (type) {
     case 'CREDIT_CARD':
@@ -33,6 +44,27 @@ export const formatLiabilityType = (type: string | undefined) => {
       return 'Line of Credit';
     case 'BUSINESS_LOAN':
       return 'Business Loan';
+    default:
+      return type;
+  }
+};
+
+export const getOriginalLiabilityType = (type: string | undefined) => {
+  switch (type) {
+    case 'Credit Card':
+      return 'CREDIT_CARD';
+    case 'Personal Loan':
+      return 'PERSONAL_LOAN';
+    case 'Mortgage':
+      return 'MORTGAGE';
+    case 'Auto Loan':
+      return 'AUTO_LOAN';
+    case 'Student Loan':
+      return 'STUDENT_LOAN';
+    case 'Line of Credit':
+      return 'LINE_OF_CREDIT';
+    case 'Business Loan':
+      return 'BUSINESS_LOAN';
     default:
       return type;
   }
@@ -58,6 +90,31 @@ export const formatLiabilityStatus = (status: string | undefined) => {
       return 'Suspended';
     case 'PENDING_ACTIVATION':
       return 'Pending Activation';
+    default:
+      return status;
+  }
+};
+
+export const getOriginalLiabilityStatus = (status: string | undefined) => {
+  switch (status) {
+    case 'Active':
+      return 'ACTIVE';
+    case 'Paid Off':
+      return 'PAID_OFF';
+    case 'Overdue':
+      return 'OVERDUE';
+    case 'Settled':
+      return 'SETTLED';
+    case 'Defaulted':
+      return 'DEFAULTED';
+    case 'Closed':
+      return 'CLOSED';
+    case 'In Dispute':
+      return 'IN_DISPUTE';
+    case 'Suspended':
+      return 'SUSPENDED';
+    case 'Pending Activation':
+      return 'PENDING_ACTIVATION';
     default:
       return status;
   }

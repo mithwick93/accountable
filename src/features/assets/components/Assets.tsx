@@ -1,25 +1,56 @@
-import { Box, Chip, Typography } from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
+import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
 import {
+  Box,
+  Button,
+  Chip,
+  DialogActions,
+  DialogContent,
+  IconButton,
+  Tooltip,
+  Typography,
+} from '@mui/material';
+import DialogTitle from '@mui/material/DialogTitle';
+import {
+  LiteralUnion,
   MaterialReactTable,
   type MRT_ColumnDef,
+  MRT_EditActionButtons,
+  MRT_Row,
   type MRT_RowData,
   useMaterialReactTable,
 } from 'material-react-table';
 import React, { useEffect, useMemo, useState } from 'react';
+import { useStaticData } from '../../../context/StaticDataContext';
 import apiClient from '../../../services/ApiService';
 import { Asset } from '../../../types/Asset';
 import {
   formatAssetType,
   formatCurrency,
+  getOriginalAssetType,
   stringToColor,
 } from '../../../utils/common';
 import log from '../../../utils/logger';
 
 const Assets: React.FC = () => {
   const [assets, setAssets] = useState<Asset[]>([]);
+  const [validationErrors, setValidationErrors] = useState<
+    Record<string, string | undefined>
+  >({});
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [updating, setUpdating] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const { currencies } = useStaticData();
+  const currencyCodes = currencies?.map((currency) => currency.code) ?? [];
   const columns = useMemo<MRT_ColumnDef<MRT_RowData>[]>(
     () => [
+      {
+        accessorKey: 'id',
+        header: 'ID',
+        Edit: () => null,
+      },
       {
         accessorKey: 'name',
         header: 'Name',
@@ -27,6 +58,30 @@ const Assets: React.FC = () => {
           sx: {
             textTransform: 'capitalize',
           },
+        },
+        muiEditTextFieldProps: {
+          required: true,
+          error: !!validationErrors?.name,
+          helperText: validationErrors?.name,
+          onFocus: () =>
+            setValidationErrors({
+              ...validationErrors,
+              name: undefined,
+            }),
+        },
+      },
+      {
+        accessorKey: 'description',
+        header: 'Description',
+        muiEditTextFieldProps: {
+          required: true,
+          error: !!validationErrors?.description,
+          helperText: validationErrors?.description,
+          onFocus: () =>
+            setValidationErrors({
+              ...validationErrors,
+              description: undefined,
+            }),
         },
       },
       {
@@ -50,9 +105,40 @@ const Assets: React.FC = () => {
             })}
           />
         ),
+        editVariant: 'select',
+        editSelectOptions: ['Investment', 'Saving Account'],
+        muiEditTextFieldProps: {
+          select: true,
+          required: true,
+          error: !!validationErrors?.type,
+          helperText: validationErrors?.type,
+          onFocus: () =>
+            setValidationErrors({
+              ...validationErrors,
+              type: undefined,
+            }),
+        },
       },
       {
-        accessorFn: (row) => formatCurrency(row.balance, row.currency),
+        accessorKey: 'currency',
+        header: 'Currency',
+        editVariant: 'select',
+        editSelectOptions: currencyCodes,
+        muiEditTextFieldProps: {
+          select: true,
+          required: true,
+          error: !!validationErrors?.currency,
+          helperText: validationErrors?.currency,
+          onFocus: () =>
+            setValidationErrors({
+              ...validationErrors,
+              currency: undefined,
+            }),
+        },
+      },
+      {
+        accessorFn: (row) => row.balance,
+        accessorKey: 'balance',
         header: 'Balance',
         muiTableHeadCellProps: {
           align: 'right',
@@ -60,13 +146,28 @@ const Assets: React.FC = () => {
         muiTableBodyCellProps: {
           align: 'right',
         },
-      },
-      {
-        accessorKey: 'currency',
-        header: 'Currency',
+        Cell: ({ cell }) => (
+          <Box component="span">
+            {formatCurrency(
+              cell.row.original.balance,
+              cell.row.original.currency,
+            )}
+          </Box>
+        ),
+        muiEditTextFieldProps: {
+          type: 'number',
+          required: true,
+          error: !!validationErrors?.balance,
+          helperText: validationErrors?.balance,
+          onFocus: () =>
+            setValidationErrors({
+              ...validationErrors,
+              balance: undefined,
+            }),
+        },
       },
     ],
-    [],
+    [validationErrors],
   );
 
   useEffect(() => {
@@ -86,15 +187,93 @@ const Assets: React.FC = () => {
     fetchAssets();
   }, []);
 
+  const validateAsset = (asset: Record<LiteralUnion<string>, any>) => {
+    const errors: Record<string, string | undefined> = {};
+    if (!asset.name) {
+      errors.name = 'Name is required';
+    }
+    if (!asset.description) {
+      errors.description = 'Description is required';
+    }
+    if (!asset.type) {
+      errors.type = 'Type is required';
+    }
+    if (!asset.currency) {
+      errors.currency = 'Currency is required';
+    }
+    if (
+      asset.balance === undefined ||
+      asset.balance === null ||
+      asset.balance === ''
+    ) {
+      errors.balance = 'Balance is required';
+    }
+    return errors;
+  };
+
+  const createAsset = async (asset: Asset) => {
+    setSaving(true);
+    try {
+      const response = await apiClient.post('/assets', {
+        name: asset.name,
+        description: asset.description,
+        type: getOriginalAssetType(asset.type),
+        currency: asset.currency,
+        balance: +asset.balance,
+      });
+      const newAsset = response.data;
+      setAssets([...assets, newAsset]);
+    } catch (error) {
+      log.error('Error creating asset: ', error);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const updateAsset = async (asset: Asset) => {
+    setUpdating(true);
+    try {
+      const { id } = asset;
+      await apiClient.put(`/assets/${id}`, {
+        name: asset.name,
+        description: asset.description,
+        type: getOriginalAssetType(asset.type),
+        currency: asset.currency,
+        balance: +asset.balance,
+      });
+      const updatedAssets = assets.map((a) => (a.id === id ? asset : a));
+      setAssets(updatedAssets);
+    } catch (error) {
+      log.error('Error updating asset: ', error);
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const deleteAsset = async (row: MRT_Row<MRT_RowData>) => {
+    setDeleting(true);
+    try {
+      const { id } = row.original;
+      await apiClient.delete(`/assets/${id}`);
+      const updatedAssets = assets.filter((a) => a.id !== id);
+      setAssets(updatedAssets);
+    } catch (error) {
+      log.error('Error deleting asset: ', error);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   const table = useMaterialReactTable({
     columns,
     data: assets,
     enableStickyHeader: true,
+    enableEditing: true,
     initialState: {
       sorting: [
         {
           id: 'type',
-          desc: false,
+          desc: true,
         },
         {
           id: 'currency',
@@ -107,6 +286,8 @@ const Assets: React.FC = () => {
       ],
       columnVisibility: {
         currency: false,
+        id: false,
+        description: false,
       },
       pagination: {
         pageIndex: 0,
@@ -115,6 +296,7 @@ const Assets: React.FC = () => {
     },
     state: {
       isLoading: loading,
+      isSaving: saving || updating || deleting,
     },
     renderDetailPanel: ({ row }) => (
       <Box
@@ -127,6 +309,96 @@ const Assets: React.FC = () => {
       >
         <Typography>Id: {row.original.id}</Typography>
         <Typography>Description: {row.original.description}</Typography>
+      </Box>
+    ),
+    onCreatingRowSave: async ({ table, values }) => {
+      //validate data
+      const newValidationErrors = validateAsset(values);
+      if (Object.values(newValidationErrors).some((error) => error)) {
+        setValidationErrors(newValidationErrors);
+        return;
+      }
+
+      //save data to api
+      setValidationErrors({});
+      await createAsset(values as Asset);
+      table.setCreatingRow(null); //exit creating mode
+    },
+    onCreatingRowCancel: () => setValidationErrors({}),
+    renderTopToolbarCustomActions: ({ table }) => (
+      <Button
+        variant="outlined"
+        onClick={() => {
+          table.setCreatingRow(true);
+        }}
+        startIcon={<AddIcon />}
+      >
+        Create
+      </Button>
+    ),
+    renderCreateRowDialogContent: ({ table, row, internalEditComponents }) => (
+      <>
+        <DialogTitle>Create New Asset</DialogTitle>
+        <DialogContent
+          sx={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}
+        >
+          {internalEditComponents}
+        </DialogContent>
+        <DialogActions>
+          <MRT_EditActionButtons variant="text" table={table} row={row} />
+        </DialogActions>
+      </>
+    ),
+    onEditingRowSave: async ({ table, values }) => {
+      //validate data
+      const newValidationErrors = validateAsset(values);
+      if (Object.values(newValidationErrors).some((error) => error)) {
+        setValidationErrors(newValidationErrors);
+        return;
+      }
+
+      //save data to api
+      setValidationErrors({});
+      await updateAsset(values as Asset);
+      table.setEditingRow(null); //exit editing mode
+    },
+    onEditingRowCancel: () => setValidationErrors({}),
+    renderEditRowDialogContent: ({ table, row, internalEditComponents }) => (
+      <>
+        <DialogTitle>Edit Asset</DialogTitle>
+        <DialogContent
+          sx={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}
+        >
+          {internalEditComponents}
+        </DialogContent>
+        <DialogActions>
+          <MRT_EditActionButtons variant="text" table={table} row={row} />
+        </DialogActions>
+      </>
+    ),
+    renderRowActions: ({ row, table }) => (
+      <Box sx={{ display: 'flex', gap: '1rem' }}>
+        <Tooltip title="Edit">
+          <IconButton onClick={() => table.setEditingRow(row)}>
+            <EditIcon />
+          </IconButton>
+        </Tooltip>
+        <Tooltip title="Delete">
+          <IconButton
+            color="error"
+            onClick={async () => {
+              if (
+                window.confirm(
+                  `Are you sure you want to delete '${row.original.name}' Asset?`,
+                )
+              ) {
+                await deleteAsset(row);
+              }
+            }}
+          >
+            <DeleteIcon />
+          </IconButton>
+        </Tooltip>
       </Box>
     ),
   });
