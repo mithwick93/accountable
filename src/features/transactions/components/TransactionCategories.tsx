@@ -146,11 +146,11 @@ const TransactionCategories: React.FC = () => {
     setUpdating(true);
     try {
       const { id } = category;
-      await apiClient.put(`/transactions/categories/${id}`, {
+      const response = await apiClient.put(`/transactions/categories/${id}`, {
         name: category.name,
         type: getOriginalTransactionType(category.type),
       });
-      setCategories(categories.map((c) => (c.id === id ? category : c)));
+      setCategories(categories.map((c) => (c.id === id ? response.data : c)));
     } catch (error) {
       log.error('Error updating transaction category: ', error);
     } finally {

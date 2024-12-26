@@ -234,14 +234,16 @@ const Assets: React.FC = () => {
     setUpdating(true);
     try {
       const { id } = asset;
-      await apiClient.put(`/assets/${id}`, {
+      const response = await apiClient.put(`/assets/${id}`, {
         name: asset.name,
         description: asset.description,
         type: getOriginalAssetType(asset.type),
         currency: asset.currency,
         balance: +asset.balance,
       });
-      const updatedAssets = assets.map((a) => (a.id === id ? asset : a));
+      const updatedAssets = assets.map((a) =>
+        a.id === id ? response.data : a,
+      );
       setAssets(updatedAssets);
     } catch (error) {
       log.error('Error updating asset: ', error);
