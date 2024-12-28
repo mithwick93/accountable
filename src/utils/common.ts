@@ -6,6 +6,11 @@ export const alertColors = {
   red: { dark: '#E57373', light: '#D32F2F' },
 };
 
+export const notSelectedOption = {
+  value: -999,
+  label: '--- Not selected ---',
+};
+
 export const formatAssetType = (type: string | undefined) => {
   switch (type) {
     case 'INVESTMENT':
