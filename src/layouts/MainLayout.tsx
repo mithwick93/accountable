@@ -35,13 +35,13 @@ const SidebarFooter = ({ mini }: SidebarFooterProps) => (
 );
 
 const CustomPageToolbar = () => {
-  const [open, setOpen] = useState(false);
+  const [openCurrencyDialog, setOpenCurrencyDialog] = useState(false);
   const handleClickOpen = () => {
-    setOpen(true);
+    setOpenCurrencyDialog(true);
   };
 
   const handleClose = () => {
-    setOpen(false);
+    setOpenCurrencyDialog(false);
   };
 
   return (
@@ -49,7 +49,7 @@ const CustomPageToolbar = () => {
       <IconButton onClick={handleClickOpen} color="primary">
         <CurrencyExchangeIcon />
       </IconButton>
-      <CurrencyRatesDialog open={open} onClose={handleClose} />
+      <CurrencyRatesDialog open={openCurrencyDialog} onClose={handleClose} />
     </PageHeaderToolbar>
   );
 };
