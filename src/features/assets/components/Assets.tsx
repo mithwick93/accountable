@@ -22,6 +22,7 @@ import {
   useMaterialReactTable,
 } from 'material-react-table';
 import React, { useEffect, useMemo, useState } from 'react';
+import { toast } from 'react-toastify';
 import { useStaticData } from '../../../context/StaticDataContext';
 import apiClient from '../../../services/ApiService';
 import { Asset } from '../../../types/Asset';
@@ -223,8 +224,10 @@ const Assets: React.FC = () => {
       });
       const newAsset = response.data;
       setAssets([...assets, newAsset]);
+      toast.success(`Created Asset: '${newAsset.name}' successfully`);
     } catch (error) {
       log.error('Error creating asset: ', error);
+      toast.error('Error creating asset', { autoClose: false });
     } finally {
       setSaving(false);
     }
@@ -245,8 +248,10 @@ const Assets: React.FC = () => {
         a.id === id ? response.data : a,
       );
       setAssets(updatedAssets);
+      toast.success(`Updated Asset: '${asset.name}' successfully`);
     } catch (error) {
       log.error('Error updating asset: ', error);
+      toast.error('Error updating asset', { autoClose: false });
     } finally {
       setUpdating(false);
     }
@@ -259,8 +264,10 @@ const Assets: React.FC = () => {
       await apiClient.delete(`/assets/${id}`);
       const updatedAssets = assets.filter((a) => a.id !== id);
       setAssets(updatedAssets);
+      toast.success(`Deleted Asset: '${row.original.name}' successfully`);
     } catch (error) {
       log.error('Error deleting asset: ', error);
+      toast.error('Error deleting asset', { autoClose: false });
     } finally {
       setDeleting(false);
     }

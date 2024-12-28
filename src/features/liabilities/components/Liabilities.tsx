@@ -22,6 +22,7 @@ import {
   useMaterialReactTable,
 } from 'material-react-table';
 import React, { useEffect, useMemo, useState } from 'react';
+import { toast } from 'react-toastify';
 import { useStaticData } from '../../../context/StaticDataContext';
 import apiClient from '../../../services/ApiService';
 import { Liability } from '../../../types/Liability';
@@ -440,9 +441,12 @@ const Liabilities: React.FC = () => {
     try {
       const payload = createPayload(liability);
       const response = await apiClient.post('/liabilities', payload);
-      setLiabilities([...liabilities, response.data]);
+      const newLiability = response.data;
+      setLiabilities([...liabilities, newLiability]);
+      toast.success(`Created Liability: '${newLiability.name}' successfully`);
     } catch (error) {
       log.error('Error creating liability:', error);
+      toast.error('Error creating liability', { autoClose: false });
     } finally {
       setSaving(false);
     }
@@ -454,9 +458,16 @@ const Liabilities: React.FC = () => {
       const { id } = liability;
       const payload = createPayload(liability);
       const response = await apiClient.put(`/liabilities/${id}`, payload);
-      setLiabilities(liabilities.map((l) => (l.id === id ? response.data : l)));
+      const updatedLiability = response.data;
+      setLiabilities(
+        liabilities.map((l) => (l.id === id ? updatedLiability : l)),
+      );
+      toast.success(
+        `Updated Liability: '${updatedLiability.name}' successfully`,
+      );
     } catch (error) {
       log.error('Error updating liability:', error);
+      toast.error('Error updating liability', { autoClose: false });
     } finally {
       setUpdating(false);
     }
@@ -468,8 +479,10 @@ const Liabilities: React.FC = () => {
       const { id } = row.original;
       await apiClient.delete(`/liabilities/${id}`);
       setLiabilities(liabilities.filter((l) => l.id !== id));
+      toast.success(`Deleted Liability: '${row.original.name}' successfully`);
     } catch (error) {
       log.error('Error deleting liability:', error);
+      toast.error('Error deleting liability', { autoClose: false });
     } finally {
       setDeleting(false);
     }

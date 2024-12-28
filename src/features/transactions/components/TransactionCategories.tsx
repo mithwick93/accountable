@@ -21,6 +21,7 @@ import {
   useMaterialReactTable,
 } from 'material-react-table';
 import React, { useEffect, useMemo, useState } from 'react';
+import { toast } from 'react-toastify';
 import apiClient from '../../../services/ApiService';
 import { TransactionCategory } from '../../../types/TransactionCategory';
 import {
@@ -135,8 +136,12 @@ const TransactionCategories: React.FC = () => {
       });
       const newCategory = response.data;
       setCategories([...categories, newCategory]);
+      toast.success(
+        `Transaction category: '${newCategory.name}' created successfully`,
+      );
     } catch (error) {
       log.error('Error creating transaction category: ', error);
+      toast.error('Error creating transaction category', { autoClose: false });
     } finally {
       setSaving(false);
     }
@@ -150,9 +155,14 @@ const TransactionCategories: React.FC = () => {
         name: category.name,
         type: getOriginalTransactionType(category.type),
       });
-      setCategories(categories.map((c) => (c.id === id ? response.data : c)));
+      const updatedCategory = response.data;
+      setCategories(categories.map((c) => (c.id === id ? updatedCategory : c)));
+      toast.success(
+        `Transaction category: '${updatedCategory.name}' updated successfully`,
+      );
     } catch (error) {
       log.error('Error updating transaction category: ', error);
+      toast.error('Error updating transaction category', { autoClose: false });
     } finally {
       setUpdating(false);
     }
@@ -164,8 +174,10 @@ const TransactionCategories: React.FC = () => {
       const { id } = row.original;
       await apiClient.delete(`/transactions/categories/${id}`);
       setCategories(categories.filter((category) => category.id !== id));
+      toast.success(`Transaction category: '${row.original.name}' deleted`);
     } catch (error) {
       log.error('Error deleting transaction category: ', error);
+      toast.error('Error deleting transaction category', { autoClose: false });
     } finally {
       setDeleting(false);
     }
