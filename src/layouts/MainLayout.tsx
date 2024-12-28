@@ -1,4 +1,5 @@
 import CurrencyExchangeIcon from '@mui/icons-material/CurrencyExchange';
+import PostAddIcon from '@mui/icons-material/PostAdd';
 import { IconButton } from '@mui/material';
 import Typography from '@mui/material/Typography';
 import {
@@ -15,6 +16,7 @@ import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import CurrencyRatesDialog from '../components/CurrencyRatesDialog';
 import ErrorBoundary from '../components/ErrorBoundary';
 import ToolbarActions from '../components/toolbar/ToolbarActions';
+import CreateTransactionDialog from '../components/transaction/CreateTransactionDialog';
 import { CurrencyRatesProvider } from '../context/CurrencyRatesContext';
 import { SettingsProvider } from '../context/SettingsContext';
 import { StaticDataProvider } from '../context/StaticDataContext';
@@ -36,20 +38,41 @@ const SidebarFooter = ({ mini }: SidebarFooterProps) => (
 
 const CustomPageToolbar = () => {
   const [openCurrencyDialog, setOpenCurrencyDialog] = useState(false);
-  const handleClickOpen = () => {
+  const [openCreateTransactionDialog, setOpenCreateTransactionDialog] =
+    useState(false);
+
+  const handleCurrencyDialogOpen = () => {
     setOpenCurrencyDialog(true);
   };
 
-  const handleClose = () => {
+  const handleCurrencyDialogClose = () => {
     setOpenCurrencyDialog(false);
+  };
+
+  const handleCreateTransactionDialogOpen = () => {
+    setOpenCreateTransactionDialog(true);
+  };
+
+  const handleCreateTransactionDialogClose = () => {
+    setOpenCreateTransactionDialog(false);
   };
 
   return (
     <PageHeaderToolbar>
-      <IconButton onClick={handleClickOpen} color="primary">
+      <IconButton onClick={handleCurrencyDialogOpen} color="primary">
         <CurrencyExchangeIcon />
       </IconButton>
-      <CurrencyRatesDialog open={openCurrencyDialog} onClose={handleClose} />
+      <IconButton onClick={handleCreateTransactionDialogOpen} color="primary">
+        <PostAddIcon />
+      </IconButton>
+      <CurrencyRatesDialog
+        open={openCurrencyDialog}
+        onClose={handleCurrencyDialogClose}
+      />
+      <CreateTransactionDialog
+        open={openCreateTransactionDialog}
+        onClose={handleCreateTransactionDialogClose}
+      />
     </PageHeaderToolbar>
   );
 };
