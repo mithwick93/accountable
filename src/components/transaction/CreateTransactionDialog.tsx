@@ -613,7 +613,12 @@ const CreateTransactionDialog = ({
                       flexDirection={smallScreen ? 'column' : 'row'}
                     >
                       <Autocomplete
-                        options={userOptions}
+                        options={userOptions.filter(
+                          (user) =>
+                            !sharedTransactions.some(
+                              (t) => t.userId === user.id,
+                            ),
+                        )}
                         autoComplete
                         autoHighlight
                         autoSelect
@@ -725,7 +730,9 @@ const CreateTransactionDialog = ({
             {formValues.type === 'TRANSFER' && (
               <>
                 <Autocomplete
-                  options={assets}
+                  options={assets.filter(
+                    (asset) => asset.id !== formValues.toAssetId,
+                  )}
                   autoComplete
                   autoHighlight
                   autoSelect
@@ -745,7 +752,9 @@ const CreateTransactionDialog = ({
                   onFocus={() => handleFocus('fromAssetId')}
                 />
                 <Autocomplete
-                  options={assets}
+                  options={assets.filter(
+                    (asset) => asset.id !== formValues.fromAssetId,
+                  )}
                   autoComplete
                   autoHighlight
                   autoSelect
