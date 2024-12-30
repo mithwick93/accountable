@@ -21,8 +21,9 @@ import {
   type MRT_RowData,
   useMaterialReactTable,
 } from 'material-react-table';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
+import { useData } from '../../../context/DataContext';
 import { useStaticData } from '../../../context/StaticDataContext';
 import apiClient from '../../../services/ApiService';
 import { Liability } from '../../../types/Liability';
@@ -39,7 +40,6 @@ import {
   stringToColor,
 } from '../../../utils/common';
 import { calculateLiabilityDates } from '../../../utils/date';
-import log from '../../../utils/logger';
 import { notifyBackendError } from '../../../utils/notifications';
 
 const createPayload = (liability: Liability) => {
@@ -66,11 +66,10 @@ const createPayload = (liability: Liability) => {
 };
 
 const Liabilities: React.FC = () => {
-  const [liabilities, setLiabilities] = useState<Liability[]>([]);
+  const { liabilities, refetchData, loading } = useData();
   const [validationErrors, setValidationErrors] = useState<
     Record<string, string | undefined>
   >({});
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [updating, setUpdating] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -363,23 +362,6 @@ const Liabilities: React.FC = () => {
     [validationErrors],
   );
 
-  useEffect(() => {
-    const fetchLiabilities = async () => {
-      setLoading(true);
-      try {
-        const response = await apiClient.get('/liabilities');
-        const liabilitiesData = response.data;
-        setLiabilities(liabilitiesData);
-      } catch (error) {
-        log.error('Error fetching liabilities:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchLiabilities();
-  }, []);
-
   // eslint-disable-next-line complexity
   const validateLiability = (liability: Record<LiteralUnion<string>, any>) => {
     const errors: Record<string, string | undefined> = {};
@@ -442,8 +424,9 @@ const Liabilities: React.FC = () => {
     try {
       const payload = createPayload(liability);
       const response = await apiClient.post('/liabilities', payload);
+      await refetchData(['liabilities']);
+
       const newLiability = response.data;
-      setLiabilities([...liabilities, newLiability]);
       toast.success(`Created Liability: '${newLiability.name}' successfully`);
     } catch (error) {
       notifyBackendError('Error creating liability', error);
@@ -458,10 +441,9 @@ const Liabilities: React.FC = () => {
       const { id } = liability;
       const payload = createPayload(liability);
       const response = await apiClient.put(`/liabilities/${id}`, payload);
+      await refetchData(['liabilities']);
+
       const updatedLiability = response.data;
-      setLiabilities(
-        liabilities.map((l) => (l.id === id ? updatedLiability : l)),
-      );
       toast.success(
         `Updated Liability: '${updatedLiability.name}' successfully`,
       );
@@ -477,7 +459,8 @@ const Liabilities: React.FC = () => {
     try {
       const { id } = row.original;
       await apiClient.delete(`/liabilities/${id}`);
-      setLiabilities(liabilities.filter((l) => l.id !== id));
+      await refetchData(['liabilities']);
+
       toast.success(`Deleted Liability: '${row.original.name}' successfully`);
     } catch (error) {
       notifyBackendError('Error deleting liability', error);
