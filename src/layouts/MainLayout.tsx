@@ -25,6 +25,9 @@ import { TokenStorage } from '../utils/TokenStorage';
 
 const userSettings = {
   currency: 'SEK',
+  transactions: {
+    updateAccounts: false,
+  },
 };
 
 const SidebarFooter = ({ mini }: SidebarFooterProps) => (

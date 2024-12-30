@@ -21,6 +21,7 @@ import useMediaQuery from '@mui/material/useMediaQuery';
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { useSettings } from '../../context/SettingsContext';
 import { useStaticData } from '../../context/StaticDataContext';
 import { useUser } from '../../context/UserContext';
 import apiClient from '../../services/ApiService';
@@ -55,12 +56,19 @@ type FormStateType = {
   sharedTransactions?: SharedTransaction[];
 };
 
-const initialFormValues: FormStateType = { updateAccounts: true };
-
 const CreateTransactionDialog = ({
   onClose,
   open,
 }: CreateTransactionDialogProps) => {
+  const { settings, update } = useSettings();
+  const baseCurrency = settings?.currency || 'USD';
+  const updateAccounts = settings?.transactions.updateAccounts ?? false;
+  const initialFormValues: FormStateType = {
+    updateAccounts: updateAccounts,
+    currency: baseCurrency,
+    date: new Date().toISOString().split('T')[0],
+  };
+
   const [formValues, setFormValues] =
     useState<FormStateType>(initialFormValues);
   const [validationErrors, setValidationErrors] = useState<
@@ -184,8 +192,6 @@ const CreateTransactionDialog = ({
   };
 
   const handleSave = async () => {
-    log.info(JSON.stringify(formValues));
-
     if (validateForm()) {
       try {
         await apiClient.post('/transactions', getRequestPayload());
@@ -241,6 +247,15 @@ const CreateTransactionDialog = ({
       if (formValues.type === 'TRANSFER') {
         if (!formValues.fromAssetId) {
           errors.fromAssetId = 'From Asset is required';
+        }
+
+        if (
+          formValues.fromAssetId &&
+          formValues.toAssetId &&
+          formValues.fromAssetId === formValues.toAssetId
+        ) {
+          errors.fromAssetId = 'From Asset and To Asset cannot be the same';
+          errors.toAssetId = 'From Asset and To Asset cannot be the same';
         }
 
         if (!formValues.toAssetId && !formValues.toLiabilityId) {
@@ -391,6 +406,7 @@ const CreateTransactionDialog = ({
               }
             />
             <Autocomplete
+              value={formValues.currency}
               options={currencyCodes}
               autoComplete
               autoHighlight
@@ -430,6 +446,7 @@ const CreateTransactionDialog = ({
               }
             />
             <TextField
+              value={formValues.date}
               label="Date"
               name="date"
               type="date"
@@ -606,12 +623,19 @@ const CreateTransactionDialog = ({
             control={
               <Switch
                 checked={formValues.updateAccounts}
-                onChange={(event) =>
+                onChange={(event) => {
+                  update({
+                    ...settings,
+                    transactions: {
+                      ...(settings?.transactions || {}),
+                      updateAccounts: event.target.checked,
+                    },
+                  });
                   setFormValues({
                     ...formValues,
                     updateAccounts: event.target.checked,
-                  })
-                }
+                  });
+                }}
                 name="updateAccounts"
                 color="primary"
               />
