@@ -17,8 +17,8 @@ import {
 import React, { useEffect, useMemo, useState } from 'react';
 import LoadingSkeleton from '../../../components/LoadingSkeleton';
 import { useCurrencyRates } from '../../../context/CurrencyRatesContext';
+import { useData } from '../../../context/DataContext';
 import { useSettings } from '../../../context/SettingsContext';
-import apiClient from '../../../services/ApiService';
 import { Asset } from '../../../types/Asset';
 import { Liability } from '../../../types/Liability';
 import {
@@ -141,8 +141,7 @@ const NetSummary: React.FC<NetSummeryProps> = ({
 };
 
 const Dashboard: React.FC = () => {
-  const [assets, setAssets] = useState<Asset[]>([]);
-  const [liabilities, setLiabilities] = useState<Liability[]>([]);
+  const { assets, liabilities, loading } = useData();
   const [assetTotals, setAssetTotals] = useState<{
     [currency: string]: number;
   }>({});
@@ -152,7 +151,6 @@ const Dashboard: React.FC = () => {
   const { currencyRates } = useCurrencyRates();
   const { settings } = useSettings();
   const currency: string = settings?.currency || 'USD';
-  const [loading, setLoading] = useState(true);
 
   const calculateTotals = (items: (Asset | Liability)[]) =>
     items.reduce(
@@ -369,26 +367,17 @@ const Dashboard: React.FC = () => {
   );
 
   useEffect(() => {
-    const fetchFinancialData = async () => {
+    const fetchFinancialData = () => {
       try {
-        const [assetResponse, liabilityResponse] = await Promise.all([
-          apiClient.get<Asset[]>('/assets'),
-          apiClient.get<Liability[]>('/liabilities'),
-        ]);
-
-        setAssets(assetResponse.data);
-        setLiabilities(liabilityResponse.data);
-        setAssetTotals(calculateTotals(assetResponse.data));
-        setLiabilityTotals(calculateTotals(liabilityResponse.data));
+        setAssetTotals(calculateTotals(assets));
+        setLiabilityTotals(calculateTotals(liabilities));
       } catch (error) {
         log.error('Error fetching financial data:', error);
-      } finally {
-        setLoading(false);
       }
     };
 
     fetchFinancialData();
-  }, []);
+  }, [assets, liabilities]);
 
   const assetsTable = useMaterialReactTable({
     columns: assetsColumns,
