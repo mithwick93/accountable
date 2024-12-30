@@ -157,6 +157,11 @@ const Assets: React.FC = () => {
         ),
         muiEditTextFieldProps: {
           type: 'number',
+          slotProps: {
+            htmlInput: {
+              min: 0,
+            },
+          },
           required: true,
           error: !!validationErrors?.balance,
           helperText: validationErrors?.balance,

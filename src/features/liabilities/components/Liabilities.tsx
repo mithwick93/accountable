@@ -190,6 +190,12 @@ const Liabilities: React.FC = () => {
         ),
         muiEditTextFieldProps: {
           type: 'number',
+          slotProps: {
+            htmlInput: {
+              min: 1,
+              max: 31,
+            },
+          },
           required: false,
           error: !!validationErrors?.statementDay,
           helperText: validationErrors?.statementDay,
@@ -229,6 +235,12 @@ const Liabilities: React.FC = () => {
         },
         muiEditTextFieldProps: {
           type: 'number',
+          slotProps: {
+            htmlInput: {
+              min: 1,
+              max: 31,
+            },
+          },
           required: true,
           error: !!validationErrors?.dueDay,
           helperText: validationErrors?.dueDay,
@@ -244,6 +256,11 @@ const Liabilities: React.FC = () => {
         header: 'Interest Rate',
         muiEditTextFieldProps: {
           type: 'number',
+          slotProps: {
+            htmlInput: {
+              min: 0,
+            },
+          },
           required: false,
           error: !!validationErrors?.interestRate,
           helperText: validationErrors?.interestRate,
@@ -283,6 +300,11 @@ const Liabilities: React.FC = () => {
         },
         muiEditTextFieldProps: {
           type: 'number',
+          slotProps: {
+            htmlInput: {
+              min: 0,
+            },
+          },
           required: true,
           error: !!validationErrors?.balance,
           helperText: validationErrors?.balance,
@@ -330,6 +352,11 @@ const Liabilities: React.FC = () => {
         ),
         muiEditTextFieldProps: {
           type: 'number',
+          slotProps: {
+            htmlInput: {
+              min: 0,
+            },
+          },
           required: true,
           error: !!validationErrors?.amount,
           helperText: validationErrors?.amount,
