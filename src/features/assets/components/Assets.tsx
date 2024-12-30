@@ -21,8 +21,9 @@ import {
   type MRT_RowData,
   useMaterialReactTable,
 } from 'material-react-table';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
+import { useData } from '../../../context/DataContext';
 import { useStaticData } from '../../../context/StaticDataContext';
 import apiClient from '../../../services/ApiService';
 import { Asset } from '../../../types/Asset';
@@ -32,15 +33,13 @@ import {
   getOriginalAssetType,
   stringToColor,
 } from '../../../utils/common';
-import log from '../../../utils/logger';
 import { notifyBackendError } from '../../../utils/notifications';
 
 const Assets: React.FC = () => {
-  const [assets, setAssets] = useState<Asset[]>([]);
+  const { assets, refetchData, loading } = useData();
   const [validationErrors, setValidationErrors] = useState<
     Record<string, string | undefined>
   >({});
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [updating, setUpdating] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -172,23 +171,6 @@ const Assets: React.FC = () => {
     [validationErrors],
   );
 
-  useEffect(() => {
-    const fetchAssets = async () => {
-      setLoading(true);
-      try {
-        const response = await apiClient.get('/assets');
-        const assetsData = response.data;
-        setAssets(assetsData);
-      } catch (error) {
-        log.error('Error fetching assets:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchAssets();
-  }, []);
-
   const validateAsset = (asset: Record<LiteralUnion<string>, any>) => {
     const errors: Record<string, string | undefined> = {};
     if (!asset.name) {
@@ -223,8 +205,9 @@ const Assets: React.FC = () => {
         currency: asset.currency,
         balance: +asset.balance,
       });
+      await refetchData(['assets']);
+
       const newAsset = response.data;
-      setAssets([...assets, newAsset]);
       toast.success(`Created Asset: '${newAsset.name}' successfully`);
     } catch (error) {
       notifyBackendError('Error creating asset', error);
@@ -244,11 +227,10 @@ const Assets: React.FC = () => {
         currency: asset.currency,
         balance: +asset.balance,
       });
-      const updatedAssets = assets.map((a) =>
-        a.id === id ? response.data : a,
-      );
-      setAssets(updatedAssets);
-      toast.success(`Updated Asset: '${asset.name}' successfully`);
+      await refetchData(['assets']);
+
+      const updatedAsset = response.data;
+      toast.success(`Updated Asset: '${updatedAsset.name}' successfully`);
     } catch (error) {
       notifyBackendError('Error updating asset', error);
     } finally {
@@ -261,8 +243,8 @@ const Assets: React.FC = () => {
     try {
       const { id } = row.original;
       await apiClient.delete(`/assets/${id}`);
-      const updatedAssets = assets.filter((a) => a.id !== id);
-      setAssets(updatedAssets);
+      await refetchData(['assets']);
+
       toast.success(`Deleted Asset: '${row.original.name}' successfully`);
     } catch (error) {
       notifyBackendError('Error deleting asset', error);
