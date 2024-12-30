@@ -18,6 +18,7 @@ import ErrorBoundary from '../components/ErrorBoundary';
 import ToolbarActions from '../components/toolbar/ToolbarActions';
 import CreateTransactionDialog from '../components/transaction/CreateTransactionDialog';
 import { CurrencyRatesProvider } from '../context/CurrencyRatesContext';
+import { DataProvider } from '../context/DataContext';
 import { SettingsProvider } from '../context/SettingsContext';
 import { StaticDataProvider } from '../context/StaticDataContext';
 import { UserProvider } from '../context/UserContext';
@@ -95,30 +96,35 @@ export default function MainLayout() {
   return (
     <UserProvider>
       <StaticDataProvider>
-        <SettingsProvider settingsKey="accountable" defaultValue={userSettings}>
-          <CurrencyRatesProvider>
-            <DashboardLayout
-              slots={{
-                toolbarActions: ToolbarActions,
-                sidebarFooter: SidebarFooter,
-              }}
-              defaultSidebarCollapsed
-            >
-              <ErrorBoundary>
-                <PageContainer
-                  slots={{ header: CustomPageHeader }}
-                  sx={{
-                    '@media (min-width: 1200px)': {
-                      maxWidth: '2400px',
-                    },
-                  }}
-                >
-                  <Outlet />
-                </PageContainer>
-              </ErrorBoundary>
-            </DashboardLayout>
-          </CurrencyRatesProvider>
-        </SettingsProvider>
+        <DataProvider>
+          <SettingsProvider
+            settingsKey="accountable"
+            defaultValue={userSettings}
+          >
+            <CurrencyRatesProvider>
+              <DashboardLayout
+                slots={{
+                  toolbarActions: ToolbarActions,
+                  sidebarFooter: SidebarFooter,
+                }}
+                defaultSidebarCollapsed
+              >
+                <ErrorBoundary>
+                  <PageContainer
+                    slots={{ header: CustomPageHeader }}
+                    sx={{
+                      '@media (min-width: 1200px)': {
+                        maxWidth: '2400px',
+                      },
+                    }}
+                  >
+                    <Outlet />
+                  </PageContainer>
+                </ErrorBoundary>
+              </DashboardLayout>
+            </CurrencyRatesProvider>
+          </SettingsProvider>
+        </DataProvider>
       </StaticDataProvider>
     </UserProvider>
   );
