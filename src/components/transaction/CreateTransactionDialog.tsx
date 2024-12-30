@@ -525,6 +525,11 @@ const CreateTransactionDialog = ({
               error={!!validationErrors?.amount}
               helperText={validationErrors?.amount}
               onFocus={() => handleFocus('amount')}
+              slotProps={{
+                htmlInput: {
+                  min: 0,
+                },
+              }}
             />
             <TextField
               value={formValues.date}
@@ -671,6 +676,11 @@ const CreateTransactionDialog = ({
                             parseFloat(e.target.value) || 0,
                           )
                         }
+                        slotProps={{
+                          htmlInput: {
+                            min: 0,
+                          },
+                        }}
                       />
                       <TextField
                         label="Paid Amount"
@@ -693,6 +703,11 @@ const CreateTransactionDialog = ({
                             parseFloat(e.target.value) || 0,
                           )
                         }
+                        slotProps={{
+                          htmlInput: {
+                            min: 0,
+                          },
+                        }}
                       />
                       <FormControlLabel
                         control={
