@@ -1,12 +1,18 @@
+import { Add as AddIcon, Remove as RemoveIcon } from '@mui/icons-material';
+import CalculateIcon from '@mui/icons-material/Calculate';
 import {
   Box,
   Button,
+  Checkbox,
   CircularProgress,
   DialogActions,
   DialogContent,
   FormHelperText,
+  IconButton,
+  Stack,
   Switch,
   TextField,
+  Typography,
 } from '@mui/material';
 import Autocomplete from '@mui/material/Autocomplete';
 import Dialog from '@mui/material/Dialog';
@@ -19,7 +25,6 @@ import RadioGroup from '@mui/material/RadioGroup';
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useSettings } from '../../context/SettingsContext';
 import { useStaticData } from '../../context/StaticDataContext';
@@ -32,6 +37,7 @@ import { PaymentSystemCredit } from '../../types/PaymentSystemCredit';
 import { PaymentSystemDebit } from '../../types/PaymentSystemDebit';
 import { SharedTransaction } from '../../types/SharedTransaction';
 import { TransactionCategory } from '../../types/TransactionCategory';
+import { User } from '../../types/User';
 import log from '../../utils/logger';
 import SlideUpTransition from '../transition/SlideUpTransition';
 
@@ -53,7 +59,6 @@ type FormStateType = {
   fromAssetId?: number;
   fromPaymentSystemId?: number;
   toLiabilityId?: number;
-  sharedTransactions?: SharedTransaction[];
 };
 
 const CreateTransactionDialog = ({
@@ -61,9 +66,14 @@ const CreateTransactionDialog = ({
   open,
 }: CreateTransactionDialogProps) => {
   const { settings, update } = useSettings();
+  const { currencies } = useStaticData();
+  const { loggedInUser, users } = useUser();
+  const [loading, setLoading] = useState(true);
+  const theme = useTheme();
   const baseCurrency = settings?.currency || 'USD';
   const updateAccounts = settings?.transactions.updateAccounts ?? false;
   const initialFormValues: FormStateType = {
+    type: 'EXPENSE',
     updateAccounts: updateAccounts,
     currency: baseCurrency,
     date: new Date().toISOString().split('T')[0],
@@ -71,9 +81,16 @@ const CreateTransactionDialog = ({
 
   const [formValues, setFormValues] =
     useState<FormStateType>(initialFormValues);
+  const [sharedTransactions, setSharedTransactions] = useState<
+    SharedTransaction[]
+  >([]);
   const [validationErrors, setValidationErrors] = useState<
     Record<string, string | undefined>
   >({});
+  const [
+    sharedTransactionValidationErrors,
+    setSharedTransactionValidationErrors,
+  ] = useState<Record<string, string | undefined>[]>([]);
   const [data, setData] = useState<
     | {
         assets: Asset[];
@@ -83,12 +100,8 @@ const CreateTransactionDialog = ({
       }
     | undefined
   >();
-  const { currencies } = useStaticData();
-  const { loggedInUser } = useUser();
-  const [loading, setLoading] = useState(true);
-  const theme = useTheme();
-  const navigate = useNavigate();
 
+  const userOptions = users ?? [];
   const assets = data?.assets ?? [];
   const liabilities = data?.liabilities ?? [];
   const paymentSystems = data?.paymentSystems ?? [];
@@ -96,7 +109,13 @@ const CreateTransactionDialog = ({
     data?.categories.filter((category) => category.type === formValues.type) ??
     [];
   const currencyCodes = currencies?.map((currency) => currency.code) ?? [];
-  const fullScreen = useMediaQuery(theme.breakpoints.down('md'));
+  const smallScreen = useMediaQuery(theme.breakpoints.down('md'));
+
+  const enableDivideEvenly =
+    formValues.type === 'EXPENSE' &&
+    sharedTransactions.length > 1 &&
+    formValues.amount &&
+    formValues.amount > 0;
 
   useEffect(() => {
     if (!open) {
@@ -191,13 +210,48 @@ const CreateTransactionDialog = ({
     });
   };
 
+  const handleAddSharedTransaction = () => {
+    setSharedTransactions([
+      ...sharedTransactions,
+      { userId: '', share: 0, paidAmount: 0, isSettled: false },
+    ]);
+  };
+
+  const handleRemoveSharedTransaction = (index: number) => {
+    setSharedTransactions(sharedTransactions.filter((_, i) => i !== index));
+  };
+
+  const handleSharedTransactionChange = (
+    index: number,
+    field: keyof SharedTransaction,
+    value: any,
+  ) => {
+    const updatedTransactions = [...sharedTransactions];
+    // @ts-expect-error ignore
+    updatedTransactions[index][field] = value;
+    setSharedTransactions(updatedTransactions);
+  };
+
+  const handleDivideEvenly = () => {
+    const totalAmount = formValues.amount || 0;
+    const share = totalAmount / (sharedTransactions.length || 1);
+    const updatedTransactions = sharedTransactions.map((transaction) => ({
+      ...transaction,
+      share,
+    }));
+
+    setSharedTransactions(updatedTransactions);
+  };
+
   const handleSave = async () => {
-    if (validateForm()) {
+    const isFormValid = validateForm();
+    const areSharedTransactionsValid = validateSharedTransactions();
+    if (isFormValid && areSharedTransactionsValid) {
       try {
         await apiClient.post('/transactions', getRequestPayload());
         toast.success('Transaction created successfully');
         handleClose();
-        navigate(0);
+        // TODO: switch to context based updating
       } catch (error) {
         log.error('Error creating transaction:', error);
         toast.error('Error creating transaction', { autoClose: false });
@@ -207,7 +261,28 @@ const CreateTransactionDialog = ({
 
   const handleClose = () => {
     setFormValues(initialFormValues);
+    setSharedTransactions([]);
+    setValidationErrors({});
+    setSharedTransactionValidationErrors([]);
     onClose();
+  };
+
+  const handleFocus = (field: string) => {
+    setValidationErrors({
+      ...validationErrors,
+      [field]: undefined,
+    });
+  };
+
+  const handleSharedTransactionFocus = (
+    index: number,
+    field: keyof SharedTransaction,
+  ) => {
+    const updatedErrors = [...sharedTransactionValidationErrors];
+    if (updatedErrors[index]) {
+      updatedErrors[index][field] = undefined;
+    }
+    setSharedTransactionValidationErrors(updatedErrors);
   };
 
   const validateForm = () => {
@@ -275,6 +350,32 @@ const CreateTransactionDialog = ({
     return Object.keys(errors).length === 0;
   };
 
+  const validateSharedTransactions = () => {
+    const errors: Record<string, string | undefined>[] = [];
+
+    sharedTransactions.forEach((transaction, index) => {
+      const transactionErrors: Record<string, string | undefined> = {};
+
+      if (!transaction.userId || transaction.userId === '') {
+        transactionErrors.userId = 'User is required';
+      }
+
+      if (transaction.share <= 0) {
+        transactionErrors.share = 'Share must be greater than 0';
+      }
+
+      if (transaction.paidAmount < 0) {
+        transactionErrors.paidAmount = 'Paid Amount cannot be negative';
+      }
+
+      errors[index] = transactionErrors;
+    });
+
+    setSharedTransactionValidationErrors(errors);
+
+    return errors.every((error) => Object.keys(error).length === 0);
+  };
+
   const getRequestPayload = () => {
     const payload: any = {
       updateAccounts: formValues.updateAccounts,
@@ -303,6 +404,15 @@ const CreateTransactionDialog = ({
       }
     }
 
+    if (sharedTransactions.length > 0) {
+      payload.sharedTransactions = sharedTransactions.map((transaction) => ({
+        userId: transaction.userId,
+        share: transaction.share,
+        paidAmount: transaction.paidAmount,
+        isSettled: transaction.isSettled,
+      }));
+    }
+
     return payload;
   };
 
@@ -320,26 +430,22 @@ const CreateTransactionDialog = ({
         <FormControl required error={!!validationErrors?.type}>
           <FormLabel id="controlled-radio-buttons-group">Type</FormLabel>
           <RadioGroup
-            row={!fullScreen}
+            value={formValues.type}
+            row={!smallScreen}
             aria-labelledby="controlled-radio-buttons-group"
             name="type"
             onChange={handleInputChange}
-            onFocus={() =>
-              setValidationErrors({
-                ...validationErrors,
-                type: undefined,
-              })
-            }
+            onFocus={() => handleFocus('type')}
           >
-            <FormControlLabel
-              value="INCOME"
-              control={<Radio />}
-              label="Income"
-            />
             <FormControlLabel
               value="EXPENSE"
               control={<Radio />}
               label="Expense"
+            />
+            <FormControlLabel
+              value="INCOME"
+              control={<Radio />}
+              label="Income"
             />
             <FormControlLabel
               value="TRANSFER"
@@ -359,12 +465,7 @@ const CreateTransactionDialog = ({
               onChange={handleInputChange}
               error={!!validationErrors?.name}
               helperText={validationErrors?.name}
-              onFocus={() =>
-                setValidationErrors({
-                  ...validationErrors,
-                  name: undefined,
-                })
-              }
+              onFocus={() => handleFocus('name')}
             />
             <TextField
               label="Description"
@@ -373,12 +474,7 @@ const CreateTransactionDialog = ({
               onChange={handleInputChange}
               error={!!validationErrors?.description}
               helperText={validationErrors?.description}
-              onFocus={() =>
-                setValidationErrors({
-                  ...validationErrors,
-                  description: undefined,
-                })
-              }
+              onFocus={() => handleFocus('description')}
             />
             <Autocomplete
               options={categoryOptions}
@@ -398,12 +494,7 @@ const CreateTransactionDialog = ({
               onChange={(_event: any, newValue: TransactionCategory | null) => {
                 handleAutoCompleteChange('categoryId', newValue?.id);
               }}
-              onFocus={() =>
-                setValidationErrors({
-                  ...validationErrors,
-                  categoryId: undefined,
-                })
-              }
+              onFocus={() => handleFocus('categoryId')}
             />
             <Autocomplete
               value={formValues.currency}
@@ -423,12 +514,7 @@ const CreateTransactionDialog = ({
               onChange={(_event: any, newValue: string | null) => {
                 handleAutoCompleteChange('currency', newValue);
               }}
-              onFocus={() =>
-                setValidationErrors({
-                  ...validationErrors,
-                  currency: undefined,
-                })
-              }
+              onFocus={() => handleFocus('currency')}
             />
             <TextField
               label="Amount"
@@ -438,12 +524,7 @@ const CreateTransactionDialog = ({
               onChange={handleInputChange}
               error={!!validationErrors?.amount}
               helperText={validationErrors?.amount}
-              onFocus={() =>
-                setValidationErrors({
-                  ...validationErrors,
-                  amount: undefined,
-                })
-              }
+              onFocus={() => handleFocus('amount')}
             />
             <TextField
               value={formValues.date}
@@ -454,12 +535,7 @@ const CreateTransactionDialog = ({
               onChange={handleInputChange}
               error={!!validationErrors?.date}
               helperText={validationErrors?.date}
-              onFocus={() =>
-                setValidationErrors({
-                  ...validationErrors,
-                  date: undefined,
-                })
-              }
+              onFocus={() => handleFocus('date')}
             />
             {formValues.type === 'INCOME' && (
               <Autocomplete
@@ -480,40 +556,171 @@ const CreateTransactionDialog = ({
                 onChange={(_event: any, newValue: Asset | null) => {
                   handleAutoCompleteChange('toAssetId', newValue?.id);
                 }}
-                onFocus={() =>
-                  setValidationErrors({
-                    ...validationErrors,
-                    toAssetId: undefined,
-                  })
-                }
+                onFocus={() => handleFocus('toAssetId')}
               />
             )}
             {formValues.type === 'EXPENSE' && (
-              <Autocomplete
-                options={paymentSystems}
-                autoComplete
-                autoHighlight
-                autoSelect
-                getOptionLabel={(option) => option.name}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="From Payment System"
-                    required
-                    error={!!validationErrors?.fromPaymentSystemId}
-                    helperText={validationErrors?.fromPaymentSystemId}
-                  />
-                )}
-                onChange={(_event: any, newValue: PaymentSystem | null) => {
-                  handleAutoCompleteChange('fromPaymentSystemId', newValue?.id);
-                }}
-                onFocus={() =>
-                  setValidationErrors({
-                    ...validationErrors,
-                    fromPaymentSystemId: undefined,
-                  })
-                }
-              />
+              <>
+                <Autocomplete
+                  options={paymentSystems}
+                  autoComplete
+                  autoHighlight
+                  autoSelect
+                  getOptionLabel={(option) => option.name}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="From Payment System"
+                      required
+                      error={!!validationErrors?.fromPaymentSystemId}
+                      helperText={validationErrors?.fromPaymentSystemId}
+                    />
+                  )}
+                  onChange={(_event: any, newValue: PaymentSystem | null) => {
+                    handleAutoCompleteChange(
+                      'fromPaymentSystemId',
+                      newValue?.id,
+                    );
+                  }}
+                  onFocus={() => handleFocus('fromPaymentSystemId')}
+                />
+                <Stack spacing={2}>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <Typography variant="subtitle1">
+                      Shared Transactions
+                    </Typography>
+                    <Button
+                      startIcon={<CalculateIcon />}
+                      disabled={!enableDivideEvenly}
+                      onClick={handleDivideEvenly}
+                    >
+                      Divide evenly
+                    </Button>
+                  </Box>
+                  {sharedTransactions.map((transaction, index) => (
+                    <Box
+                      key={index}
+                      display="flex"
+                      alignItems="flex-start"
+                      justifyContent="flex-start"
+                      gap={2}
+                      flexDirection={smallScreen ? 'column' : 'row'}
+                    >
+                      <Autocomplete
+                        options={userOptions}
+                        autoComplete
+                        autoHighlight
+                        autoSelect
+                        getOptionLabel={(option) =>
+                          `${option.firstName} ${option.lastName}`
+                        }
+                        sx={{ width: '50%' }}
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            label="User"
+                            required
+                            error={
+                              !!sharedTransactionValidationErrors[index]?.userId
+                            }
+                            helperText={
+                              sharedTransactionValidationErrors[index]?.userId
+                            }
+                            onFocus={() =>
+                              handleSharedTransactionFocus(index, 'userId')
+                            }
+                          />
+                        )}
+                        onChange={(_event: any, newValue: User | null) => {
+                          handleSharedTransactionChange(
+                            index,
+                            'userId',
+                            newValue?.id || '',
+                          );
+                        }}
+                      />
+                      <TextField
+                        label="Share"
+                        type="number"
+                        value={transaction.share}
+                        required
+                        error={
+                          !!sharedTransactionValidationErrors[index]?.share
+                        }
+                        helperText={
+                          sharedTransactionValidationErrors[index]?.share
+                        }
+                        onFocus={() =>
+                          handleSharedTransactionFocus(index, 'share')
+                        }
+                        onChange={(e) =>
+                          handleSharedTransactionChange(
+                            index,
+                            'share',
+                            parseFloat(e.target.value) || 0,
+                          )
+                        }
+                      />
+                      <TextField
+                        label="Paid Amount"
+                        type="number"
+                        value={transaction.paidAmount}
+                        required
+                        error={
+                          !!sharedTransactionValidationErrors[index]?.paidAmount
+                        }
+                        helperText={
+                          sharedTransactionValidationErrors[index]?.paidAmount
+                        }
+                        onFocus={() =>
+                          handleSharedTransactionFocus(index, 'paidAmount')
+                        }
+                        onChange={(e) =>
+                          handleSharedTransactionChange(
+                            index,
+                            'paidAmount',
+                            parseFloat(e.target.value) || 0,
+                          )
+                        }
+                      />
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={transaction.isSettled}
+                            onChange={(e) =>
+                              handleSharedTransactionChange(
+                                index,
+                                'isSettled',
+                                e.target.checked,
+                              )
+                            }
+                          />
+                        }
+                        label="Settled"
+                      />
+                      <IconButton
+                        onClick={() => handleRemoveSharedTransaction(index)}
+                        sx={{ backgroundColor: theme.palette.error.main }}
+                      >
+                        <RemoveIcon />
+                      </IconButton>
+                    </Box>
+                  ))}
+                  <Button
+                    startIcon={<AddIcon />}
+                    onClick={handleAddSharedTransaction}
+                    disabled={!formValues.amount}
+                  >
+                    Add Shared Transaction
+                  </Button>
+                </Stack>
+              </>
             )}
             {formValues.type === 'TRANSFER' && (
               <>
@@ -535,12 +742,7 @@ const CreateTransactionDialog = ({
                   onChange={(_event: any, newValue: Asset | null) => {
                     handleAutoCompleteChange('fromAssetId', newValue?.id);
                   }}
-                  onFocus={() =>
-                    setValidationErrors({
-                      ...validationErrors,
-                      fromAssetId: undefined,
-                    })
-                  }
+                  onFocus={() => handleFocus('fromAssetId')}
                 />
                 <Autocomplete
                   options={assets}
@@ -560,12 +762,7 @@ const CreateTransactionDialog = ({
                   onChange={(_event: any, newValue: Asset | null) => {
                     handleAutoCompleteChange('toAssetId', newValue?.id);
                   }}
-                  onFocus={() =>
-                    setValidationErrors({
-                      ...validationErrors,
-                      toAssetId: undefined,
-                    })
-                  }
+                  onFocus={() => handleFocus('toAssetId')}
                 />
                 <Autocomplete
                   options={liabilities}
@@ -585,12 +782,7 @@ const CreateTransactionDialog = ({
                   onChange={(_event: any, newValue: Liability | null) => {
                     handleAutoCompleteChange('toLiabilityId', newValue?.id);
                   }}
-                  onFocus={() =>
-                    setValidationErrors({
-                      ...validationErrors,
-                      toLiabilityId: undefined,
-                    })
-                  }
+                  onFocus={() => handleFocus('toLiabilityId')}
                 />
               </>
             )}
@@ -602,7 +794,7 @@ const CreateTransactionDialog = ({
 
   return (
     <Dialog
-      fullScreen={fullScreen}
+      fullScreen
       fullWidth
       onClose={handleClose}
       open={open}
