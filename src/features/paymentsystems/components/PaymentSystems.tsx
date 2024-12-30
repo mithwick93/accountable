@@ -29,6 +29,7 @@ import { PaymentSystemCredit } from '../../../types/PaymentSystemCredit';
 import { PaymentSystemDebit } from '../../../types/PaymentSystemDebit';
 import { notSelectedOption, stringToColor } from '../../../utils/common';
 import log from '../../../utils/logger';
+import { notifyBackendError } from '../../../utils/notifications';
 
 const PaymentSystems: React.FC = () => {
   const [paymentSystems, setPaymentSystems] = useState<
@@ -302,8 +303,7 @@ const PaymentSystems: React.FC = () => {
         return;
       }
     } catch (error) {
-      log.error('Error creating payment system: ', error);
-      toast.error('Error creating payment system', { autoClose: false });
+      notifyBackendError('Error creating payment system', error);
     } finally {
       setSaving(false);
     }
@@ -350,7 +350,7 @@ const PaymentSystems: React.FC = () => {
       }
     } catch (error) {
       log.error('Error updating payment system: ', error);
-      toast.error('Error updating payment system', { autoClose: false });
+      notifyBackendError('Error updating payment system', error);
     } finally {
       setUpdating(false);
     }
@@ -368,8 +368,7 @@ const PaymentSystems: React.FC = () => {
       setPaymentSystems(paymentSystems.filter((ps) => ps.id !== id));
       toast.success(`Payment system: '${row.original.name}' deleted`);
     } catch (error) {
-      log.error('Error deleting payment system: ', error);
-      toast.error('Error deleting payment system', { autoClose: false });
+      notifyBackendError('Error deleting payment system', error);
     } finally {
       setDeleting(false);
     }

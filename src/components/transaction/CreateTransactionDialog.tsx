@@ -41,6 +41,7 @@ import { SharedTransaction } from '../../types/SharedTransaction';
 import { TransactionCategory } from '../../types/TransactionCategory';
 import { User } from '../../types/User';
 import log from '../../utils/logger';
+import { notifyBackendError } from '../../utils/notifications';
 import SlideUpTransition from '../transition/SlideUpTransition';
 
 interface CreateTransactionDialogProps {
@@ -50,6 +51,7 @@ interface CreateTransactionDialogProps {
 
 type FormStateType = {
   updateAccounts: boolean;
+  userId?: string;
   type?: string;
   name?: string;
   description?: string;
@@ -76,6 +78,7 @@ const CreateTransactionDialog = ({
   const updateAccounts = settings?.transactions.updateAccounts ?? false;
   const initialFormValues: FormStateType = {
     type: 'EXPENSE',
+    userId: loggedInUser?.sub,
     updateAccounts: updateAccounts,
     currency: baseCurrency,
     date: new Date().toISOString().split('T')[0],
@@ -254,9 +257,8 @@ const CreateTransactionDialog = ({
         toast.success('Transaction created successfully');
         handleClose();
         // TODO: switch to context based updating
-      } catch (error) {
-        log.error('Error creating transaction:', error);
-        toast.error('Error creating transaction', { autoClose: false });
+      } catch (error: any) {
+        notifyBackendError('Error creating transaction', error);
       }
     }
   };
@@ -293,6 +295,10 @@ const CreateTransactionDialog = ({
     if (!formValues.type) {
       errors.type = 'Type is required';
     } else {
+      if (!formValues.userId) {
+        errors.userId = 'User is required';
+      }
+
       if (!formValues.name) {
         errors.name = 'Name is required';
       }
@@ -307,6 +313,8 @@ const CreateTransactionDialog = ({
 
       if (!formValues.amount) {
         errors.amount = 'Amount is required';
+      } else if (formValues.amount <= 0) {
+        errors.amount = 'Amount must be greater than 0';
       }
 
       if (!formValues.date) {
@@ -324,15 +332,6 @@ const CreateTransactionDialog = ({
       if (formValues.type === 'TRANSFER') {
         if (!formValues.fromAssetId) {
           errors.fromAssetId = 'From Asset is required';
-        }
-
-        if (
-          formValues.fromAssetId &&
-          formValues.toAssetId &&
-          formValues.fromAssetId === formValues.toAssetId
-        ) {
-          errors.fromAssetId = 'From Asset and To Asset cannot be the same';
-          errors.toAssetId = 'From Asset and To Asset cannot be the same';
         }
 
         if (!formValues.toAssetId && !formValues.toLiabilityId) {
@@ -388,7 +387,7 @@ const CreateTransactionDialog = ({
       currency: formValues.currency,
       amount: formValues.amount,
       date: formValues.date,
-      userId: loggedInUser?.sub,
+      userId: formValues.userId,
       sharedTransactions: [],
     };
 
@@ -459,6 +458,31 @@ const CreateTransactionDialog = ({
         </FormControl>
         {formValues.type && (
           <>
+            <Autocomplete
+              value={userOptions.find(
+                (user) => `${user.id}` === `${formValues.userId}`,
+              )}
+              options={userOptions}
+              autoComplete
+              autoHighlight
+              autoSelect
+              getOptionLabel={(option) =>
+                `${option.firstName} ${option.lastName}`
+              }
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Paid by"
+                  required
+                  error={!!validationErrors?.userId}
+                  helperText={validationErrors?.userId}
+                  onFocus={() => handleFocus('userId')}
+                />
+              )}
+              onChange={(_event: any, newValue: User | null) => {
+                handleAutoCompleteChange('userId', newValue?.id);
+              }}
+            />
             <TextField
               label="Name"
               name="name"

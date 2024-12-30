@@ -33,6 +33,7 @@ import {
   stringToColor,
 } from '../../../utils/common';
 import log from '../../../utils/logger';
+import { notifyBackendError } from '../../../utils/notifications';
 
 const Assets: React.FC = () => {
   const [assets, setAssets] = useState<Asset[]>([]);
@@ -226,8 +227,7 @@ const Assets: React.FC = () => {
       setAssets([...assets, newAsset]);
       toast.success(`Created Asset: '${newAsset.name}' successfully`);
     } catch (error) {
-      log.error('Error creating asset: ', error);
-      toast.error('Error creating asset', { autoClose: false });
+      notifyBackendError('Error creating asset', error);
     } finally {
       setSaving(false);
     }
@@ -250,8 +250,7 @@ const Assets: React.FC = () => {
       setAssets(updatedAssets);
       toast.success(`Updated Asset: '${asset.name}' successfully`);
     } catch (error) {
-      log.error('Error updating asset: ', error);
-      toast.error('Error updating asset', { autoClose: false });
+      notifyBackendError('Error updating asset', error);
     } finally {
       setUpdating(false);
     }
@@ -266,8 +265,7 @@ const Assets: React.FC = () => {
       setAssets(updatedAssets);
       toast.success(`Deleted Asset: '${row.original.name}' successfully`);
     } catch (error) {
-      log.error('Error deleting asset: ', error);
-      toast.error('Error deleting asset', { autoClose: false });
+      notifyBackendError('Error deleting asset', error);
     } finally {
       setDeleting(false);
     }

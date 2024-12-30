@@ -40,6 +40,7 @@ import {
 } from '../../../utils/common';
 import { calculateLiabilityDates } from '../../../utils/date';
 import log from '../../../utils/logger';
+import { notifyBackendError } from '../../../utils/notifications';
 
 const createPayload = (liability: Liability) => {
   const payload: any = {
@@ -445,8 +446,7 @@ const Liabilities: React.FC = () => {
       setLiabilities([...liabilities, newLiability]);
       toast.success(`Created Liability: '${newLiability.name}' successfully`);
     } catch (error) {
-      log.error('Error creating liability:', error);
-      toast.error('Error creating liability', { autoClose: false });
+      notifyBackendError('Error creating liability', error);
     } finally {
       setSaving(false);
     }
@@ -466,8 +466,7 @@ const Liabilities: React.FC = () => {
         `Updated Liability: '${updatedLiability.name}' successfully`,
       );
     } catch (error) {
-      log.error('Error updating liability:', error);
-      toast.error('Error updating liability', { autoClose: false });
+      notifyBackendError('Error updating liability', error);
     } finally {
       setUpdating(false);
     }
@@ -481,8 +480,7 @@ const Liabilities: React.FC = () => {
       setLiabilities(liabilities.filter((l) => l.id !== id));
       toast.success(`Deleted Liability: '${row.original.name}' successfully`);
     } catch (error) {
-      log.error('Error deleting liability:', error);
-      toast.error('Error deleting liability', { autoClose: false });
+      notifyBackendError('Error deleting liability', error);
     } finally {
       setDeleting(false);
     }

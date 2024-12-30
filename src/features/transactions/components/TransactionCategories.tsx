@@ -30,6 +30,7 @@ import {
   stringToColor,
 } from '../../../utils/common';
 import log from '../../../utils/logger';
+import { notifyBackendError } from '../../../utils/notifications';
 
 const TransactionCategories: React.FC = () => {
   const [categories, setCategories] = useState<TransactionCategory[]>([]);
@@ -140,8 +141,7 @@ const TransactionCategories: React.FC = () => {
         `Transaction category: '${newCategory.name}' created successfully`,
       );
     } catch (error) {
-      log.error('Error creating transaction category: ', error);
-      toast.error('Error creating transaction category', { autoClose: false });
+      notifyBackendError('Error creating transaction category', error);
     } finally {
       setSaving(false);
     }
@@ -162,7 +162,7 @@ const TransactionCategories: React.FC = () => {
       );
     } catch (error) {
       log.error('Error updating transaction category: ', error);
-      toast.error('Error updating transaction category', { autoClose: false });
+      notifyBackendError('Error updating transaction category', error);
     } finally {
       setUpdating(false);
     }
@@ -176,8 +176,7 @@ const TransactionCategories: React.FC = () => {
       setCategories(categories.filter((category) => category.id !== id));
       toast.success(`Transaction category: '${row.original.name}' deleted`);
     } catch (error) {
-      log.error('Error deleting transaction category: ', error);
-      toast.error('Error deleting transaction category', { autoClose: false });
+      notifyBackendError('Error deleting transaction category', error);
     } finally {
       setDeleting(false);
     }
