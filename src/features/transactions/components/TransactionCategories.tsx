@@ -20,8 +20,9 @@ import {
   type MRT_RowData,
   useMaterialReactTable,
 } from 'material-react-table';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
+import { useData } from '../../../context/DataContext';
 import apiClient from '../../../services/ApiService';
 import { TransactionCategory } from '../../../types/TransactionCategory';
 import {
@@ -33,11 +34,10 @@ import log from '../../../utils/logger';
 import { notifyBackendError } from '../../../utils/notifications';
 
 const TransactionCategories: React.FC = () => {
-  const [categories, setCategories] = useState<TransactionCategory[]>([]);
+  const { categories, refetchData, loading } = useData();
   const [validationErrors, setValidationErrors] = useState<
     Record<string, string | undefined>
   >({});
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [updating, setUpdating] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -100,23 +100,6 @@ const TransactionCategories: React.FC = () => {
     [validationErrors],
   );
 
-  useEffect(() => {
-    const fetchCategories = async () => {
-      setLoading(true);
-      try {
-        const response = await apiClient.get('/transactions/categories');
-        const categoriesData = response.data;
-        setCategories(categoriesData);
-      } catch (error) {
-        log.error('Error fetching transaction categories:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchCategories();
-  }, []);
-
   const validateCategory = (category: Record<LiteralUnion<string>, any>) => {
     const errors: Record<string, string | undefined> = {};
     if (!category.name) {
@@ -135,8 +118,9 @@ const TransactionCategories: React.FC = () => {
         name: category.name,
         type: getOriginalTransactionType(category.type),
       });
+      await refetchData(['categories']);
+
       const newCategory = response.data;
-      setCategories([...categories, newCategory]);
       toast.success(
         `Transaction category: '${newCategory.name}' created successfully`,
       );
@@ -155,8 +139,9 @@ const TransactionCategories: React.FC = () => {
         name: category.name,
         type: getOriginalTransactionType(category.type),
       });
+      await refetchData(['categories']);
+
       const updatedCategory = response.data;
-      setCategories(categories.map((c) => (c.id === id ? updatedCategory : c)));
       toast.success(
         `Transaction category: '${updatedCategory.name}' updated successfully`,
       );
@@ -173,7 +158,8 @@ const TransactionCategories: React.FC = () => {
     try {
       const { id } = row.original;
       await apiClient.delete(`/transactions/categories/${id}`);
-      setCategories(categories.filter((category) => category.id !== id));
+      await refetchData(['categories']);
+
       toast.success(`Transaction category: '${row.original.name}' deleted`);
     } catch (error) {
       notifyBackendError('Error deleting transaction category', error);
