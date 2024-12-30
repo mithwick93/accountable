@@ -5,6 +5,7 @@ import {
   DialogActions,
   DialogContent,
   FormHelperText,
+  Switch,
   TextField,
 } from '@mui/material';
 import Autocomplete from '@mui/material/Autocomplete';
@@ -18,7 +19,10 @@ import RadioGroup from '@mui/material/RadioGroup';
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import { useStaticData } from '../../context/StaticDataContext';
+import { useUser } from '../../context/UserContext';
 import apiClient from '../../services/ApiService';
 import { Asset } from '../../types/Asset';
 import { Liability } from '../../types/Liability';
@@ -36,6 +40,7 @@ interface CreateTransactionDialogProps {
 }
 
 type FormStateType = {
+  updateAccounts: boolean;
   type?: string;
   name?: string;
   description?: string;
@@ -46,11 +51,11 @@ type FormStateType = {
   toAssetId?: number;
   fromAssetId?: number;
   fromPaymentSystemId?: number;
-  toPaymentSystemId?: number;
+  toLiabilityId?: number;
   sharedTransactions?: SharedTransaction[];
 };
 
-const initialFormValues: FormStateType = {};
+const initialFormValues: FormStateType = { updateAccounts: true };
 
 const CreateTransactionDialog = ({
   onClose,
@@ -61,69 +66,29 @@ const CreateTransactionDialog = ({
   const [validationErrors, setValidationErrors] = useState<
     Record<string, string | undefined>
   >({});
-  const [assets, setAssets] = useState<Asset[]>([]);
-  const [liabilities, setLiabilities] = useState<Liability[]>([]);
-  const [paymentSystems, setPaymentSystems] = useState<
-    (PaymentSystemCredit | PaymentSystemDebit)[]
-  >([]);
-  const [categories, setCategories] = useState<TransactionCategory[]>([]);
+  const [data, setData] = useState<
+    | {
+        assets: Asset[];
+        liabilities: Liability[];
+        paymentSystems: (PaymentSystemCredit | PaymentSystemDebit)[];
+        categories: TransactionCategory[];
+      }
+    | undefined
+  >();
   const { currencies } = useStaticData();
+  const { loggedInUser } = useUser();
   const [loading, setLoading] = useState(true);
-
   const theme = useTheme();
-  const fullScreen = useMediaQuery(theme.breakpoints.down('md'));
+  const navigate = useNavigate();
+
+  const assets = data?.assets ?? [];
+  const liabilities = data?.liabilities ?? [];
+  const paymentSystems = data?.paymentSystems ?? [];
+  const categoryOptions =
+    data?.categories.filter((category) => category.type === formValues.type) ??
+    [];
   const currencyCodes = currencies?.map((currency) => currency.code) ?? [];
-  const categoryOptions = categories.filter(
-    (category) => category.type === formValues.type,
-  );
-
-  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = event.target;
-
-    if (name === 'type') {
-      setFormValues({
-        ...formValues,
-        [name]: value,
-        toAssetId: initialFormValues.toAssetId,
-        fromAssetId: initialFormValues.fromAssetId,
-        fromPaymentSystemId: initialFormValues.fromPaymentSystemId,
-        toPaymentSystemId: initialFormValues.toPaymentSystemId,
-        categoryId: initialFormValues.categoryId,
-      });
-    } else if (name === 'amount') {
-      setFormValues({
-        ...formValues,
-        // @ts-expect-error value is always a number or undefined
-        [name]: value ? parseFloat(value) : value,
-      });
-    } else {
-      setFormValues({
-        ...formValues,
-        [name]: value,
-      });
-    }
-  };
-
-  const handleAutoCompleteChange = (
-    key: string,
-    value: number | string | undefined | null,
-  ) => {
-    setFormValues({
-      ...formValues,
-      [key]: value,
-    });
-  };
-
-  const handleSave = () => {
-    log.info(JSON.stringify(formValues));
-    // TODO: Implement validation
-    // TODO: Implement save
-  };
-
-  const handleClose = () => {
-    setFormValues(initialFormValues);
-    onClose();
-  };
+  const fullScreen = useMediaQuery(theme.breakpoints.down('md'));
 
   useEffect(() => {
     if (!open) {
@@ -165,10 +130,12 @@ const CreateTransactionDialog = ({
             a.type.localeCompare(b.type) || a.name.localeCompare(b.name),
         );
 
-        setAssets(assetsResponse.data);
-        setLiabilities(liabilitiesResponse.data);
-        setPaymentSystems([...creditsData, ...debitsData]);
-        setCategories(categories);
+        setData({
+          assets: assetsResponse.data,
+          liabilities: liabilitiesResponse.data,
+          paymentSystems: [...creditsData, ...debitsData],
+          categories,
+        });
       } catch (error) {
         log.error('Error fetching data:', error);
       } finally {
@@ -178,6 +145,151 @@ const CreateTransactionDialog = ({
 
     fetchData();
   }, [open]);
+
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = event.target;
+
+    if (name === 'type') {
+      setFormValues({
+        ...formValues,
+        [name]: value,
+        toAssetId: initialFormValues.toAssetId,
+        fromAssetId: initialFormValues.fromAssetId,
+        fromPaymentSystemId: initialFormValues.fromPaymentSystemId,
+        toLiabilityId: initialFormValues.toLiabilityId,
+        categoryId: initialFormValues.categoryId,
+      });
+    } else if (name === 'amount') {
+      setFormValues({
+        ...formValues,
+        // @ts-expect-error value is always a number or undefined
+        [name]: value ? parseFloat(value) : value,
+      });
+    } else {
+      setFormValues({
+        ...formValues,
+        [name]: value,
+      });
+    }
+  };
+
+  const handleAutoCompleteChange = (
+    key: string,
+    value: number | string | undefined | null,
+  ) => {
+    setFormValues({
+      ...formValues,
+      [key]: value,
+    });
+  };
+
+  const handleSave = async () => {
+    log.info(JSON.stringify(formValues));
+
+    if (validateForm()) {
+      try {
+        await apiClient.post('/transactions', getRequestPayload());
+        toast.success('Transaction created successfully');
+        handleClose();
+        navigate(0);
+      } catch (error) {
+        log.error('Error creating transaction:', error);
+        toast.error('Error creating transaction', { autoClose: false });
+      }
+    }
+  };
+
+  const handleClose = () => {
+    setFormValues(initialFormValues);
+    onClose();
+  };
+
+  const validateForm = () => {
+    const errors: Record<string, string | undefined> = {};
+
+    if (!formValues.type) {
+      errors.type = 'Type is required';
+    } else {
+      if (!formValues.name) {
+        errors.name = 'Name is required';
+      }
+
+      if (!formValues.categoryId) {
+        errors.categoryId = 'Category is required';
+      }
+
+      if (!formValues.currency) {
+        errors.currency = 'Currency is required';
+      }
+
+      if (!formValues.amount) {
+        errors.amount = 'Amount is required';
+      }
+
+      if (!formValues.date) {
+        errors.date = 'Date is required';
+      }
+
+      if (formValues.type === 'INCOME' && !formValues.toAssetId) {
+        errors.toAssetId = 'To Asset is required';
+      }
+
+      if (formValues.type === 'EXPENSE' && !formValues.fromPaymentSystemId) {
+        errors.fromPaymentSystemId = 'From Payment System is required';
+      }
+
+      if (formValues.type === 'TRANSFER') {
+        if (!formValues.fromAssetId) {
+          errors.fromAssetId = 'From Asset is required';
+        }
+
+        if (!formValues.toAssetId && !formValues.toLiabilityId) {
+          errors.toAssetId = 'To Asset or To Liability is required';
+          errors.toLiabilityId = 'To Asset or To Liability is required';
+        }
+
+        if (formValues.toAssetId && formValues.toLiabilityId) {
+          errors.toAssetId = 'Cannot have both To Asset and To Liability';
+          errors.toLiabilityId = 'Cannot have both To Asset and To Liability';
+        }
+      }
+    }
+
+    setValidationErrors(errors);
+
+    return Object.keys(errors).length === 0;
+  };
+
+  const getRequestPayload = () => {
+    const payload: any = {
+      updateAccounts: formValues.updateAccounts,
+      type: formValues.type,
+      name: formValues.name,
+      description: formValues.description,
+      categoryId: formValues.categoryId,
+      currency: formValues.currency,
+      amount: formValues.amount,
+      date: formValues.date,
+      userId: loggedInUser?.sub,
+      sharedTransactions: [],
+    };
+
+    if (formValues.type === 'INCOME') {
+      payload.toAssetId = formValues.toAssetId;
+    } else if (formValues.type === 'EXPENSE') {
+      payload.fromPaymentSystemId = formValues.fromPaymentSystemId;
+    } else if (formValues.type === 'TRANSFER') {
+      payload.fromAssetId = formValues.fromAssetId;
+
+      if (formValues.toAssetId) {
+        payload.toAssetId = formValues.toAssetId;
+      } else {
+        payload.toLiabilityId = formValues.toLiabilityId;
+      }
+    }
+
+    return payload;
+  };
 
   const renderContent = () => {
     if (loading) {
@@ -449,17 +561,17 @@ const CreateTransactionDialog = ({
                       {...params}
                       label="To Liability"
                       required
-                      error={!!validationErrors?.toPaymentSystemId}
-                      helperText={validationErrors?.toPaymentSystemId}
+                      error={!!validationErrors?.toLiabilityId}
+                      helperText={validationErrors?.toLiabilityId}
                     />
                   )}
                   onChange={(_event: any, newValue: Liability | null) => {
-                    handleAutoCompleteChange('toPaymentSystemId', newValue?.id);
+                    handleAutoCompleteChange('toLiabilityId', newValue?.id);
                   }}
                   onFocus={() =>
                     setValidationErrors({
                       ...validationErrors,
-                      toPaymentSystemId: undefined,
+                      toLiabilityId: undefined,
                     })
                   }
                 />
@@ -481,7 +593,33 @@ const CreateTransactionDialog = ({
       keepMounted
       aria-describedby="alert-dialog-slide-description"
     >
-      <DialogTitle>Record Transaction</DialogTitle>
+      <DialogTitle>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
+          Record Transaction
+          <FormControlLabel
+            control={
+              <Switch
+                checked={formValues.updateAccounts}
+                onChange={(event) =>
+                  setFormValues({
+                    ...formValues,
+                    updateAccounts: event.target.checked,
+                  })
+                }
+                name="updateAccounts"
+                color="primary"
+              />
+            }
+            label="Update accounts"
+          />
+        </Box>
+      </DialogTitle>
       <DialogContent
         sx={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}
       >
