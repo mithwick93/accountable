@@ -26,8 +26,9 @@ import Radio from '@mui/material/Radio';
 import RadioGroup from '@mui/material/RadioGroup';
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { toast } from 'react-toastify';
+import { useData } from '../../context/DataContext';
 import { useSettings } from '../../context/SettingsContext';
 import { useStaticData } from '../../context/StaticDataContext';
 import { useUser } from '../../context/UserContext';
@@ -35,12 +36,9 @@ import apiClient from '../../services/ApiService';
 import { Asset } from '../../types/Asset';
 import { Liability } from '../../types/Liability';
 import { PaymentSystem } from '../../types/PaymentSystem';
-import { PaymentSystemCredit } from '../../types/PaymentSystemCredit';
-import { PaymentSystemDebit } from '../../types/PaymentSystemDebit';
 import { SharedTransaction } from '../../types/SharedTransaction';
 import { TransactionCategory } from '../../types/TransactionCategory';
 import { User } from '../../types/User';
-import log from '../../utils/logger';
 import { notifyBackendError } from '../../utils/notifications';
 import SlideUpTransition from '../transition/SlideUpTransition';
 
@@ -71,8 +69,15 @@ const CreateTransactionDialog = ({
 }: CreateTransactionDialogProps) => {
   const { settings, update } = useSettings();
   const { currencies } = useStaticData();
+  const {
+    assets,
+    liabilities,
+    paymentSystems,
+    categories,
+    refetchData,
+    loading,
+  } = useData();
   const { loggedInUser, users } = useUser();
-  const [loading, setLoading] = useState(true);
   const theme = useTheme();
   const baseCurrency = settings?.currency || 'USD';
   const updateAccounts = settings?.transactions.updateAccounts ?? false;
@@ -96,23 +101,10 @@ const CreateTransactionDialog = ({
     sharedTransactionValidationErrors,
     setSharedTransactionValidationErrors,
   ] = useState<Record<string, string | undefined>[]>([]);
-  const [data, setData] = useState<
-    | {
-        assets: Asset[];
-        liabilities: Liability[];
-        paymentSystems: (PaymentSystemCredit | PaymentSystemDebit)[];
-        categories: TransactionCategory[];
-      }
-    | undefined
-  >();
 
   const userOptions = users ?? [];
-  const assets = data?.assets ?? [];
-  const liabilities = data?.liabilities ?? [];
-  const paymentSystems = data?.paymentSystems ?? [];
   const categoryOptions =
-    data?.categories.filter((category) => category.type === formValues.type) ??
-    [];
+    categories.filter((category) => category.type === formValues.type) ?? [];
   const currencyCodes = currencies?.map((currency) => currency.code) ?? [];
   const smallScreen = useMediaQuery(theme.breakpoints.down('md'));
 
@@ -121,62 +113,6 @@ const CreateTransactionDialog = ({
     sharedTransactions.length > 1 &&
     formValues.amount &&
     formValues.amount > 0;
-
-  useEffect(() => {
-    if (!open) {
-      return;
-    }
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const [
-          assetsResponse,
-          liabilitiesResponse,
-          creditsResponse,
-          debitsResponse,
-          categoriesResponse,
-        ] = await Promise.all([
-          apiClient.get('/assets'),
-          apiClient.get('/liabilities'),
-          apiClient.get('/payment-systems/credits'),
-          apiClient.get('/payment-systems/debits'),
-          apiClient.get('/transactions/categories'),
-        ]);
-
-        const creditsData = creditsResponse.data.map(
-          (item: PaymentSystemCredit) => ({
-            ...item,
-            type: 'Credit',
-          }),
-        );
-
-        const debitsData = debitsResponse.data.map(
-          (item: PaymentSystemDebit) => ({
-            ...item,
-            type: 'Debit',
-          }),
-        );
-
-        const categories = categoriesResponse.data.sort(
-          (a: TransactionCategory, b: TransactionCategory) =>
-            a.type.localeCompare(b.type) || a.name.localeCompare(b.name),
-        );
-
-        setData({
-          assets: assetsResponse.data,
-          liabilities: liabilitiesResponse.data,
-          paymentSystems: [...creditsData, ...debitsData],
-          categories,
-        });
-      } catch (error) {
-        log.error('Error fetching data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [open]);
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
@@ -255,8 +191,9 @@ const CreateTransactionDialog = ({
       try {
         await apiClient.post('/transactions', getRequestPayload());
         toast.success('Transaction created successfully');
+
+        await refetchData();
         handleClose();
-        // TODO: switch to context based updating
       } catch (error: any) {
         notifyBackendError('Error creating transaction', error);
       }
