@@ -1,5 +1,6 @@
 import { Add as AddIcon, Remove as RemoveIcon } from '@mui/icons-material';
 import CalculateIcon from '@mui/icons-material/Calculate';
+import CloseIcon from '@mui/icons-material/Close';
 import {
   Box,
   Button,
@@ -12,6 +13,7 @@ import {
   Stack,
   Switch,
   TextField,
+  Tooltip,
   Typography,
 } from '@mui/material';
 import Autocomplete from '@mui/material/Autocomplete';
@@ -600,13 +602,34 @@ const CreateTransactionDialog = ({
                     <Typography variant="subtitle1">
                       Shared Transactions
                     </Typography>
-                    <Button
-                      startIcon={<CalculateIcon />}
-                      disabled={!enableDivideEvenly}
-                      onClick={handleDivideEvenly}
+                    <Box
+                      sx={{
+                        display: 'flex-end',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                      }}
                     >
-                      Divide evenly
-                    </Button>
+                      <Tooltip title="Divide evenly">
+                        <span>
+                          <IconButton
+                            onClick={handleDivideEvenly}
+                            disabled={!enableDivideEvenly}
+                          >
+                            <CalculateIcon />
+                          </IconButton>
+                        </span>
+                      </Tooltip>
+                      <Tooltip title="Add shared trsnaction">
+                        <span>
+                          <IconButton
+                            onClick={handleAddSharedTransaction}
+                            disabled={!formValues.amount}
+                          >
+                            <AddIcon />
+                          </IconButton>
+                        </span>
+                      </Tooltip>
+                    </Box>
                   </Box>
                   {sharedTransactions.map((transaction, index) => (
                     <Box
@@ -732,13 +755,6 @@ const CreateTransactionDialog = ({
                       </IconButton>
                     </Box>
                   ))}
-                  <Button
-                    startIcon={<AddIcon />}
-                    onClick={handleAddSharedTransaction}
-                    disabled={!formValues.amount}
-                  >
-                    Add Shared Transaction
-                  </Button>
                 </Stack>
               </>
             )}
@@ -834,30 +850,41 @@ const CreateTransactionDialog = ({
             alignItems: 'center',
           }}
         >
-          Record Transaction
-          <FormControlLabel
-            control={
-              <Switch
-                checked={formValues.updateAccounts}
-                onChange={(event) => {
-                  update({
-                    ...settings,
-                    transactions: {
-                      ...(settings?.transactions || {}),
+          Add Transaction
+          <Box
+            sx={{
+              display: 'flex-end',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}
+          >
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={formValues.updateAccounts}
+                  onChange={(event) => {
+                    update({
+                      ...settings,
+                      transactions: {
+                        ...(settings?.transactions || {}),
+                        updateAccounts: event.target.checked,
+                      },
+                    });
+                    setFormValues({
+                      ...formValues,
                       updateAccounts: event.target.checked,
-                    },
-                  });
-                  setFormValues({
-                    ...formValues,
-                    updateAccounts: event.target.checked,
-                  });
-                }}
-                name="updateAccounts"
-                color="primary"
-              />
-            }
-            label="Update accounts"
-          />
+                    });
+                  }}
+                  name="updateAccounts"
+                  color="primary"
+                />
+              }
+              label="Update accounts"
+            />
+            <IconButton onClick={handleClose}>
+              <CloseIcon />
+            </IconButton>
+          </Box>
         </Box>
       </DialogTitle>
       <DialogContent
@@ -866,8 +893,13 @@ const CreateTransactionDialog = ({
         {renderContent()}
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleClose}>Cancel</Button>
-        <Button onClick={handleSave}>Save</Button>
+        <Button onClick={handleClose} variant="outlined">
+          Cancel
+        </Button>
+        <Box sx={{ width: '1rem' }} />
+        <Button onClick={handleSave} variant="contained">
+          Save
+        </Button>
       </DialogActions>
     </Dialog>
   );
