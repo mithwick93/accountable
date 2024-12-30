@@ -23,8 +23,11 @@ import {
 } from 'material-react-table';
 import React, { useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
+import { useData } from '../../../context/DataContext';
 import { useStaticData } from '../../../context/StaticDataContext';
 import apiClient from '../../../services/ApiService';
+import { Asset } from '../../../types/Asset';
+import { Liability } from '../../../types/Liability';
 import { PaymentSystemCredit } from '../../../types/PaymentSystemCredit';
 import { PaymentSystemDebit } from '../../../types/PaymentSystemDebit';
 import { notSelectedOption, stringToColor } from '../../../utils/common';
@@ -32,15 +35,15 @@ import log from '../../../utils/logger';
 import { notifyBackendError } from '../../../utils/notifications';
 
 const PaymentSystems: React.FC = () => {
-  const [paymentSystems, setPaymentSystems] = useState<
-    (PaymentSystemCredit | PaymentSystemDebit)[]
-  >([]);
+  const { assets, liabilities, paymentSystems, refetchData, loading } =
+    useData();
   const [validationErrors, setValidationErrors] = useState<
     Record<string, string | undefined>
   >({});
-  const [assets, setAssets] = useState<DropdownOption[]>([]);
-  const [liabilities, setLiabilities] = useState<DropdownOption[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [assetsOptions, setAssetsOptions] = useState<DropdownOption[]>([]);
+  const [liabilitiesOptions, setLiabilitiesOptions] = useState<
+    DropdownOption[]
+  >([]);
   const [saving, setSaving] = useState(false);
   const [updating, setUpdating] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -130,7 +133,7 @@ const PaymentSystems: React.FC = () => {
         accessorKey: 'assetId',
         header: 'Asset',
         editVariant: 'select',
-        editSelectOptions: assets,
+        editSelectOptions: assetsOptions,
         muiEditTextFieldProps: {
           select: true,
           required: false,
@@ -148,7 +151,7 @@ const PaymentSystems: React.FC = () => {
         accessorKey: 'liabilityId',
         header: 'Liability',
         editVariant: 'select',
-        editSelectOptions: liabilities,
+        editSelectOptions: liabilitiesOptions,
         muiEditTextFieldProps: {
           select: true,
           required: false,
@@ -166,56 +169,25 @@ const PaymentSystems: React.FC = () => {
   );
 
   useEffect(() => {
-    const fetchPaymentSystems = async () => {
-      setLoading(true);
+    const fetchPaymentSystems = () => {
       try {
-        const [
-          creditsResponse,
-          debitsResponse,
-          assetsResponse,
-          liabilityResponse,
-        ] = await Promise.all([
-          apiClient.get('/payment-systems/credits'),
-          apiClient.get('/payment-systems/debits'),
-          apiClient.get('/assets'),
-          apiClient.get('/liabilities'),
-        ]);
-
-        const creditsData = creditsResponse.data.map(
-          (item: PaymentSystemCredit) => ({
-            ...item,
-            type: 'Credit',
-          }),
-        );
-
-        const debitsData = debitsResponse.data.map(
-          (item: PaymentSystemDebit) => ({
-            ...item,
-            type: 'Debit',
-          }),
-        );
-
-        const assetsData = assetsResponse.data.map((item: any) => ({
+        const assetsData = assets.map((item: Asset) => ({
           value: item.id,
           label: item.name,
         }));
-        const liabilitiesData = liabilityResponse.data.map((item: any) => ({
+        const liabilitiesData = liabilities.map((item: Liability) => ({
           value: item.id,
           label: item.name,
         }));
-
-        setPaymentSystems([...creditsData, ...debitsData]);
-        setAssets([notSelectedOption, ...assetsData]);
-        setLiabilities([notSelectedOption, ...liabilitiesData]);
+        setAssetsOptions([notSelectedOption, ...assetsData]);
+        setLiabilitiesOptions([notSelectedOption, ...liabilitiesData]);
       } catch (error) {
-        log.error('Error fetching payment systems:', error);
-      } finally {
-        setLoading(false);
+        log.error('Error fetching asset and liability options:', error);
       }
     };
 
     fetchPaymentSystems();
-  }, []);
+  }, [assets, liabilities]);
 
   const validatePaymentSystem = (paymentSystem: Record<string, any>) => {
     const errors: Record<string, string | undefined> = {};
@@ -281,9 +253,9 @@ const PaymentSystems: React.FC = () => {
           currency: paymentSystem.currency,
           assetId: paymentSystem.assetId,
         });
+        await refetchData(['paymentSystems']);
+
         const newPaymentSystem = response.data;
-        newPaymentSystem.type = 'Debit';
-        setPaymentSystems([...paymentSystems, newPaymentSystem]);
         toast.success(
           `Payment system: '${newPaymentSystem.name}' created successfully`,
         );
@@ -294,9 +266,9 @@ const PaymentSystems: React.FC = () => {
           currency: paymentSystem.currency,
           liabilityId: paymentSystem.liabilityId,
         });
+        await refetchData(['paymentSystems']);
+
         const newPaymentSystem = response.data;
-        newPaymentSystem.type = 'Credit';
-        setPaymentSystems([...paymentSystems, newPaymentSystem]);
         toast.success(
           `Payment system: '${newPaymentSystem.name}' created successfully`,
         );
@@ -319,13 +291,9 @@ const PaymentSystems: React.FC = () => {
           currency: paymentSystem.currency,
           assetId: paymentSystem.assetId,
         });
+        await refetchData(['paymentSystems']);
+
         const updatedPaymentSystem = response.data;
-        updatedPaymentSystem.type = 'Debit';
-        setPaymentSystems(
-          paymentSystems.map((ps) =>
-            ps.id === id ? updatedPaymentSystem : ps,
-          ),
-        );
         toast.success(
           `Payment system: '${updatedPaymentSystem.name}' updated successfully`,
         );
@@ -336,13 +304,9 @@ const PaymentSystems: React.FC = () => {
           currency: paymentSystem.currency,
           liabilityId: paymentSystem.liabilityId,
         });
+        await refetchData(['paymentSystems']);
+
         const updatedPaymentSystem = response.data;
-        updatedPaymentSystem.type = 'Credit';
-        setPaymentSystems(
-          paymentSystems.map((ps) =>
-            ps.id === id ? updatedPaymentSystem : ps,
-          ),
-        );
         toast.success(
           `Payment system: '${updatedPaymentSystem.name}' updated successfully`,
         );
@@ -365,7 +329,8 @@ const PaymentSystems: React.FC = () => {
       } else if (type === 'Credit') {
         await apiClient.delete(`/payment-systems/credits/${id}`);
       }
-      setPaymentSystems(paymentSystems.filter((ps) => ps.id !== id));
+      await refetchData(['paymentSystems']);
+
       toast.success(`Payment system: '${row.original.name}' deleted`);
     } catch (error) {
       notifyBackendError('Error deleting payment system', error);
