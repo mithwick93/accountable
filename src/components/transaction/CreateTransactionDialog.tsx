@@ -127,6 +127,7 @@ const CreateTransactionDialog = ({
         toLiabilityId: initialFormValues.toLiabilityId,
         categoryId: initialFormValues.categoryId,
       });
+      setSharedTransactions([]);
     } else if (name === 'amount') {
       setFormValues({
         ...formValues,
@@ -192,7 +193,7 @@ const CreateTransactionDialog = ({
         await apiClient.post('/transactions', getRequestPayload());
         toast.success('Transaction created successfully');
 
-        await refetchData();
+        await refetchData(['assets', 'liabilities']);
         handleClose();
       } catch (error: any) {
         notifyBackendError('Error creating transaction', error);
@@ -354,6 +355,19 @@ const CreateTransactionDialog = ({
     return payload;
   };
 
+  const selectedUser = React.useMemo(
+    () => userOptions.find((user) => `${user.id}` === `${formValues.userId}`),
+    [userOptions, formValues.userId],
+  );
+
+  const selectedCategory = React.useMemo(
+    () =>
+      categoryOptions.find(
+        (category) => `${category.id}` === `${formValues.categoryId}`,
+      ),
+    [categoryOptions, formValues.categoryId],
+  );
+
   const renderContent = () => {
     if (loading) {
       return (
@@ -396,9 +410,7 @@ const CreateTransactionDialog = ({
         {formValues.type && (
           <>
             <Autocomplete
-              value={userOptions.find(
-                (user) => `${user.id}` === `${formValues.userId}`,
-              )}
+              value={selectedUser}
               options={userOptions}
               autoComplete
               autoHighlight
@@ -440,6 +452,8 @@ const CreateTransactionDialog = ({
               onFocus={() => handleFocus('description')}
             />
             <Autocomplete
+              value={selectedCategory}
+              inputValue={selectedCategory?.name || ''}
               options={categoryOptions}
               autoComplete
               autoHighlight
