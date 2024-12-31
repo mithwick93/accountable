@@ -413,7 +413,7 @@ const CreateTransactionDialog = ({
         {formValues.type && (
           <>
             <Autocomplete
-              value={selectedUser}
+              value={selectedUser || null}
               options={userOptions}
               autoComplete
               autoHighlight
@@ -485,7 +485,7 @@ const CreateTransactionDialog = ({
               onFocus={() => handleFocus('categoryId')}
             />
             <Autocomplete
-              value={formValues.currency}
+              value={formValues.currency || null}
               options={currencyCodes}
               autoComplete
               autoHighlight
