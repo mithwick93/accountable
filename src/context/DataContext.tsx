@@ -10,22 +10,56 @@ import { Asset } from '../types/Asset';
 import { Liability } from '../types/Liability';
 import { PaymentSystemCredit } from '../types/PaymentSystemCredit';
 import { PaymentSystemDebit } from '../types/PaymentSystemDebit';
+import { Transaction } from '../types/Transaction';
 import { TransactionCategory } from '../types/TransactionCategory';
 import log from '../utils/logger';
+import { useSettings } from './SettingsContext';
 
-type DATA_TYPES = 'assets' | 'liabilities' | 'paymentSystems' | 'categories';
+type DATA_TYPES =
+  | 'assets'
+  | 'liabilities'
+  | 'paymentSystems'
+  | 'categories'
+  | 'transactions';
+
+type TransactionResponse = {
+  content: Transaction[];
+  pageable: {
+    pageNumber: number;
+    pageSize: number;
+    offset: number;
+    paged: boolean;
+  };
+  totalElements: number;
+  totalPages: number;
+  numberOfElements: number;
+  size: number;
+};
 
 interface DataContextType {
   assets: Asset[];
   liabilities: Liability[];
   paymentSystems: (PaymentSystemCredit | PaymentSystemDebit)[];
   categories: TransactionCategory[];
+  transactions: TransactionResponse | null;
   loading: boolean;
   // eslint-disable-next-line no-unused-vars
   refetchData: (dataTypes?: DATA_TYPES[]) => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
+
+const prepareTransactionSearchRequestPayload = (
+  params: Record<string, any>,
+): Record<string, any> => {
+  const filteredParams: Record<string, any> = {};
+  for (const key in params) {
+    if (params[key] !== null) {
+      filteredParams[key] = params[key];
+    }
+  }
+  return filteredParams;
+};
 
 export const DataProvider = ({ children }: { children: ReactNode }) => {
   const [assets, setAssets] = useState<Asset[]>([]);
@@ -34,8 +68,13 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     (PaymentSystemCredit | PaymentSystemDebit)[]
   >([]);
   const [categories, setCategories] = useState<TransactionCategory[]>([]);
+  const [transactions, setTransactions] = useState<TransactionResponse | null>(
+    null,
+  );
   const [loading, setLoading] = useState<boolean>(true);
+  const { settings } = useSettings();
 
+  // eslint-disable-next-line complexity
   const fetchData = async (
     dataTypes: DATA_TYPES[] = [
       'assets',
@@ -60,6 +99,21 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
       }
       if (dataTypes.includes('categories')) {
         promises.push(apiClient.get('/transactions/categories'));
+      }
+
+      if (dataTypes.includes('transactions')) {
+        const searchParameters: Record<string, any> =
+          settings?.transactions?.search?.parameters || {};
+        const { page, size, sort, ...requestPayload } = searchParameters;
+        const sortParams = sort
+          ? sort.map((s: string) => `sort=${s}`).join('&')
+          : '';
+        promises.push(
+          apiClient.post(
+            `/transactions/search?page=${page}&size=${size}&${sortParams}`,
+            prepareTransactionSearchRequestPayload(requestPayload),
+          ),
+        );
       }
 
       const responses = await Promise.all(promises);
@@ -105,6 +159,10 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
           );
         setCategories(categories);
       }
+      if (dataTypes.includes('transactions') && responses[0]) {
+        const transactions = responses.shift()?.data;
+        setTransactions(transactions);
+      }
     } catch (error) {
       log.error('Error fetching data:', error);
     } finally {
@@ -125,6 +183,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         liabilities,
         paymentSystems,
         categories,
+        transactions,
         refetchData,
         loading,
       }}
