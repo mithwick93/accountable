@@ -173,25 +173,38 @@ export const getOriginalTransactionType = (type: string | undefined) => {
   }
 };
 
-export const stringToColor = (input: string, isDarkTheme: boolean) => {
+export const stringToColor = (input: string, isDarkTheme: boolean): string => {
+  // Create a hash from the input string
   let hash = 0;
   for (let i = 0; i < input.length; i++) {
-    hash = input.charCodeAt(i) + ((hash << 7) - hash);
+    hash = input.charCodeAt(i) + ((hash << 5) - hash);
   }
 
-  const color = [0, 1, 2].map((i) => (hash >> (i * 8)) & 0xff);
+  // Generate RGB values from the hash
+  let r = (hash >> 0) & 0xff;
+  let g = (hash >> 8) & 0xff;
+  let b = (hash >> 16) & 0xff;
 
-  const adjustBrightness = (value: number, factor: number) =>
-    Math.min(255, Math.max(0, Math.floor(value * factor)));
+  // Adjust colors for dark mode or light mode
+  if (isDarkTheme) {
+    // Darken the colors for dark mode
+    r = Math.floor(r * 0.5);
+    g = Math.floor(g * 0.5);
+    b = Math.floor(b * 0.5);
+  } else {
+    // Lighten the colors for light mode
+    r = Math.floor(r + (255 - r) * 0.5);
+    g = Math.floor(g + (255 - g) * 0.5);
+    b = Math.floor(b + (255 - b) * 0.5);
+  }
 
-  const brightnessFactor = isDarkTheme ? 0.5 : 1.2;
-  const adjustedColor = color.map((component) =>
-    adjustBrightness(component, brightnessFactor),
-  );
+  // Ensure RGB values are in the 0-255 range
+  r = Math.min(255, Math.max(0, r));
+  g = Math.min(255, Math.max(0, g));
+  b = Math.min(255, Math.max(0, b));
 
-  return `#${adjustedColor
-    .map((c) => `00${c.toString(16)}`.slice(-2))
-    .join('')}`;
+  // Convert RGB values to hexadecimal and return the color
+  return `#${[r, g, b].map((x) => x.toString(16).padStart(2, '0')).join('')}`;
 };
 
 export const getCreditUtilizationColor = (
