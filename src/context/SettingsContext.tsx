@@ -30,7 +30,7 @@ const SettingsContext = createContext<SettingsContextType | undefined>(
 const fillMissingSettings = (
   userSettings: Record<string, any>,
   defaultValue: Record<string, any>,
-) => {
+): Record<string, any> => {
   if (!defaultValue) {
     return userSettings;
   }
@@ -38,6 +38,16 @@ const fillMissingSettings = (
   Object.keys(defaultValue).forEach((key) => {
     if (!(key in userSettings)) {
       userSettings[key] = defaultValue[key];
+    } else if (
+      typeof userSettings[key] === 'object' &&
+      typeof defaultValue[key] === 'object' &&
+      !Array.isArray(userSettings[key]) &&
+      !Array.isArray(defaultValue[key])
+    ) {
+      userSettings[key] = fillMissingSettings(
+        userSettings[key],
+        defaultValue[key],
+      );
     }
   });
 
