@@ -416,8 +416,6 @@ const CreateTransactionDialog = ({
               value={selectedUser || null}
               options={userOptions}
               autoComplete
-              autoHighlight
-              autoSelect
               getOptionLabel={(option) =>
                 `${option.firstName} ${option.lastName}`
               }
@@ -461,8 +459,6 @@ const CreateTransactionDialog = ({
               inputValue={formValues.categoryDisplayName || ''}
               options={categoryOptions}
               autoComplete
-              autoHighlight
-              autoSelect
               getOptionLabel={(option) => option.name}
               renderInput={(params) => (
                 <TextField
@@ -488,8 +484,6 @@ const CreateTransactionDialog = ({
               value={formValues.currency || null}
               options={currencyCodes}
               autoComplete
-              autoHighlight
-              autoSelect
               renderInput={(params) => (
                 <TextField
                   {...params}
@@ -533,10 +527,10 @@ const CreateTransactionDialog = ({
             />
             {formValues.type === 'INCOME' && (
               <Autocomplete
-                options={assets}
+                options={assets.filter(
+                  (asset) => asset.currency === formValues.currency,
+                )}
                 autoComplete
-                autoHighlight
-                autoSelect
                 getOptionLabel={(option) => option.name}
                 renderInput={(params) => (
                   <TextField
@@ -556,10 +550,11 @@ const CreateTransactionDialog = ({
             {formValues.type === 'EXPENSE' && (
               <>
                 <Autocomplete
-                  options={paymentSystems}
+                  options={paymentSystems.filter(
+                    (paymentSystem) =>
+                      paymentSystem.currency === formValues.currency,
+                  )}
                   autoComplete
-                  autoHighlight
-                  autoSelect
                   getOptionLabel={(option) => option.name}
                   renderInput={(params) => (
                     <TextField
@@ -570,6 +565,7 @@ const CreateTransactionDialog = ({
                       helperText={validationErrors?.fromPaymentSystemId}
                     />
                   )}
+                  groupBy={(option) => option.type}
                   onChange={(_event: any, newValue: PaymentSystem | null) => {
                     handleAutoCompleteChange(
                       'fromPaymentSystemId',
@@ -635,8 +631,6 @@ const CreateTransactionDialog = ({
                             ),
                         )}
                         autoComplete
-                        autoHighlight
-                        autoSelect
                         getOptionLabel={(option) =>
                           `${option.firstName} ${option.lastName}`
                         }
@@ -749,11 +743,11 @@ const CreateTransactionDialog = ({
               <>
                 <Autocomplete
                   options={assets.filter(
-                    (asset) => asset.id !== formValues.toAssetId,
+                    (asset) =>
+                      asset.id !== formValues.toAssetId &&
+                      asset.currency === formValues.currency,
                   )}
                   autoComplete
-                  autoHighlight
-                  autoSelect
                   getOptionLabel={(option) => option.name}
                   renderInput={(params) => (
                     <TextField
@@ -771,11 +765,11 @@ const CreateTransactionDialog = ({
                 />
                 <Autocomplete
                   options={assets.filter(
-                    (asset) => asset.id !== formValues.fromAssetId,
+                    (asset) =>
+                      asset.id !== formValues.fromAssetId &&
+                      asset.currency === formValues.currency,
                   )}
                   autoComplete
-                  autoHighlight
-                  autoSelect
                   getOptionLabel={(option) => option.name}
                   renderInput={(params) => (
                     <TextField
@@ -792,10 +786,10 @@ const CreateTransactionDialog = ({
                   onFocus={() => handleFocus('toAssetId')}
                 />
                 <Autocomplete
-                  options={liabilities}
+                  options={liabilities.filter(
+                    (liability) => liability.currency === formValues.currency,
+                  )}
                   autoComplete
-                  autoHighlight
-                  autoSelect
                   getOptionLabel={(option) => option.name}
                   renderInput={(params) => (
                     <TextField
