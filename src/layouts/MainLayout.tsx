@@ -43,6 +43,9 @@ const userSettings = {
         toLiabilityIds: null,
         hasPendingSettlements: null,
         hasSharedTransactions: null,
+        page: 0,
+        size: 50,
+        sort: ['date,desc', 'name,asc'],
       },
     },
   },
@@ -112,12 +115,9 @@ export default function MainLayout() {
 
   return (
     <UserProvider>
-      <StaticDataProvider>
-        <DataProvider>
-          <SettingsProvider
-            settingsKey="accountable"
-            defaultValue={userSettings}
-          >
+      <SettingsProvider settingsKey="accountable" defaultValue={userSettings}>
+        <StaticDataProvider>
+          <DataProvider>
             <CurrencyRatesProvider>
               <DashboardLayout
                 slots={{
@@ -140,9 +140,9 @@ export default function MainLayout() {
                 </ErrorBoundary>
               </DashboardLayout>
             </CurrencyRatesProvider>
-          </SettingsProvider>
-        </DataProvider>
-      </StaticDataProvider>
+          </DataProvider>
+        </StaticDataProvider>
+      </SettingsProvider>
     </UserProvider>
   );
 }
