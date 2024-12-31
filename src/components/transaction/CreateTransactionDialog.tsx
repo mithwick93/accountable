@@ -195,7 +195,7 @@ const CreateTransactionDialog = ({
         await apiClient.post('/transactions', getRequestPayload());
         toast.success('Transaction created successfully');
 
-        await refetchData(['assets', 'liabilities']);
+        await refetchData(['assets', 'liabilities', 'transactions']);
         handleClose();
       } catch (error: any) {
         notifyBackendError('Error creating transaction', error);
