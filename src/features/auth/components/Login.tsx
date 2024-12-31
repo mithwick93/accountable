@@ -1,6 +1,6 @@
 import { Alert, Box, Button, Link, TextField, Typography } from '@mui/material';
 import { jwtDecode } from 'jwt-decode';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import logoLight from '../../../assets/logo-light.svg';
@@ -17,6 +17,13 @@ const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const from = location.state?.from?.pathname || '/';
+
+  useEffect(() => {
+    const accessToken = TokenStorage.getAccessToken();
+    if (accessToken) {
+      navigate(from, { replace: true });
+    }
+  }, [navigate]);
 
   const handleLogin = async () => {
     try {
