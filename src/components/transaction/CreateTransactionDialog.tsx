@@ -54,6 +54,7 @@ type FormStateType = {
   name?: string;
   description?: string;
   categoryId?: number;
+  categoryDisplayName?: string;
   currency?: string;
   amount?: number;
   date?: string;
@@ -126,6 +127,7 @@ const CreateTransactionDialog = ({
         fromPaymentSystemId: initialFormValues.fromPaymentSystemId,
         toLiabilityId: initialFormValues.toLiabilityId,
         categoryId: initialFormValues.categoryId,
+        categoryDisplayName: initialFormValues.categoryDisplayName,
       });
       setSharedTransactions([]);
     } else if (name === 'amount') {
@@ -368,6 +370,7 @@ const CreateTransactionDialog = ({
     [categoryOptions, formValues.categoryId],
   );
 
+  // eslint-disable-next-line complexity
   const renderContent = () => {
     if (loading) {
       return (
@@ -436,6 +439,7 @@ const CreateTransactionDialog = ({
               label="Name"
               name="name"
               type="text"
+              value={formValues.name || ''}
               required
               onChange={handleInputChange}
               error={!!validationErrors?.name}
@@ -446,14 +450,15 @@ const CreateTransactionDialog = ({
               label="Description"
               name="description"
               type="text"
+              value={formValues.description || ''}
               onChange={handleInputChange}
               error={!!validationErrors?.description}
               helperText={validationErrors?.description}
               onFocus={() => handleFocus('description')}
             />
             <Autocomplete
-              value={selectedCategory}
-              inputValue={selectedCategory?.name || ''}
+              value={selectedCategory || null}
+              inputValue={formValues.categoryDisplayName || ''}
               options={categoryOptions}
               autoComplete
               autoHighlight
@@ -470,6 +475,12 @@ const CreateTransactionDialog = ({
               )}
               onChange={(_event: any, newValue: TransactionCategory | null) => {
                 handleAutoCompleteChange('categoryId', newValue?.id);
+              }}
+              onInputChange={(_event: any, newInputValue: string) => {
+                setFormValues({
+                  ...formValues,
+                  categoryDisplayName: newInputValue,
+                });
               }}
               onFocus={() => handleFocus('categoryId')}
             />
@@ -497,6 +508,7 @@ const CreateTransactionDialog = ({
               label="Amount"
               name="amount"
               type="number"
+              value={formValues.amount || ''}
               required
               onChange={handleInputChange}
               error={!!validationErrors?.amount}
@@ -806,6 +818,10 @@ const CreateTransactionDialog = ({
       </>
     );
   };
+
+  if (!open) {
+    return null;
+  }
 
   return (
     <Dialog
