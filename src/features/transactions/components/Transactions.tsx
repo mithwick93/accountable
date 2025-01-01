@@ -1,4 +1,4 @@
-import { Box, Chip } from '@mui/material';
+import { Box, Chip, Tooltip } from '@mui/material';
 import {
   MaterialReactTable,
   MRT_ColumnDef,
@@ -20,11 +20,12 @@ const Transactions: React.FC = () => {
     loading,
     refetchData,
   } = useData();
-  const { settings } = useSettings();
+  const { settings, update } = useSettings();
   const transactions = transactionsResponse?.content || [];
-  const searchParameters = settings?.transactions.search.parameters || {};
-  const page = searchParameters.page || 0;
-  const size = searchParameters.size || 50;
+  const searchParameters: Record<string, any> =
+    settings?.transactions?.search?.parameters || {};
+  const pageIndex = searchParameters.pageIndex || 0;
+  const pageSize = searchParameters.pageSize || 50;
 
   useEffect(() => {
     refetchData(['transactions']);
@@ -35,33 +36,24 @@ const Transactions: React.FC = () => {
       {
         accessorKey: 'name',
         header: 'Name',
-        maxSize: 100,
-      },
-      {
-        accessorKey: 'description',
-        header: 'Description',
-        maxSize: 100,
-      },
-      {
-        accessorFn: (row) => formatTransactionType(row.type),
-        accessorKey: 'type',
-        header: 'Type',
-        Cell: ({ renderedCellValue }) => (
-          <Chip
-            label={renderedCellValue}
-            sx={(theme) => ({
-              backgroundColor: stringToColor(
-                renderedCellValue as string,
-                theme.palette.mode === 'dark',
-              ),
-            })}
-          />
+        minSize: 200,
+        size: 200,
+        maxSize: 400,
+        Cell: ({ cell }) => (
+          <Tooltip title={cell.getValue<string>()}>
+            <Box
+              component="span"
+              sx={{
+                maxWidth: 400,
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }}
+            >
+              {cell.getValue<string>()}
+            </Box>
+          </Tooltip>
         ),
-      },
-      {
-        accessorFn: (row) => row.category.name,
-        accessorKey: 'category',
-        header: 'Category',
       },
       {
         accessorFn: (row) => row.amount,
@@ -73,6 +65,9 @@ const Transactions: React.FC = () => {
         muiTableBodyCellProps: {
           align: 'right',
         },
+        minSize: 150,
+        size: 150,
+        maxSize: 200,
         Cell: ({ cell }) => (
           <Box component="span">
             {formatCurrency(
@@ -91,6 +86,167 @@ const Transactions: React.FC = () => {
         muiTableBodyCellProps: {
           align: 'right',
         },
+        minSize: 150,
+        size: 150,
+        maxSize: 200,
+      },
+      {
+        accessorKey: 'description',
+        header: 'Description',
+        grow: false,
+        minSize: 150,
+        size: 150,
+        maxSize: 200,
+        Cell: ({ cell }) => (
+          <Tooltip title={cell.getValue<string>()}>
+            <Box
+              component="span"
+              sx={{
+                maxWidth: 150,
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }}
+            >
+              {cell.getValue<string>()}
+            </Box>
+          </Tooltip>
+        ),
+      },
+      {
+        accessorFn: (row) => formatTransactionType(row.type),
+        accessorKey: 'type',
+        header: 'Type',
+        minSize: 150,
+        size: 150,
+        maxSize: 150,
+        Cell: ({ renderedCellValue }) => (
+          <Chip
+            label={renderedCellValue}
+            sx={(theme) => ({
+              backgroundColor: stringToColor(
+                renderedCellValue as string,
+                theme.palette.mode === 'dark',
+              ),
+            })}
+          />
+        ),
+      },
+      {
+        accessorFn: (row) => row.category.name,
+        accessorKey: 'category',
+        header: 'Category',
+        minSize: 150,
+        size: 150,
+        maxSize: 150,
+        Cell: ({ renderedCellValue }) => (
+          <Chip
+            label={renderedCellValue}
+            sx={(theme) => ({
+              backgroundColor: stringToColor(
+                renderedCellValue as string,
+                theme.palette.mode === 'dark',
+              ),
+            })}
+          />
+        ),
+      },
+      {
+        accessorFn: (row) =>
+          row.fromPaymentSystemCredit?.name || row.fromPaymentSystemDebit?.name,
+        accessorKey: 'fromPaymentSystem',
+        header: 'From Payment System',
+        grow: false,
+        minSize: 150,
+        size: 150,
+        maxSize: 200,
+        Cell: ({ cell }) => (
+          <Tooltip title={cell.getValue<string>()}>
+            <Box
+              component="span"
+              sx={{
+                maxWidth: 150,
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }}
+            >
+              {cell.getValue<string>()}
+            </Box>
+          </Tooltip>
+        ),
+      },
+      {
+        accessorFn: (row) => row.fromAsset?.name,
+        accessorKey: 'fromAsset',
+        header: 'From Asset',
+        grow: false,
+        minSize: 150,
+        size: 150,
+        maxSize: 200,
+        Cell: ({ cell }) => (
+          <Tooltip title={cell.getValue<string>()}>
+            <Box
+              component="span"
+              sx={{
+                maxWidth: 150,
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }}
+            >
+              {cell.getValue<string>()}
+            </Box>
+          </Tooltip>
+        ),
+      },
+      {
+        accessorFn: (row) => row.toAsset?.name,
+        accessorKey: 'toAsset',
+        header: 'To Asset',
+        grow: false,
+        minSize: 150,
+        size: 150,
+        maxSize: 200,
+        Cell: ({ cell }) => (
+          <Tooltip title={cell.getValue<string>()}>
+            <Box
+              component="span"
+              sx={{
+                maxWidth: 150,
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }}
+            >
+              {cell.getValue<string>()}
+            </Box>
+          </Tooltip>
+        ),
+      },
+      {
+        accessorFn: (row) => row.toLiability?.name,
+        accessorKey: 'toLiability',
+        header: 'To Liability',
+        grow: false,
+        minSize: 150,
+        size: 150,
+        maxSize: 200,
+        Cell: ({ cell }) => (
+          <Tooltip title={cell.getValue<string>()}>
+            <Box
+              component="span"
+              sx={{
+                maxWidth: 150,
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }}
+            >
+              {cell.getValue<string>()}
+            </Box>
+          </Tooltip>
+        ),
       },
     ],
     [],
@@ -100,14 +256,36 @@ const Transactions: React.FC = () => {
     columns,
     data: transactions,
     enableStickyHeader: true,
-    initialState: {
-      pagination: {
-        pageIndex: page,
-        pageSize: size,
-      },
-    },
+    manualPagination: true,
+    enableColumnResizing: true,
+    columnResizeMode: 'onEnd',
+    rowCount: transactionsResponse?.totalElements || 0,
     state: {
       isLoading: loading,
+      pagination: {
+        pageIndex: pageIndex,
+        pageSize: pageSize,
+      },
+    },
+    onPaginationChange: (updaterOrValue) => {
+      const newState =
+        typeof updaterOrValue === 'function'
+          ? updaterOrValue({ pageIndex, pageSize })
+          : updaterOrValue;
+      update({
+        ...settings,
+        transactions: {
+          ...(settings?.transactions || {}),
+          search: {
+            ...(settings?.transactions?.search || {}),
+            parameters: {
+              ...searchParameters,
+              pageIndex: newState.pageIndex,
+              pageSize: newState.pageSize,
+            },
+          },
+        },
+      });
     },
   });
 
