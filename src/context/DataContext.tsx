@@ -124,7 +124,15 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
           ...requestPayload
         } = searchParameters;
         const sortParams = sorting
-          ? sorting.map((s: string) => `sort=${s}`).join('&')
+          ? sorting
+              .map((s: string) => {
+                if (s.startsWith('date,')) {
+                  const [, direction] = s.split(',');
+                  return `sort=${s}&sort=modified,${direction}`;
+                }
+                return `sort=${s}`;
+              })
+              .join('&')
           : '';
         promises.push(
           apiClient.post(
