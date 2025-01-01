@@ -43,16 +43,26 @@ interface DataContextType {
   categories: TransactionCategory[];
   transactions: TransactionResponse | null;
   loading: boolean;
-  // eslint-disable-next-line no-unused-vars
-  refetchData: (dataTypes?: DATA_TYPES[]) => Promise<void>;
+
+  refetchData: (
+    // eslint-disable-next-line no-unused-vars
+    dataTypes?: DATA_TYPES[],
+    // eslint-disable-next-line no-unused-vars
+    options?: Record<string, any>,
+  ) => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
 const prepareTransactionSearchRequestPayload = (
-  params: Record<string, any>,
+  params: Record<string, any> | null | undefined,
 ): Record<string, any> => {
   const filteredParams: Record<string, any> = {};
+
+  if (!params) {
+    return filteredParams;
+  }
+
   for (const key in params) {
     if (params[key] !== null) {
       filteredParams[key] = params[key];
@@ -82,6 +92,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
       'paymentSystems',
       'categories',
     ],
+    options: Record<string, any> = {},
   ) => {
     setLoading(true);
     try {
@@ -103,8 +114,15 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
 
       if (dataTypes.includes('transactions')) {
         const searchParameters: Record<string, any> =
-          settings?.transactions?.search?.parameters || {};
-        const { page, size, sort, ...requestPayload } = searchParameters;
+          options?.transactions?.search?.parameters ||
+          settings?.transactions?.search?.parameters ||
+          {};
+        const {
+          page = 0,
+          size = 50,
+          sort,
+          ...requestPayload
+        } = searchParameters;
         const sortParams = sort
           ? sort.map((s: string) => `sort=${s}`).join('&')
           : '';
@@ -170,7 +188,10 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const refetchData = (dataTypes?: DATA_TYPES[]) => fetchData(dataTypes);
+  const refetchData = (
+    dataTypes?: DATA_TYPES[],
+    options: Record<string, any> = {},
+  ) => fetchData(dataTypes, options);
 
   useEffect(() => {
     fetchData();
