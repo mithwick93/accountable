@@ -136,7 +136,9 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
           : '';
         promises.push(
           apiClient.post(
-            `/transactions/search?page=${pageIndex}&size=${pageSize}&${sortParams}`,
+            `/transactions/search?page=${pageIndex}&size=${pageSize}${
+              sortParams ? '&' : ''
+            }${sortParams}`,
             prepareTransactionSearchRequestPayload(requestPayload),
           ),
         );
