@@ -106,7 +106,7 @@ const writeUserSettings = debounce(
       log.error('Failed to save setting:', error);
     }
   },
-  2500,
+  1000,
 );
 
 export const SettingsProvider: React.FC<SettingsProviderProps> = ({
