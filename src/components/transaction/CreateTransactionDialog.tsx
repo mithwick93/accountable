@@ -195,7 +195,21 @@ const CreateTransactionDialog = ({
         await apiClient.post('/transactions', getRequestPayload());
         toast.success('Transaction created successfully');
 
-        await refetchData(['assets', 'liabilities', 'transactions']);
+        const searchParameters: Record<string, any> =
+          settings?.transactions?.search?.parameters || {};
+        const pageIndex = searchParameters.pageIndex || 0;
+        const pageSize = searchParameters.pageSize || 50;
+        await refetchData(['assets', 'liabilities', 'transactions'], {
+          transactions: {
+            search: {
+              parameters: {
+                pageIndex: pageIndex,
+                pageSize: pageSize,
+                sorting: searchParameters.sorting,
+              },
+            },
+          },
+        });
         handleClose();
       } catch (error: any) {
         notifyBackendError('Error creating transaction', error);
