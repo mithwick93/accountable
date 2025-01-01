@@ -118,17 +118,17 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
           settings?.transactions?.search?.parameters ||
           {};
         const {
-          page = 0,
-          size = 50,
-          sort,
+          pageIndex = 0,
+          pageSize = 50,
+          sorting,
           ...requestPayload
         } = searchParameters;
-        const sortParams = sort
-          ? sort.map((s: string) => `sort=${s}`).join('&')
+        const sortParams = sorting
+          ? sorting.map((s: string) => `sort=${s}`).join('&')
           : '';
         promises.push(
           apiClient.post(
-            `/transactions/search?page=${page}&size=${size}&${sortParams}`,
+            `/transactions/search?page=${pageIndex}&size=${pageSize}&${sortParams}`,
             prepareTransactionSearchRequestPayload(requestPayload),
           ),
         );
