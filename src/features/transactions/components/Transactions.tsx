@@ -1,4 +1,9 @@
 import { Avatar, Box, Chip, Tooltip, useTheme } from '@mui/material';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFnsV3';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { ColumnFilter } from '@tanstack/table-core/src/features/ColumnFiltering';
+import { format } from 'date-fns';
+import { enGB } from 'date-fns/locale';
 import {
   MaterialReactTable,
   MRT_ColumnDef,
@@ -9,7 +14,7 @@ import React, { useEffect, useMemo } from 'react';
 import { useData } from '../../../context/DataContext';
 import { useSettings } from '../../../context/SettingsContext';
 import {
-  formatCurrency,
+  formatNumber,
   formatTransactionType,
   generateAvatarProps,
   stringToColor,
@@ -30,41 +35,61 @@ const Transactions: React.FC = () => {
   const pageIndex = searchParameters.pageIndex || 0;
   const pageSize = searchParameters.pageSize || 50;
 
+  const columnFilters = (
+    settings?.transactions?.search?.columnFilters || []
+  ).map((filter: ColumnFilter) => {
+    if (filter.id === 'date' && Array.isArray(filter.value)) {
+      return {
+        ...filter,
+        value: filter.value.map((item) => (!item ? undefined : new Date(item))),
+      };
+    }
+    return filter;
+  });
+
   useEffect(() => {
-    refetchData(['transactions']);
+    refetchData(['transactions'], {
+      transactions: {
+        search: {
+          parameters: {
+            pageIndex: searchParameters.pageIndex,
+            pageSize: searchParameters.pageSize,
+            sorting: searchParameters.sorting,
+          },
+        },
+      },
+    });
   }, [searchParameters]);
 
   const columns = useMemo<MRT_ColumnDef<MRT_RowData>[]>(
     () => [
       {
-        accessorFn: (row) => row.user,
+        accessorFn: (row) => `${row.user?.firstName} ${row.user?.lastName}`,
         accessorKey: 'user',
         header: 'User',
         grow: false,
         minSize: 150,
         size: 150,
         maxSize: 150,
-        Cell: ({ cell }) => {
-          const name = `${cell.row.original.user.firstName} ${cell.row.original.user.lastName}`;
-          return (
-            <Tooltip title={name}>
-              <Avatar
-                {...generateAvatarProps(
-                  name || 'User',
-                  theme.palette.mode === 'dark',
-                  { width: 24, height: 24, fontSize: 12 },
-                )}
-              />
-            </Tooltip>
-          );
-        },
+        Cell: ({ cell }) => (
+          <Tooltip title={cell.getValue<string>()}>
+            <Avatar
+              {...generateAvatarProps(
+                cell.getValue<string>() || 'User',
+                theme.palette.mode === 'dark',
+                { width: 24, height: 24, fontSize: 12 },
+              )}
+            />
+          </Tooltip>
+        ),
+        filterVariant: 'multi-select',
       },
       {
         accessorKey: 'name',
         header: 'Name',
         minSize: 200,
         size: 200,
-        maxSize: 400,
+        maxSize: 500,
         Cell: ({ cell }) => (
           <Tooltip title={cell.getValue<string>()}>
             <Box
@@ -82,28 +107,7 @@ const Transactions: React.FC = () => {
         ),
       },
       {
-        accessorFn: (row) => row.amount,
-        accessorKey: 'amount',
-        header: 'Amount',
-        muiTableHeadCellProps: {
-          align: 'right',
-        },
-        muiTableBodyCellProps: {
-          align: 'right',
-        },
-        minSize: 150,
-        size: 150,
-        maxSize: 200,
-        Cell: ({ cell }) => (
-          <Box component="span">
-            {formatCurrency(
-              cell.row.original.amount,
-              cell.row.original.currency,
-            )}
-          </Box>
-        ),
-      },
-      {
+        accessorFn: (row) => new Date(row.date),
         accessorKey: 'date',
         header: 'Date',
         muiTableHeadCellProps: {
@@ -115,6 +119,42 @@ const Transactions: React.FC = () => {
         minSize: 150,
         size: 150,
         maxSize: 200,
+        Cell: ({ cell }) => format(cell.getValue<Date>(), 'dd/MM/yyyy'),
+        filterVariant: 'date-range',
+      },
+      {
+        accessorFn: (row) => row.currency,
+        accessorKey: 'currency',
+        header: 'Currency',
+        muiTableHeadCellProps: {
+          align: 'right',
+        },
+        muiTableBodyCellProps: {
+          align: 'right',
+        },
+        minSize: 150,
+        size: 200,
+        maxSize: 200,
+        filterVariant: 'multi-select',
+      },
+      {
+        accessorFn: (row) => row.amount,
+        accessorKey: 'amount',
+        header: 'Amount',
+        muiTableHeadCellProps: {
+          align: 'right',
+        },
+        muiTableBodyCellProps: {
+          align: 'right',
+        },
+        minSize: 150,
+        size: 200,
+        maxSize: 200,
+        Cell: ({ cell }) => (
+          <Box component="span">{formatNumber(cell.row.original.amount)}</Box>
+        ),
+        filterVariant: 'range-slider',
+        filterFn: 'betweenInclusive',
       },
       {
         accessorKey: 'description',
@@ -157,14 +197,15 @@ const Transactions: React.FC = () => {
             })}
           />
         ),
+        filterVariant: 'multi-select',
       },
       {
-        accessorFn: (row) => row.category.name,
+        accessorFn: (row) => row.category?.name,
         accessorKey: 'category',
         header: 'Category',
         minSize: 150,
-        size: 150,
-        maxSize: 150,
+        size: 200,
+        maxSize: 200,
         Cell: ({ renderedCellValue }) => (
           <Chip
             label={renderedCellValue}
@@ -176,6 +217,7 @@ const Transactions: React.FC = () => {
             })}
           />
         ),
+        filterVariant: 'multi-select',
       },
       {
         accessorFn: (row) =>
@@ -201,6 +243,7 @@ const Transactions: React.FC = () => {
             </Box>
           </Tooltip>
         ),
+        filterVariant: 'multi-select',
       },
       {
         accessorFn: (row) => row.fromAsset?.name,
@@ -225,6 +268,7 @@ const Transactions: React.FC = () => {
             </Box>
           </Tooltip>
         ),
+        filterVariant: 'multi-select',
       },
       {
         accessorFn: (row) => row.toAsset?.name,
@@ -249,6 +293,7 @@ const Transactions: React.FC = () => {
             </Box>
           </Tooltip>
         ),
+        filterVariant: 'multi-select',
       },
       {
         accessorFn: (row) => row.toLiability?.name,
@@ -273,6 +318,7 @@ const Transactions: React.FC = () => {
             </Box>
           </Tooltip>
         ),
+        filterVariant: 'multi-select',
       },
     ],
     [],
@@ -284,6 +330,22 @@ const Transactions: React.FC = () => {
     enableRowNumbers: true,
     enableStickyHeader: true,
     manualPagination: true,
+    paginationDisplayMode: 'pages',
+    muiPaginationProps: {
+      rowsPerPageOptions: [25, 50, 100, 250, 500, 1000],
+    },
+    isMultiSortEvent: () => true,
+    initialState: {
+      showColumnFilters: true,
+      sorting: [
+        {
+          id: 'date',
+          desc: true,
+        },
+      ],
+    },
+    columnFilterDisplayMode: 'popover',
+    enableFacetedValues: true,
     enableColumnResizing: true,
     columnResizeMode: 'onEnd',
     rowCount: transactionsResponse?.totalElements || 0,
@@ -293,6 +355,24 @@ const Transactions: React.FC = () => {
         pageIndex: pageIndex,
         pageSize: pageSize,
       },
+      columnFilters: columnFilters,
+    },
+    onColumnFiltersChange: (updaterOrValue) => {
+      const newColumnFilters =
+        typeof updaterOrValue === 'function'
+          ? updaterOrValue(columnFilters)
+          : updaterOrValue;
+
+      update({
+        ...settings,
+        transactions: {
+          ...(settings?.transactions || {}),
+          search: {
+            ...(settings?.transactions?.search || {}),
+            columnFilters: newColumnFilters,
+          },
+        },
+      });
     },
     onPaginationChange: (updaterOrValue) => {
       const newState =
@@ -316,7 +396,10 @@ const Transactions: React.FC = () => {
     },
   });
 
-  return <MaterialReactTable table={table} />;
+  return (
+    <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={enGB}>
+      <MaterialReactTable table={table} />
+    </LocalizationProvider>
+  );
 };
-
 export default Transactions;
