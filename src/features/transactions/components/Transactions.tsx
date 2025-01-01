@@ -1,4 +1,4 @@
-import { Box, Chip, Tooltip } from '@mui/material';
+import { Avatar, Box, Chip, Tooltip, useTheme } from '@mui/material';
 import {
   MaterialReactTable,
   MRT_ColumnDef,
@@ -11,6 +11,7 @@ import { useSettings } from '../../../context/SettingsContext';
 import {
   formatCurrency,
   formatTransactionType,
+  generateAvatarProps,
   stringToColor,
 } from '../../../utils/common';
 
@@ -21,6 +22,8 @@ const Transactions: React.FC = () => {
     refetchData,
   } = useData();
   const { settings, update } = useSettings();
+  const theme = useTheme();
+
   const transactions = transactionsResponse?.content || [];
   const searchParameters: Record<string, any> =
     settings?.transactions?.search?.parameters || {};
@@ -33,6 +36,29 @@ const Transactions: React.FC = () => {
 
   const columns = useMemo<MRT_ColumnDef<MRT_RowData>[]>(
     () => [
+      {
+        accessorFn: (row) => row.user,
+        accessorKey: 'user',
+        header: 'User',
+        grow: false,
+        minSize: 150,
+        size: 150,
+        maxSize: 150,
+        Cell: ({ cell }) => {
+          const name = `${cell.row.original.user.firstName} ${cell.row.original.user.lastName}`;
+          return (
+            <Tooltip title={name}>
+              <Avatar
+                {...generateAvatarProps(
+                  name || 'User',
+                  theme.palette.mode === 'dark',
+                  { width: 24, height: 24, fontSize: 12 },
+                )}
+              />
+            </Tooltip>
+          );
+        },
+      },
       {
         accessorKey: 'name',
         header: 'Name',
@@ -255,6 +281,7 @@ const Transactions: React.FC = () => {
   const table = useMaterialReactTable({
     columns,
     data: transactions,
+    enableRowNumbers: true,
     enableStickyHeader: true,
     manualPagination: true,
     enableColumnResizing: true,

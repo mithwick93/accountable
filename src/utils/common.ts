@@ -173,11 +173,23 @@ export const getOriginalTransactionType = (type: string | undefined) => {
   }
 };
 
+export const generateAvatarProps = (
+  name: string,
+  isDarkTheme: boolean,
+  sx?: Record<string, any>,
+) => ({
+  sx: { ...(sx || {}), bgcolor: stringToColor(name, isDarkTheme) },
+  children: name
+    .split(' ')
+    .map((part) => part[0])
+    .join(''),
+});
+
 export const stringToColor = (input: string, isDarkTheme: boolean): string => {
   // Create a hash from the input string
   let hash = 0;
   for (let i = 0; i < input.length; i++) {
-    hash = input.charCodeAt(i) + ((hash << 5) - hash);
+    hash = input.charCodeAt(i) + ((hash << 10) - hash);
   }
 
   // Generate RGB values from the hash

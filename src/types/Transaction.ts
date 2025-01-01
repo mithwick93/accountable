@@ -4,6 +4,7 @@ import { PaymentSystemCredit } from './PaymentSystemCredit';
 import { PaymentSystemDebit } from './PaymentSystemDebit';
 import { SharedTransaction } from './SharedTransaction';
 import { TransactionCategory } from './TransactionCategory';
+import { User } from './User';
 
 export type Transaction = {
   id: number;
@@ -14,6 +15,7 @@ export type Transaction = {
   amount: number;
   currency: string;
   date: string;
+  user: User;
   fromAsset?: Asset;
   toAsset?: Asset;
   fromPaymentSystemCredit?: PaymentSystemCredit;

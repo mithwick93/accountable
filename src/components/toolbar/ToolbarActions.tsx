@@ -17,7 +17,7 @@ import { useSettings } from '../../context/SettingsContext';
 import { useStaticData } from '../../context/StaticDataContext';
 import { useUser } from '../../context/UserContext';
 import { AuthService } from '../../services/AuthService';
-import { stringToColor } from '../../utils/common';
+import { generateAvatarProps } from '../../utils/common';
 
 const clockUpdateInterval = 60000;
 
@@ -29,14 +29,6 @@ const formatDate = () =>
     hour: '2-digit',
     minute: '2-digit',
   });
-
-const generateAvatarProps = (name: string, isDarkTheme: boolean) => ({
-  sx: { bgcolor: stringToColor(name, isDarkTheme) },
-  children: name
-    .split(' ')
-    .map((part) => part[0])
-    .join(''),
-});
 
 const ToolbarActions = () => {
   const { loggedInUser } = useUser();
@@ -67,7 +59,7 @@ const ToolbarActions = () => {
   const handleCurrencyChange = (event: SelectChangeEvent) =>
     update({ ...settings, currency: event.target.value });
 
-  const userNames =
+  const userName =
     `${loggedInUser?.firstName || ''} ${loggedInUser?.lastName || ''}`.trim();
 
   return (
@@ -88,10 +80,10 @@ const ToolbarActions = () => {
         ))}
       </Select>
       <ThemeSwitcher />
-      <Tooltip title={userNames || 'User'}>
+      <Tooltip title={userName || 'User'}>
         <Avatar
           {...generateAvatarProps(
-            userNames || 'User',
+            userName || 'User',
             theme.palette.mode === 'dark',
           )}
           onClick={handleMenuOpen}
