@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import PWAPrompt from 'react-ios-pwa-prompt';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -16,6 +17,7 @@ import TransactionCategoriesPage from './pages/TransactionCategoriesPage';
 import TransactionsPage from './pages/TransactionsPage';
 import reportWebVitals from './reportWebVitals';
 import './index.css';
+import * as serviceWorkerRegistration from './serviceWorkerRegistration';
 
 const router = createBrowserRouter([
   {
@@ -79,8 +81,14 @@ root.render(
       closeOnClick
       theme="colored"
     />
+    <PWAPrompt promptOnVisit={1} timesToShow={3} />
   </React.StrictMode>,
 );
+
+// If you want your app to work offline and load faster, you can change
+// unregister() to register() below. Note this comes with some pitfalls.
+// Learn more about service workers: https://cra.link/PWA
+serviceWorkerRegistration.register();
 
 // If you want to start measuring performance in your app, pass a function
 // to log results (for example: reportWebVitals(console.log))
