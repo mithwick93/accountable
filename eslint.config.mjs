@@ -68,6 +68,7 @@ export default [
             'MRT_Row',
             'MRT_RowData',
             'MRT_EditActionButtons',
+            'MRT_ColumnFiltersState',
           ],
         },
       ],
