@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars */
 import { AxiosError } from 'axios';
 import { debounce } from 'lodash-es';
 import React, {
@@ -14,6 +13,7 @@ import log from '../utils/logger';
 
 interface SettingsContextType {
   settings: Record<string, any> | null;
+  // eslint-disable-next-line no-unused-vars
   update: (newSettings: Record<string, any>) => void;
 }
 
