@@ -516,6 +516,7 @@ const CreateTransactionDialog = ({
               label="Amount"
               name="amount"
               type="number"
+              inputMode="decimal"
               value={formValues.amount || ''}
               required
               onChange={handleInputChange}

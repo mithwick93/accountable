@@ -441,7 +441,7 @@ const Dashboard: React.FC = () => {
 
   return (
     <Grid container spacing={2}>
-      <Grid size={{ xs: 12, sm: 6 }}>
+      <Grid size={{ xs: 12, sm: 12, lg: 6 }}>
         <NetSummary
           title="Net Worth"
           totals={assetTotals}
@@ -450,7 +450,7 @@ const Dashboard: React.FC = () => {
           isLoading={loading}
         />
       </Grid>
-      <Grid size={{ xs: 12, sm: 6 }}>
+      <Grid size={{ xs: 12, sm: 12, lg: 6 }}>
         <NetSummary
           title="Net Liabilities"
           totals={liabilityTotals}
@@ -459,13 +459,7 @@ const Dashboard: React.FC = () => {
           isLoading={loading}
         />
       </Grid>
-      <Grid
-        container
-        spacing={2}
-        size={{ xs: 12, sm: 12 }}
-        sx={{ mt: 2 }}
-      ></Grid>
-      <Grid size={{ xs: 12, sm: 6 }}>
+      <Grid size={{ xs: 12, sm: 12, lg: 6 }}>
         <Card>
           <CardHeader title="Assets Summery" />
           <CardContent>
@@ -473,7 +467,7 @@ const Dashboard: React.FC = () => {
           </CardContent>
         </Card>
       </Grid>
-      <Grid size={{ xs: 12, sm: 6 }}>
+      <Grid size={{ xs: 12, sm: 12, lg: 6 }}>
         <Card>
           <CardHeader title="Liabilities Summery" />
           <CardContent>
