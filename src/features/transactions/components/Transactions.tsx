@@ -1,4 +1,5 @@
 import { Avatar, Box, Chip, Tooltip, useTheme } from '@mui/material';
+import Typography from '@mui/material/Typography';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFnsV3';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { ColumnFilter } from '@tanstack/table-core/src/features/ColumnFiltering';
@@ -19,6 +20,32 @@ import {
   generateAvatarProps,
   stringToColor,
 } from '../../../utils/common';
+
+const getBillingPeriodText = (settings: Record<string, any> | null): string => {
+  const billingPeriod: ColumnFilter | undefined =
+    settings?.transactions?.search?.columnFilters?.find(
+      (filter: ColumnFilter) =>
+        filter.id === 'date' && Array.isArray(filter.value),
+    );
+
+  let startDate, endDate;
+  if (billingPeriod && Array.isArray(billingPeriod.value)) {
+    [startDate, endDate] = billingPeriod.value;
+  }
+
+  if (startDate && endDate) {
+    return `${format(new Date(startDate), 'dd/MM/yyyy')} - ${format(
+      new Date(endDate),
+      'dd/MM/yyyy',
+    )}`;
+  } else if (startDate) {
+    return `${format(new Date(startDate), 'dd/MM/yyyy')} - !`;
+  } else if (endDate) {
+    return `! - ${format(new Date(endDate), 'dd/MM/yyyy')}`;
+  } else {
+    return 'All time';
+  }
+};
 
 const Transactions: React.FC = () => {
   const {
@@ -332,7 +359,7 @@ const Transactions: React.FC = () => {
     manualPagination: true,
     paginationDisplayMode: 'pages',
     muiPaginationProps: {
-      rowsPerPageOptions: [25, 50, 100, 250, 500, 1000],
+      rowsPerPageOptions: [10, 25, 50, 100, 250, 500, 1000],
     },
     isMultiSortEvent: () => true,
     initialState: {
@@ -398,6 +425,9 @@ const Transactions: React.FC = () => {
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={enGB}>
+      <Typography variant="h6" gutterBottom>
+        Billing Period: {getBillingPeriodText(settings)}
+      </Typography>
       <MaterialReactTable table={table} />
     </LocalizationProvider>
   );
