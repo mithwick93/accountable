@@ -36,9 +36,12 @@ import apiClient from '../../services/ApiService';
 import { Asset } from '../../types/Asset';
 import { Liability } from '../../types/Liability';
 import { PaymentSystem } from '../../types/PaymentSystem';
+import { PaymentSystemCredit } from '../../types/PaymentSystemCredit';
+import { PaymentSystemDebit } from '../../types/PaymentSystemDebit';
 import { SharedTransaction } from '../../types/SharedTransaction';
 import { TransactionCategory } from '../../types/TransactionCategory';
 import { User } from '../../types/User';
+import { formatCurrency } from '../../utils/common';
 import { notifyBackendError } from '../../utils/notifications';
 import SlideUpTransition from '../transition/SlideUpTransition';
 
@@ -556,6 +559,15 @@ const CreateTransactionDialog = ({
                     helperText={validationErrors?.toAssetId}
                   />
                 )}
+                renderOption={(props, option) => {
+                  const { key, ...optionProps } = props;
+                  return (
+                    <Box key={key} component="li" {...optionProps}>
+                      {option.name} (
+                      {formatCurrency(option.balance, option.currency)})
+                    </Box>
+                  );
+                }}
                 onChange={(_event: any, newValue: Asset | null) => {
                   handleAutoCompleteChange('toAssetId', newValue?.id);
                 }}
@@ -580,6 +592,32 @@ const CreateTransactionDialog = ({
                       helperText={validationErrors?.fromPaymentSystemId}
                     />
                   )}
+                  renderOption={(props, option) => {
+                    const { key, ...optionProps } = props;
+                    let content;
+
+                    if (option.type === 'Credit') {
+                      const credit = option as PaymentSystemCredit;
+                      content = `${credit.name} (${formatCurrency(
+                        credit.liability.amount - credit.liability.balance,
+                        credit.currency,
+                      )})`;
+                    } else if (option.type === 'Debit') {
+                      const debit = option as PaymentSystemDebit;
+                      content = `${debit.name} (${formatCurrency(
+                        debit.asset.balance,
+                        debit.currency,
+                      )})`;
+                    } else {
+                      content = option.name;
+                    }
+
+                    return (
+                      <Box key={key} component="li" {...optionProps}>
+                        {content}
+                      </Box>
+                    );
+                  }}
                   groupBy={(option) => option.type}
                   onChange={(_event: any, newValue: PaymentSystem | null) => {
                     handleAutoCompleteChange(
@@ -773,6 +811,15 @@ const CreateTransactionDialog = ({
                       helperText={validationErrors?.fromAssetId}
                     />
                   )}
+                  renderOption={(props, option) => {
+                    const { key, ...optionProps } = props;
+                    return (
+                      <Box key={key} component="li" {...optionProps}>
+                        {option.name} (
+                        {formatCurrency(option.balance, option.currency)})
+                      </Box>
+                    );
+                  }}
                   onChange={(_event: any, newValue: Asset | null) => {
                     handleAutoCompleteChange('fromAssetId', newValue?.id);
                   }}
@@ -795,6 +842,15 @@ const CreateTransactionDialog = ({
                       helperText={validationErrors?.toAssetId}
                     />
                   )}
+                  renderOption={(props, option) => {
+                    const { key, ...optionProps } = props;
+                    return (
+                      <Box key={key} component="li" {...optionProps}>
+                        {option.name} (
+                        {formatCurrency(option.balance, option.currency)})
+                      </Box>
+                    );
+                  }}
                   onChange={(_event: any, newValue: Asset | null) => {
                     handleAutoCompleteChange('toAssetId', newValue?.id);
                   }}
@@ -815,6 +871,15 @@ const CreateTransactionDialog = ({
                       helperText={validationErrors?.toLiabilityId}
                     />
                   )}
+                  renderOption={(props, option) => {
+                    const { key, ...optionProps } = props;
+                    return (
+                      <Box key={key} component="li" {...optionProps}>
+                        {option.name} (
+                        {formatCurrency(option.balance, option.currency)})
+                      </Box>
+                    );
+                  }}
                   onChange={(_event: any, newValue: Liability | null) => {
                     handleAutoCompleteChange('toLiabilityId', newValue?.id);
                   }}
