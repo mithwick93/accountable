@@ -345,6 +345,7 @@ const PaymentSystems: React.FC = () => {
     enableStickyHeader: true,
     enableEditing: true,
     initialState: {
+      density: 'compact',
       sorting: [
         {
           id: 'currency',

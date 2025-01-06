@@ -363,6 +363,7 @@ const Transactions: React.FC = () => {
     },
     isMultiSortEvent: () => true,
     initialState: {
+      density: 'compact',
       showColumnFilters: true,
       sorting: [
         {

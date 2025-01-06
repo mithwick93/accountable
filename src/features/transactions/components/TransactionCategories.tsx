@@ -174,6 +174,7 @@ const TransactionCategories: React.FC = () => {
     enableStickyHeader: true,
     enableEditing: true,
     initialState: {
+      density: 'compact',
       sorting: [
         {
           id: 'type',

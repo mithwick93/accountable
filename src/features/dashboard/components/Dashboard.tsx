@@ -388,6 +388,7 @@ const Dashboard: React.FC = () => {
     enableStickyHeader: true,
     groupedColumnMode: false,
     initialState: {
+      density: 'compact',
       grouping: ['currency', 'type'],
       sorting: [
         {
@@ -418,6 +419,7 @@ const Dashboard: React.FC = () => {
     enableStickyHeader: true,
     groupedColumnMode: false,
     initialState: {
+      density: 'compact',
       grouping: ['currency', 'type'],
       sorting: [
         {
