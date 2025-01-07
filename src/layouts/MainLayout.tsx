@@ -45,7 +45,7 @@ const userSettings = {
         hasSharedTransactions: null,
         pageIndex: 0,
         pageSize: 25,
-        sorting: ['date,desc', 'name,asc'],
+        sorting: ['date,desc'],
       },
     },
   },
