@@ -64,7 +64,7 @@ const prepareTransactionSearchRequestPayload = (
   }
 
   for (const key in params) {
-    if (params[key] !== null) {
+    if (params[key] !== undefined && params[key] !== null) {
       filteredParams[key] = params[key];
     }
   }

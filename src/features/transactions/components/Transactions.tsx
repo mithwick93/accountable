@@ -1,5 +1,18 @@
-import { Avatar, Box, Chip, Tooltip, useTheme } from '@mui/material';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import {
+  Avatar,
+  Box,
+  Chip,
+  Tooltip,
+  useMediaQuery,
+  useTheme,
+} from '@mui/material';
+import Accordion from '@mui/material/Accordion';
+import AccordionDetails from '@mui/material/AccordionDetails';
+import AccordionSummary from '@mui/material/AccordionSummary';
 import Typography from '@mui/material/Typography';
+import { BarChart } from '@mui/x-charts/BarChart';
+import { axisClasses } from '@mui/x-charts/ChartsAxis';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFnsV3';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { ColumnFilter } from '@tanstack/table-core/src/features/ColumnFiltering';
@@ -11,9 +24,10 @@ import {
   MRT_RowData,
   useMaterialReactTable,
 } from 'material-react-table';
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useData } from '../../../context/DataContext';
 import { useSettings } from '../../../context/SettingsContext';
+import { Transaction } from '../../../types/Transaction';
 import {
   formatNumber,
   formatTransactionType,
@@ -21,7 +35,7 @@ import {
   stringToColor,
 } from '../../../utils/common';
 
-const getBillingPeriodText = (settings: Record<string, any> | null): string => {
+const getStartEndDate = (settings: Record<string, any> | null) => {
   const billingPeriod: ColumnFilter | undefined =
     settings?.transactions?.search?.columnFilters?.find(
       (filter: ColumnFilter) =>
@@ -32,6 +46,11 @@ const getBillingPeriodText = (settings: Record<string, any> | null): string => {
   if (billingPeriod && Array.isArray(billingPeriod.value)) {
     [startDate, endDate] = billingPeriod.value;
   }
+  return { startDate, endDate };
+};
+
+const getBillingPeriodText = (settings: Record<string, any> | null): string => {
+  const { startDate, endDate } = getStartEndDate(settings);
 
   if (startDate && endDate) {
     return `${format(new Date(startDate), 'dd/MM/yyyy')} - ${format(
@@ -45,6 +64,167 @@ const getBillingPeriodText = (settings: Record<string, any> | null): string => {
   } else {
     return 'All time';
   }
+};
+
+const calculateGroupedExpenses = (
+  transactions: Transaction[],
+  currency: string,
+) => {
+  const groupedExpenses: { [category: string]: number } = {};
+
+  transactions
+    .filter((transaction) => transaction.currency === currency)
+    .forEach((transaction) => {
+      const type = formatTransactionType(transaction.type) || 'Unknown';
+      if (!groupedExpenses[type]) {
+        groupedExpenses[type] = 0;
+      }
+      groupedExpenses[type] += transaction.amount;
+    });
+
+  return groupedExpenses;
+};
+
+const calculateGroupedExpensesByCategory = (
+  transactions: Transaction[],
+  currency: string,
+) => {
+  const groupedExpenses: { [category: string]: number } = {};
+
+  transactions
+    .filter((transaction) => transaction.currency === currency)
+    .forEach((transaction) => {
+      const category = transaction.category?.name || 'Unknown';
+      if (!groupedExpenses[category]) {
+        groupedExpenses[category] = 0;
+      }
+      groupedExpenses[category] += transaction.amount;
+    });
+
+  return groupedExpenses;
+};
+
+type SummedTransactionsProps = {
+  transactions: Transaction[];
+};
+const SummedTransactions: React.FC<SummedTransactionsProps> = ({
+  transactions,
+}) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const { settings } = useSettings();
+  const currency: string = settings?.currency || 'USD';
+
+  const [groupedExpenses, setGroupedExpenses] = useState<{
+    [type: string]: number;
+  }>({
+    Income: 0,
+    Expense: 0,
+    Transfer: 0,
+  });
+
+  const [groupedExpensesByCategory, setGroupedExpensesByCategory] = useState<{
+    [category: string]: number;
+  }>({});
+
+  useEffect(() => {
+    const expenses = calculateGroupedExpenses(transactions, currency);
+    setGroupedExpenses(expenses);
+
+    const expensesByCategory = calculateGroupedExpensesByCategory(
+      transactions,
+      currency,
+    );
+    setGroupedExpensesByCategory(expensesByCategory);
+  }, [transactions, currency]);
+
+  const dataByType = Object.keys(groupedExpenses).map((group) => ({
+    group,
+    amount: groupedExpenses[group],
+  }));
+
+  const dataByCategory = Object.keys(groupedExpensesByCategory).map(
+    (category) => ({
+      category,
+      amount: groupedExpensesByCategory[category],
+    }),
+  );
+
+  return (
+    <Box component="div" mb={2}>
+      <Accordion defaultExpanded>
+        <AccordionSummary
+          expandIcon={<ExpandMoreIcon />}
+          aria-controls="panel1-content"
+          id="panel1-header"
+        >
+          <Typography component="span">Summery</Typography>
+        </AccordionSummary>
+        <AccordionDetails>
+          <Accordion defaultExpanded>
+            <AccordionSummary
+              expandIcon={<ExpandMoreIcon />}
+              aria-controls="panel2-content"
+              id="panel2-header"
+            >
+              <Typography component="span">Type</Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <Box display="flex" justifyContent="center" width="100%">
+                <BarChart
+                  xAxis={[
+                    {
+                      scaleType: 'band',
+                      data: dataByType.map((item) => item.group),
+                    },
+                  ]}
+                  yAxis={[{ label: `Amount (${currency})` }]}
+                  series={[{ data: dataByType.map((item) => item.amount) }]}
+                  width={isMobile ? 300 : 500}
+                  height={isMobile ? 200 : 300}
+                  sx={{
+                    [`& .${axisClasses.left} .${axisClasses.label}`]: {
+                      transform: 'translateX(-50px)',
+                    },
+                  }}
+                />
+              </Box>
+            </AccordionDetails>
+          </Accordion>
+          <Accordion defaultExpanded>
+            <AccordionSummary
+              expandIcon={<ExpandMoreIcon />}
+              aria-controls="panel3-content"
+              id="panel3-header"
+            >
+              <Typography component="span">Categories</Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <Box display="flex" justifyContent="center" width="100%">
+                <BarChart
+                  xAxis={[
+                    {
+                      scaleType: 'band',
+                      data: dataByCategory.map((item) => item.category),
+                    },
+                  ]}
+                  yAxis={[{ label: `Amount (${currency})` }]}
+                  series={[{ data: dataByCategory.map((item) => item.amount) }]}
+                  width={isMobile ? 300 : 500}
+                  height={isMobile ? 200 : 300}
+                  sx={{
+                    [`& .${axisClasses.left} .${axisClasses.label}`]: {
+                      transform: 'translateX(-50px)',
+                    },
+                  }}
+                />
+              </Box>
+            </AccordionDetails>
+          </Accordion>
+        </AccordionDetails>
+      </Accordion>
+    </Box>
+  );
 };
 
 const Transactions: React.FC = () => {
@@ -75,6 +255,7 @@ const Transactions: React.FC = () => {
   });
 
   useEffect(() => {
+    const { startDate, endDate } = getStartEndDate(settings);
     refetchData(['transactions'], {
       transactions: {
         search: {
@@ -82,11 +263,13 @@ const Transactions: React.FC = () => {
             pageIndex: searchParameters.pageIndex,
             pageSize: searchParameters.pageSize,
             sorting: searchParameters.sorting,
+            dateFrom: startDate && format(startDate, 'yyyy-MM-dd'),
+            dateTo: endDate && format(endDate, 'yyyy-MM-dd'),
           },
         },
       },
     });
-  }, [searchParameters]);
+  }, [searchParameters, settings]);
 
   const columns = useMemo<MRT_ColumnDef<MRT_RowData>[]>(
     () => [
@@ -357,7 +540,6 @@ const Transactions: React.FC = () => {
     enableRowNumbers: true,
     enableStickyHeader: true,
     manualPagination: true,
-    paginationDisplayMode: 'pages',
     muiPaginationProps: {
       rowsPerPageOptions: [10, 25, 50, 100, 250, 500, 1000],
     },
@@ -429,6 +611,7 @@ const Transactions: React.FC = () => {
       <Typography variant="h6" gutterBottom>
         Billing Period: {getBillingPeriodText(settings)}
       </Typography>
+      <SummedTransactions transactions={transactions} />
       <MaterialReactTable table={table} />
     </LocalizationProvider>
   );
