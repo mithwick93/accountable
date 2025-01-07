@@ -2,6 +2,9 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import {
   Avatar,
   Box,
+  Card,
+  CardContent,
+  CardHeader,
   Chip,
   Tooltip,
   useMediaQuery,
@@ -10,6 +13,7 @@ import {
 import Accordion from '@mui/material/Accordion';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import AccordionSummary from '@mui/material/AccordionSummary';
+import Grid from '@mui/material/Grid2';
 import Typography from '@mui/material/Typography';
 import { BarChart } from '@mui/x-charts/BarChart';
 import { axisClasses } from '@mui/x-charts/ChartsAxis';
@@ -158,10 +162,56 @@ const SummedTransactions: React.FC<SummedTransactionsProps> = ({
           aria-controls="panel1-content"
           id="panel1-header"
         >
-          <Typography component="span">Summery</Typography>
+          <Typography component="span" variant="h5">
+            Summery
+          </Typography>
         </AccordionSummary>
         <AccordionDetails>
-          <Accordion defaultExpanded>
+          <Grid container spacing={2} mb={2}>
+            <Grid size={{ xs: 12, sm: 12, lg: 4 }}>
+              <Card>
+                <CardHeader title="Expenses" />
+                <CardContent>
+                  <Typography
+                    variant="h5"
+                    component="div"
+                    style={{ fontWeight: 'bold' }}
+                  >
+                    {formatNumber(groupedExpenses.Expense || 0)} {currency}
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+            <Grid size={{ xs: 12, sm: 12, lg: 4 }}>
+              <Card>
+                <CardHeader title="Income" />
+                <CardContent>
+                  <Typography
+                    variant="h5"
+                    component="div"
+                    style={{ fontWeight: 'bold' }}
+                  >
+                    {formatNumber(groupedExpenses.Income || 0)} {currency}
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+            <Grid size={{ xs: 12, sm: 12, lg: 4 }}>
+              <Card>
+                <CardHeader title="Transfers" />
+                <CardContent>
+                  <Typography
+                    variant="h5"
+                    component="div"
+                    style={{ fontWeight: 'bold' }}
+                  >
+                    {formatNumber(groupedExpenses.Transfer || 0)} {currency}
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+          </Grid>
+          <Accordion>
             <AccordionSummary
               expandIcon={<ExpandMoreIcon />}
               aria-controls="panel2-content"
@@ -191,7 +241,7 @@ const SummedTransactions: React.FC<SummedTransactionsProps> = ({
               </Box>
             </AccordionDetails>
           </Accordion>
-          <Accordion defaultExpanded>
+          <Accordion>
             <AccordionSummary
               expandIcon={<ExpandMoreIcon />}
               aria-controls="panel3-content"
