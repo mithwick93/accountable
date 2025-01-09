@@ -41,7 +41,11 @@ import { PaymentSystemDebit } from '../../types/PaymentSystemDebit';
 import { SharedTransaction } from '../../types/SharedTransaction';
 import { TransactionCategory } from '../../types/TransactionCategory';
 import { User } from '../../types/User';
-import { formatCurrency } from '../../utils/common';
+import {
+  formatCurrency,
+  getStartEndDate,
+  getTransactionsFetchOptions,
+} from '../../utils/common';
 import { notifyBackendError } from '../../utils/notifications';
 import SlideUpTransition from '../transition/SlideUpTransition';
 
@@ -105,6 +109,10 @@ const CreateTransactionDialog = ({
     sharedTransactionValidationErrors,
     setSharedTransactionValidationErrors,
   ] = useState<Record<string, string | undefined>[]>([]);
+  const [
+    sharedTransactionCommonValidationErrors,
+    setSharedTransactionCommonValidationErrors,
+  ] = useState<string[]>([]);
 
   const userOptions = users ?? [];
   const categoryOptions =
@@ -165,7 +173,14 @@ const CreateTransactionDialog = ({
   };
 
   const handleRemoveSharedTransaction = (index: number) => {
-    setSharedTransactions(sharedTransactions.filter((_, i) => i !== index));
+    const updatedSharedTransactions = sharedTransactions.filter(
+      (_, i) => i !== index,
+    );
+    setSharedTransactions(updatedSharedTransactions);
+
+    if (updatedSharedTransactions.length === 0) {
+      setSharedTransactionCommonValidationErrors([]);
+    }
   };
 
   const handleSharedTransactionChange = (
@@ -200,19 +215,11 @@ const CreateTransactionDialog = ({
 
         const searchParameters: Record<string, any> =
           settings?.transactions?.search?.parameters || {};
-        const pageIndex = searchParameters.pageIndex || 0;
-        const pageSize = searchParameters.pageSize || 50;
-        await refetchData(['assets', 'liabilities', 'transactions'], {
-          transactions: {
-            search: {
-              parameters: {
-                pageIndex: pageIndex,
-                pageSize: pageSize,
-                sorting: searchParameters.sorting,
-              },
-            },
-          },
-        });
+        const { startDate, endDate } = getStartEndDate(settings);
+        await refetchData(
+          ['assets', 'liabilities', 'paymentSystems', 'transactions'],
+          getTransactionsFetchOptions(searchParameters, startDate, endDate),
+        );
         handleClose();
       } catch (error: any) {
         notifyBackendError('Error creating transaction', error);
@@ -225,6 +232,7 @@ const CreateTransactionDialog = ({
     setSharedTransactions([]);
     setValidationErrors({});
     setSharedTransactionValidationErrors([]);
+    setSharedTransactionCommonValidationErrors([]);
     onClose();
   };
 
@@ -244,6 +252,7 @@ const CreateTransactionDialog = ({
       updatedErrors[index][field] = undefined;
     }
     setSharedTransactionValidationErrors(updatedErrors);
+    setSharedTransactionCommonValidationErrors([]);
   };
 
   const validateForm = () => {
@@ -310,6 +319,10 @@ const CreateTransactionDialog = ({
 
   const validateSharedTransactions = () => {
     const errors: Record<string, string | undefined>[] = [];
+    const commonErrors: string[] = [];
+    let hasPositiveShare = false;
+    let hasPositivePaidAmount = false;
+    let hasSettledTransaction = false;
 
     sharedTransactions.forEach((transaction, index) => {
       const transactionErrors: Record<string, string | undefined> = {};
@@ -318,20 +331,46 @@ const CreateTransactionDialog = ({
         transactionErrors.userId = 'User is required';
       }
 
-      if (transaction.share <= 0) {
-        transactionErrors.share = 'Share must be greater than 0';
+      if (transaction.share < 0) {
+        transactionErrors.share = 'Share cannot be negative';
+      } else if (transaction.share > 0) {
+        hasPositiveShare = true;
       }
 
       if (transaction.paidAmount < 0) {
         transactionErrors.paidAmount = 'Paid Amount cannot be negative';
+      } else if (transaction.paidAmount > 0) {
+        hasPositivePaidAmount = true;
+      }
+
+      if (transaction.isSettled) {
+        hasSettledTransaction = true;
       }
 
       errors[index] = transactionErrors;
     });
 
-    setSharedTransactionValidationErrors(errors);
+    if (sharedTransactions.length > 0) {
+      if (!hasPositiveShare) {
+        commonErrors.push('At least one share must be greater than 0');
+      }
 
-    return errors.every((error) => Object.keys(error).length === 0);
+      if (!hasPositivePaidAmount) {
+        commonErrors.push('At least one paid amount must be greater than 0');
+      }
+
+      if (!hasSettledTransaction) {
+        commonErrors.push('At least one shared transaction must be settled');
+      }
+    }
+
+    setSharedTransactionValidationErrors(errors);
+    setSharedTransactionCommonValidationErrors(commonErrors);
+
+    return (
+      commonErrors.length === 0 &&
+      errors.every((error) => Object.keys(error).length === 0)
+    );
   };
 
   const getRequestPayload = () => {
@@ -365,9 +404,9 @@ const CreateTransactionDialog = ({
     if (sharedTransactions.length > 0) {
       payload.sharedTransactions = sharedTransactions.map((transaction) => ({
         userId: transaction.userId,
-        share: transaction.share,
-        paidAmount: transaction.paidAmount,
-        isSettled: transaction.isSettled,
+        share: transaction.share || 0,
+        paidAmount: transaction.paidAmount || 0,
+        isSettled: transaction.isSettled || false,
       }));
     }
 
@@ -667,6 +706,11 @@ const CreateTransactionDialog = ({
                       </Tooltip>
                     </Box>
                   </Box>
+                  {sharedTransactionCommonValidationErrors.length > 0 && (
+                    <FormHelperText error sx={{ whiteSpace: 'pre-wrap' }}>
+                      {sharedTransactionCommonValidationErrors.join('\n')}
+                    </FormHelperText>
+                  )}
                   {sharedTransactions.map((transaction, index) => (
                     <Box
                       key={index}
@@ -715,7 +759,7 @@ const CreateTransactionDialog = ({
                       <TextField
                         label="Share"
                         type="number"
-                        value={transaction.share}
+                        value={transaction.share || ''}
                         required
                         error={
                           !!sharedTransactionValidationErrors[index]?.share
@@ -742,7 +786,7 @@ const CreateTransactionDialog = ({
                       <TextField
                         label="Paid Amount"
                         type="number"
-                        value={transaction.paidAmount}
+                        value={transaction.paidAmount || ''}
                         required
                         error={
                           !!sharedTransactionValidationErrors[index]?.paidAmount
@@ -780,6 +824,9 @@ const CreateTransactionDialog = ({
                           />
                         }
                         label="Settled"
+                        onFocus={() =>
+                          handleSharedTransactionFocus(index, 'isSettled')
+                        }
                       />
                       <IconButton
                         onClick={() => handleRemoveSharedTransaction(index)}

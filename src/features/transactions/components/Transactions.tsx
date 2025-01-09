@@ -33,80 +33,16 @@ import { useData } from '../../../context/DataContext';
 import { useSettings } from '../../../context/SettingsContext';
 import { Transaction } from '../../../types/Transaction';
 import {
+  calculateGroupedExpenses,
+  calculateGroupedExpensesByCategory,
   formatNumber,
   formatTransactionType,
   generateAvatarProps,
+  getBillingPeriodText,
+  getStartEndDate,
+  getTransactionsFetchOptions,
   stringToColor,
 } from '../../../utils/common';
-
-const getStartEndDate = (settings: Record<string, any> | null) => {
-  const billingPeriod: ColumnFilter | undefined =
-    settings?.transactions?.search?.columnFilters?.find(
-      (filter: ColumnFilter) =>
-        filter.id === 'date' && Array.isArray(filter.value),
-    );
-
-  let startDate, endDate;
-  if (billingPeriod && Array.isArray(billingPeriod.value)) {
-    [startDate, endDate] = billingPeriod.value;
-  }
-  return { startDate, endDate };
-};
-
-const getBillingPeriodText = (settings: Record<string, any> | null): string => {
-  const { startDate, endDate } = getStartEndDate(settings);
-
-  if (startDate && endDate) {
-    return `${format(new Date(startDate), 'dd/MM/yyyy')} - ${format(
-      new Date(endDate),
-      'dd/MM/yyyy',
-    )}`;
-  } else if (startDate) {
-    return `${format(new Date(startDate), 'dd/MM/yyyy')} - !`;
-  } else if (endDate) {
-    return `! - ${format(new Date(endDate), 'dd/MM/yyyy')}`;
-  } else {
-    return 'All time';
-  }
-};
-
-const calculateGroupedExpenses = (
-  transactions: Transaction[],
-  currency: string,
-) => {
-  const groupedExpenses: { [category: string]: number } = {};
-
-  transactions
-    .filter((transaction) => transaction.currency === currency)
-    .forEach((transaction) => {
-      const type = formatTransactionType(transaction.type) || 'Unknown';
-      if (!groupedExpenses[type]) {
-        groupedExpenses[type] = 0;
-      }
-      groupedExpenses[type] += transaction.amount;
-    });
-
-  return groupedExpenses;
-};
-
-const calculateGroupedExpensesByCategory = (
-  transactions: Transaction[],
-  currency: string,
-) => {
-  const groupedExpenses: { [category: string]: number } = {};
-
-  transactions
-    .filter((transaction) => transaction.currency === currency)
-    .forEach((transaction) => {
-      const category = transaction.category?.name || 'Unknown';
-      if (!groupedExpenses[category]) {
-        groupedExpenses[category] = 0;
-      }
-      groupedExpenses[category] += transaction.amount;
-    });
-
-  return groupedExpenses;
-};
 
 type SummedTransactionsProps = {
   transactions: Transaction[];
@@ -290,7 +226,7 @@ const Transactions: React.FC = () => {
   const searchParameters: Record<string, any> =
     settings?.transactions?.search?.parameters || {};
   const pageIndex = searchParameters.pageIndex || 0;
-  const pageSize = searchParameters.pageSize || 50;
+  const pageSize = searchParameters.pageSize || 100;
 
   const columnFilters = (
     settings?.transactions?.search?.columnFilters || []
@@ -306,19 +242,10 @@ const Transactions: React.FC = () => {
 
   useEffect(() => {
     const { startDate, endDate } = getStartEndDate(settings);
-    refetchData(['transactions'], {
-      transactions: {
-        search: {
-          parameters: {
-            pageIndex: searchParameters.pageIndex,
-            pageSize: searchParameters.pageSize,
-            sorting: searchParameters.sorting,
-            dateFrom: startDate && format(startDate, 'yyyy-MM-dd'),
-            dateTo: endDate && format(endDate, 'yyyy-MM-dd'),
-          },
-        },
-      },
-    });
+    refetchData(
+      ['transactions'],
+      getTransactionsFetchOptions(searchParameters, startDate, endDate),
+    );
   }, [searchParameters, settings]);
 
   const columns = useMemo<MRT_ColumnDef<MRT_RowData>[]>(

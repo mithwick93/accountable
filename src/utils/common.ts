@@ -1,4 +1,7 @@
 import { PaletteMode } from '@mui/material/styles/createPalette';
+import { ColumnFilter } from '@tanstack/table-core/src/features/ColumnFiltering';
+import { format } from 'date-fns';
+import { Transaction } from '../types/Transaction';
 
 export const alertColors = {
   green: { dark: '#81C784', light: '#388E3C' },
@@ -271,3 +274,92 @@ export const formatCurrency = (amount: number, currency: string) => {
     currency,
   });
 };
+
+export const getStartEndDate = (settings: Record<string, any> | null) => {
+  const billingPeriod: ColumnFilter | undefined =
+    settings?.transactions?.search?.columnFilters?.find(
+      (filter: ColumnFilter) =>
+        filter.id === 'date' && Array.isArray(filter.value),
+    );
+
+  let startDate, endDate;
+  if (billingPeriod && Array.isArray(billingPeriod.value)) {
+    [startDate, endDate] = billingPeriod.value;
+  }
+  return { startDate, endDate };
+};
+
+export const getBillingPeriodText = (
+  settings: Record<string, any> | null,
+): string => {
+  const { startDate, endDate } = getStartEndDate(settings);
+
+  if (startDate && endDate) {
+    return `${format(new Date(startDate), 'dd/MM/yyyy')} - ${format(
+      new Date(endDate),
+      'dd/MM/yyyy',
+    )}`;
+  } else if (startDate) {
+    return `${format(new Date(startDate), 'dd/MM/yyyy')} - !`;
+  } else if (endDate) {
+    return `! - ${format(new Date(endDate), 'dd/MM/yyyy')}`;
+  } else {
+    return 'All time';
+  }
+};
+
+export const calculateGroupedExpenses = (
+  transactions: Transaction[],
+  currency: string,
+) => {
+  const groupedExpenses: { [category: string]: number } = {};
+
+  transactions
+    .filter((transaction) => transaction.currency === currency)
+    .forEach((transaction) => {
+      const type = formatTransactionType(transaction.type) || 'Unknown';
+      if (!groupedExpenses[type]) {
+        groupedExpenses[type] = 0;
+      }
+      groupedExpenses[type] += transaction.amount;
+    });
+
+  return groupedExpenses;
+};
+
+export const calculateGroupedExpensesByCategory = (
+  transactions: Transaction[],
+  currency: string,
+) => {
+  const groupedExpenses: { [category: string]: number } = {};
+
+  transactions
+    .filter((transaction) => transaction.currency === currency)
+    .forEach((transaction) => {
+      const category = transaction.category?.name || 'Unknown';
+      if (!groupedExpenses[category]) {
+        groupedExpenses[category] = 0;
+      }
+      groupedExpenses[category] += transaction.amount;
+    });
+
+  return groupedExpenses;
+};
+
+export const getTransactionsFetchOptions = (
+  searchParameters: Record<string, any>,
+  startDate: string | undefined | null,
+  endDate: string | undefined | null,
+) => ({
+  transactions: {
+    search: {
+      parameters: {
+        pageIndex: searchParameters.pageIndex || 0,
+        pageSize: searchParameters.pageSize || 100,
+        sorting: searchParameters.sorting,
+        dateFrom: startDate && format(startDate, 'yyyy-MM-dd'),
+        dateTo: endDate && format(endDate, 'yyyy-MM-dd'),
+      },
+    },
+  },
+});
