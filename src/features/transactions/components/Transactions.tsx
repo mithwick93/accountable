@@ -15,7 +15,7 @@ import AccordionDetails from '@mui/material/AccordionDetails';
 import AccordionSummary from '@mui/material/AccordionSummary';
 import Grid from '@mui/material/Grid2';
 import Typography from '@mui/material/Typography';
-import { BarChart } from '@mui/x-charts/BarChart';
+import { BarChart } from '@mui/x-charts';
 import { axisClasses } from '@mui/x-charts/ChartsAxis';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFnsV3';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -28,16 +28,17 @@ import {
   MRT_RowData,
   useMaterialReactTable,
 } from 'material-react-table';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useData } from '../../../context/DataContext';
 import { useSettings } from '../../../context/SettingsContext';
 import { Transaction } from '../../../types/Transaction';
 import {
   calculateGroupedExpenses,
-  calculateGroupedExpensesByCategory,
+  formatCurrency,
   formatNumber,
   formatTransactionType,
   generateAvatarProps,
+  getAggregatedDataForType,
   getBillingPeriodText,
   getStartEndDate,
   getTransactionsFetchOptions,
@@ -55,39 +56,78 @@ const SummedTransactions: React.FC<SummedTransactionsProps> = ({
   const { settings } = useSettings();
   const currency: string = settings?.currency || 'USD';
 
-  const [groupedExpenses, setGroupedExpenses] = useState<{
-    [type: string]: number;
-  }>({
-    Income: 0,
-    Expense: 0,
-    Transfer: 0,
-  });
+  const transactionsForCurrency = transactions.filter(
+    (transaction) => transaction.currency === currency,
+  );
+  const groupedExpenses = calculateGroupedExpenses(transactionsForCurrency);
 
-  const [groupedExpensesByCategory, setGroupedExpensesByCategory] = useState<{
-    [category: string]: number;
-  }>({});
+  const incomeData = getAggregatedDataForType(
+    transactionsForCurrency,
+    'INCOME',
+  );
+  const expenseData = getAggregatedDataForType(
+    transactionsForCurrency,
+    'EXPENSE',
+  );
+  const transferData = getAggregatedDataForType(
+    transactionsForCurrency,
+    'TRANSFER',
+  );
 
-  useEffect(() => {
-    const expenses = calculateGroupedExpenses(transactions, currency);
-    setGroupedExpenses(expenses);
+  const expenseTotal = formatCurrency(groupedExpenses.Expense || 0, currency);
+  const incomeTotal = formatCurrency(groupedExpenses.Income || 0, currency);
+  const transferTotal = formatCurrency(groupedExpenses.Transfer || 0, currency);
 
-    const expensesByCategory = calculateGroupedExpensesByCategory(
-      transactions,
-      currency,
-    );
-    setGroupedExpensesByCategory(expensesByCategory);
-  }, [transactions, currency]);
-
-  const dataByType = Object.keys(groupedExpenses).map((group) => ({
-    group,
-    amount: groupedExpenses[group],
-  }));
-
-  const dataByCategory = Object.keys(groupedExpensesByCategory).map(
-    (category) => ({
-      category,
-      amount: groupedExpensesByCategory[category],
-    }),
+  const renderChart = (
+    title: string,
+    data: { category: string; amount: number }[],
+    currency: string,
+  ) => (
+    <Grid size={{ xs: 12 }}>
+      <Card>
+        <CardHeader title={title} />
+        <CardContent
+          sx={{ display: 'flex', justifyContent: 'center', width: '100%' }}
+        >
+          {data.length > 0 ? (
+            <BarChart
+              dataset={data}
+              xAxis={[
+                {
+                  scaleType: 'band',
+                  dataKey: 'category',
+                  // @ts-expect-error library error
+                  barGapRatio: 0.1,
+                  categoryGapRatio: 0.7,
+                },
+              ]}
+              yAxis={[{ label: `Amount (${currency})` }]}
+              series={[
+                {
+                  dataKey: 'amount',
+                  label: 'Amount',
+                  valueFormatter: (value: number | null) =>
+                    formatCurrency(value || 0, currency),
+                },
+              ]}
+              grid={{ vertical: true, horizontal: true }}
+              borderRadius={5}
+              width={isMobile ? 400 : 800}
+              height={isMobile ? 250 : 500}
+              slotProps={{ legend: { hidden: true } }}
+              sx={{
+                [`& .${axisClasses.left} .${axisClasses.label}`]: {
+                  transform: 'translateX(-35px)',
+                },
+              }}
+              margin={{ top: 5, right: 5, bottom: 80, left: 100 }}
+            />
+          ) : (
+            <Typography component="span">No data to display</Typography>
+          )}
+        </CardContent>
+      </Card>
+    </Grid>
   );
 
   return (
@@ -113,7 +153,7 @@ const SummedTransactions: React.FC<SummedTransactionsProps> = ({
                     component="div"
                     style={{ fontWeight: 'bold' }}
                   >
-                    {formatNumber(groupedExpenses.Expense || 0)} {currency}
+                    {expenseTotal}
                   </Typography>
                 </CardContent>
               </Card>
@@ -127,7 +167,7 @@ const SummedTransactions: React.FC<SummedTransactionsProps> = ({
                     component="div"
                     style={{ fontWeight: 'bold' }}
                   >
-                    {formatNumber(groupedExpenses.Income || 0)} {currency}
+                    {incomeTotal}
                   </Typography>
                 </CardContent>
               </Card>
@@ -141,7 +181,7 @@ const SummedTransactions: React.FC<SummedTransactionsProps> = ({
                     component="div"
                     style={{ fontWeight: 'bold' }}
                   >
-                    {formatNumber(groupedExpenses.Transfer || 0)} {currency}
+                    {transferTotal}
                   </Typography>
                 </CardContent>
               </Card>
@@ -153,58 +193,24 @@ const SummedTransactions: React.FC<SummedTransactionsProps> = ({
               aria-controls="panel2-content"
               id="panel2-header"
             >
-              <Typography component="span">Type</Typography>
+              <Typography component="span" variant="h6">
+                Breakdown
+              </Typography>
             </AccordionSummary>
             <AccordionDetails>
-              <Box display="flex" justifyContent="center" width="100%">
-                <BarChart
-                  xAxis={[
-                    {
-                      scaleType: 'band',
-                      data: dataByType.map((item) => item.group),
-                    },
-                  ]}
-                  yAxis={[{ label: `Amount (${currency})` }]}
-                  series={[{ data: dataByType.map((item) => item.amount) }]}
-                  width={isMobile ? 300 : 500}
-                  height={isMobile ? 200 : 300}
-                  sx={{
-                    [`& .${axisClasses.left} .${axisClasses.label}`]: {
-                      transform: 'translateX(-50px)',
-                    },
-                  }}
-                />
-              </Box>
-            </AccordionDetails>
-          </Accordion>
-          <Accordion>
-            <AccordionSummary
-              expandIcon={<ExpandMoreIcon />}
-              aria-controls="panel3-content"
-              id="panel3-header"
-            >
-              <Typography component="span">Categories</Typography>
-            </AccordionSummary>
-            <AccordionDetails>
-              <Box display="flex" justifyContent="center" width="100%">
-                <BarChart
-                  xAxis={[
-                    {
-                      scaleType: 'band',
-                      data: dataByCategory.map((item) => item.category),
-                    },
-                  ]}
-                  yAxis={[{ label: `Amount (${currency})` }]}
-                  series={[{ data: dataByCategory.map((item) => item.amount) }]}
-                  width={isMobile ? 300 : 500}
-                  height={isMobile ? 200 : 300}
-                  sx={{
-                    [`& .${axisClasses.left} .${axisClasses.label}`]: {
-                      transform: 'translateX(-50px)',
-                    },
-                  }}
-                />
-              </Box>
+              <Grid container spacing={2}>
+                {renderChart(
+                  `Expenses : ${expenseTotal}`,
+                  expenseData,
+                  currency,
+                )}
+                {renderChart(`Income : ${incomeTotal}`, incomeData, currency)}
+                {renderChart(
+                  `Transfer : ${transferTotal}`,
+                  transferData,
+                  currency,
+                )}
+              </Grid>
             </AccordionDetails>
           </Accordion>
         </AccordionDetails>

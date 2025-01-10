@@ -308,42 +308,42 @@ export const getBillingPeriodText = (
   }
 };
 
-export const calculateGroupedExpenses = (
-  transactions: Transaction[],
-  currency: string,
-) => {
+export const calculateGroupedExpenses = (transactions: Transaction[]) => {
   const groupedExpenses: { [category: string]: number } = {};
 
-  transactions
-    .filter((transaction) => transaction.currency === currency)
-    .forEach((transaction) => {
-      const type = formatTransactionType(transaction.type) || 'Unknown';
-      if (!groupedExpenses[type]) {
-        groupedExpenses[type] = 0;
-      }
-      groupedExpenses[type] += transaction.amount;
-    });
+  transactions.forEach((transaction) => {
+    const type = formatTransactionType(transaction.type) || 'Unknown';
+    if (!groupedExpenses[type]) {
+      groupedExpenses[type] = 0;
+    }
+    groupedExpenses[type] += transaction.amount;
+  });
 
   return groupedExpenses;
 };
 
-export const calculateGroupedExpensesByCategory = (
+export const getAggregatedDataForType = (
   transactions: Transaction[],
-  currency: string,
+  type: 'INCOME' | 'EXPENSE' | 'TRANSFER',
 ) => {
-  const groupedExpenses: { [category: string]: number } = {};
+  const filteredTransactions = transactions.filter((t) => t.type === type);
 
-  transactions
-    .filter((transaction) => transaction.currency === currency)
-    .forEach((transaction) => {
-      const category = transaction.category?.name || 'Unknown';
-      if (!groupedExpenses[category]) {
-        groupedExpenses[category] = 0;
+  const aggregatedData = filteredTransactions.reduce(
+    (acc, transaction) => {
+      const { category, amount } = transaction;
+      if (!acc[category.name]) {
+        acc[category.name] = 0;
       }
-      groupedExpenses[category] += transaction.amount;
-    });
+      acc[category.name] += amount;
+      return acc;
+    },
+    {} as Record<string, number>,
+  );
 
-  return groupedExpenses;
+  return Object.entries(aggregatedData).map(([categoryName, amount]) => ({
+    category: categoryName,
+    amount,
+  }));
 };
 
 export const getTransactionsFetchOptions = (

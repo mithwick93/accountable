@@ -24,7 +24,6 @@ import { Liability } from '../../../types/Liability';
 import {
   formatCurrency,
   formatLiabilityType,
-  formatNumber,
   getCreditUtilizationColor,
   getDueDateColor,
   stringToColor,
@@ -101,7 +100,7 @@ const NetSummary: React.FC<NetSummeryProps> = ({
               component="div"
               style={{ fontWeight: 'bold' }}
             >
-              {formatNumber(netValue)} {currency}
+              {formatCurrency(netValue || 0, currency)}
             </Typography>
           </Grid>
           <Grid
