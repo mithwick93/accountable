@@ -520,6 +520,12 @@ const Transactions: React.FC = () => {
     muiPaginationProps: {
       rowsPerPageOptions: [10, 25, 50, 100, 250, 500, 1000],
     },
+    muiTableContainerProps: {
+      sx: {
+        maxHeight: '1000px',
+        overflowY: 'auto',
+      },
+    },
     isMultiSortEvent: () => true,
     initialState: {
       density: 'compact',
@@ -593,4 +599,5 @@ const Transactions: React.FC = () => {
     </LocalizationProvider>
   );
 };
+
 export default Transactions;
