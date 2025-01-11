@@ -38,7 +38,7 @@ import { Liability } from '../../types/Liability';
 import { PaymentSystem } from '../../types/PaymentSystem';
 import { PaymentSystemCredit } from '../../types/PaymentSystemCredit';
 import { PaymentSystemDebit } from '../../types/PaymentSystemDebit';
-import { SharedTransaction } from '../../types/SharedTransaction';
+import { SharedTransactionRequest } from '../../types/SharedTransactionRequest';
 import { TransactionCategory } from '../../types/TransactionCategory';
 import { User } from '../../types/User';
 import {
@@ -100,7 +100,7 @@ const CreateTransactionDialog = ({
   const [formValues, setFormValues] =
     useState<FormStateType>(initialFormValues);
   const [sharedTransactions, setSharedTransactions] = useState<
-    SharedTransaction[]
+    SharedTransactionRequest[]
   >([]);
   const [validationErrors, setValidationErrors] = useState<
     Record<string, string | undefined>
@@ -185,7 +185,7 @@ const CreateTransactionDialog = ({
 
   const handleSharedTransactionChange = (
     index: number,
-    field: keyof SharedTransaction,
+    field: keyof SharedTransactionRequest,
     value: any,
   ) => {
     const updatedTransactions = [...sharedTransactions];
@@ -245,7 +245,7 @@ const CreateTransactionDialog = ({
 
   const handleSharedTransactionFocus = (
     index: number,
-    field: keyof SharedTransaction,
+    field: keyof SharedTransactionRequest,
   ) => {
     const updatedErrors = [...sharedTransactionValidationErrors];
     if (updatedErrors[index]) {
