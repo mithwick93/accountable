@@ -1,4 +1,4 @@
-export interface Liability {
+export type Liability = {
   id: number;
   name: string;
   description?: string;
@@ -10,4 +10,4 @@ export interface Liability {
   statementDay?: string;
   dueDay: string;
   status: string;
-}
+};

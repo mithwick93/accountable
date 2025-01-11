@@ -1,4 +1,4 @@
-export interface LiabilityType {
+export type LiabilityType = {
   id: number;
   name: string;
-}
+};

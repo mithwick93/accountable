@@ -1,7 +1,7 @@
 import { Asset } from './Asset';
 import { PaymentSystem } from './PaymentSystem';
 
-export interface PaymentSystemDebit extends PaymentSystem {
+export type PaymentSystemDebit = PaymentSystem & {
   dailyLimit?: number;
   asset: Asset;
-}
+};
