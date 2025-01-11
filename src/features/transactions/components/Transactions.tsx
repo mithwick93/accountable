@@ -14,6 +14,13 @@ import Accordion from '@mui/material/Accordion';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import AccordionSummary from '@mui/material/AccordionSummary';
 import Grid from '@mui/material/Grid2';
+import Paper from '@mui/material/Paper';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
 import Typography from '@mui/material/Typography';
 import { BarChart } from '@mui/x-charts';
 import { axisClasses } from '@mui/x-charts/ChartsAxis';
@@ -42,13 +49,14 @@ import {
   getBillingPeriodText,
   getStartEndDate,
   getTransactionsFetchOptions,
+  getUserTransactionSummary,
   stringToColor,
 } from '../../../utils/common';
 
-type SummedTransactionsProps = {
+type TransactionsSummeryProps = {
   transactions: Transaction[];
 };
-const SummedTransactions: React.FC<SummedTransactionsProps> = ({
+const TransactionsSummery: React.FC<TransactionsSummeryProps> = ({
   transactions,
 }) => {
   const theme = useTheme();
@@ -57,10 +65,13 @@ const SummedTransactions: React.FC<SummedTransactionsProps> = ({
   const expandSummery = settings?.transactions?.expandSummery || false;
   const currency: string = settings?.currency || 'USD';
 
-  const transactionsForCurrency = transactions.filter(
+  const transactionsForCurrency: Transaction[] = transactions.filter(
     (transaction) => transaction.currency === currency,
   );
   const groupedExpenses = calculateGroupedExpenses(transactionsForCurrency);
+  const sharedTransactionsSummary = getUserTransactionSummary(
+    transactionsForCurrency,
+  );
 
   const incomeData = getAggregatedDataForType(
     transactionsForCurrency,
@@ -243,6 +254,73 @@ const SummedTransactions: React.FC<SummedTransactionsProps> = ({
                   currency,
                 )}
               </Grid>
+            </AccordionDetails>
+          </Accordion>
+          <Accordion>
+            <AccordionSummary
+              expandIcon={<ExpandMoreIcon />}
+              aria-controls="panel3-content"
+              id="panel3-header"
+            >
+              <Typography component="span" variant="h6">
+                Shared Transactions
+              </Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              {sharedTransactionsSummary.length > 0 ? (
+                <TableContainer component={Paper}>
+                  <Table size="medium" stickyHeader>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell sx={{ fontWeight: 'bold' }}>Name</TableCell>
+                        <TableCell align="right" sx={{ fontWeight: 'bold' }}>
+                          Paid
+                        </TableCell>
+                        <TableCell align="right" sx={{ fontWeight: 'bold' }}>
+                          Owed
+                        </TableCell>
+                        <TableCell align="right" sx={{ fontWeight: 'bold' }}>
+                          Total
+                        </TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {sharedTransactionsSummary.map((row) => (
+                        <TableRow
+                          key={row.user.id}
+                          sx={{
+                            '&:last-child td, &:last-child th': { border: 0 },
+                          }}
+                        >
+                          <TableCell component="th" scope="row">
+                            {`${row.user.firstName} ${row.user.lastName}`}
+                          </TableCell>
+                          <TableCell align="right">
+                            {formatCurrency(row.totalPaid, currency)}
+                          </TableCell>
+                          <TableCell align="right">
+                            {formatCurrency(row.totalOwed, currency)}
+                          </TableCell>
+                          <TableCell align="right">
+                            {formatCurrency(row.totalShare, currency)}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              ) : (
+                <Typography
+                  component="span"
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    width: '100%',
+                  }}
+                >
+                  No data to display
+                </Typography>
+              )}
             </AccordionDetails>
           </Accordion>
         </AccordionDetails>
@@ -632,7 +710,7 @@ const Transactions: React.FC = () => {
       <Typography variant="h6" gutterBottom>
         Billing Period: {getBillingPeriodText(settings)}
       </Typography>
-      <SummedTransactions transactions={transactions} />
+      <TransactionsSummery transactions={transactions} />
       <MaterialReactTable table={table} />
     </LocalizationProvider>
   );

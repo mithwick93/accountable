@@ -2,6 +2,7 @@ import { PaletteMode } from '@mui/material/styles/createPalette';
 import { ColumnFilter } from '@tanstack/table-core/src/features/ColumnFiltering';
 import { format } from 'date-fns';
 import { Transaction } from '../types/Transaction';
+import { User } from '../types/User';
 
 export const alertColors = {
   green: { dark: '#81C784', light: '#388E3C' },
@@ -320,6 +321,47 @@ export const calculateGroupedExpenses = (transactions: Transaction[]) => {
   });
 
   return groupedExpenses;
+};
+
+export type SharedTransactionsSummary = {
+  user: User;
+  totalPaid: number;
+  totalOwed: number;
+  totalShare: number;
+};
+export const getUserTransactionSummary = (
+  transactions: Transaction[],
+): SharedTransactionsSummary[] => {
+  const sharedTransactions = transactions.flatMap(
+    (transaction) => transaction.sharedTransactions || [],
+  );
+
+  const groupedByUser = sharedTransactions.reduce(
+    (acc, sharedTransaction) => {
+      const userId = sharedTransaction.user.id;
+      if (!acc[userId]) {
+        acc[userId] = {
+          user: sharedTransaction.user,
+          totalPaid: 0,
+          totalOwed: 0,
+          totalShare: 0,
+        };
+      }
+
+      if (sharedTransaction.isSettled) {
+        acc[userId].totalPaid += sharedTransaction.share;
+      } else {
+        acc[userId].totalOwed += sharedTransaction.share;
+      }
+
+      acc[userId].totalShare += sharedTransaction.share;
+
+      return acc;
+    },
+    {} as Record<string, SharedTransactionsSummary>,
+  );
+
+  return Object.values(groupedByUser);
 };
 
 export const getAggregatedDataForType = (
