@@ -22,34 +22,8 @@ import { DataProvider } from '../context/DataContext';
 import { SettingsProvider } from '../context/SettingsContext';
 import { StaticDataProvider } from '../context/StaticDataContext';
 import { UserProvider } from '../context/UserContext';
+import { defaultUserSettings } from '../utils/settings';
 import { TokenStorage } from '../utils/TokenStorage';
-
-const userSettings = {
-  currency: 'SEK',
-  transactions: {
-    updateAccounts: false,
-    search: {
-      parameters: {
-        userIds: null,
-        dateFrom: null,
-        dateTo: null,
-        types: null,
-        categoryIds: null,
-        fromAssetIds: null,
-        toAssetIds: null,
-        fromPaymentSystemIds: null,
-        toPaymentSystemIds: null,
-        fromLiabilityIds: null,
-        toLiabilityIds: null,
-        hasPendingSettlements: null,
-        hasSharedTransactions: null,
-        pageIndex: 0,
-        pageSize: 25,
-        sorting: ['date,desc'],
-      },
-    },
-  },
-};
 
 const SidebarFooter = ({ mini }: SidebarFooterProps) => (
   <Typography
@@ -115,7 +89,10 @@ export default function MainLayout() {
 
   return (
     <UserProvider>
-      <SettingsProvider settingsKey="accountable" defaultValue={userSettings}>
+      <SettingsProvider
+        settingsKey="accountable"
+        defaultValue={defaultUserSettings}
+      >
         <StaticDataProvider>
           <DataProvider>
             <CurrencyRatesProvider>
