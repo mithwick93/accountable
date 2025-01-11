@@ -354,7 +354,9 @@ const CreateTransactionDialog = ({
       if (!hasPositiveShare) {
         commonErrors.push('At least one share must be greater than 0');
       }
+    }
 
+    if (sharedTransactions.length > 1) {
       if (!hasPositivePaidAmount) {
         commonErrors.push('At least one paid amount must be greater than 0');
       }
