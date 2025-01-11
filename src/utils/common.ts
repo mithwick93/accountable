@@ -290,25 +290,6 @@ export const getStartEndDate = (settings: Record<string, any> | null) => {
   return { startDate, endDate };
 };
 
-export const getBillingPeriodText = (
-  settings: Record<string, any> | null,
-): string => {
-  const { startDate, endDate } = getStartEndDate(settings);
-
-  if (startDate && endDate) {
-    return `${format(new Date(startDate), 'dd/MM/yyyy')} - ${format(
-      new Date(endDate),
-      'dd/MM/yyyy',
-    )}`;
-  } else if (startDate) {
-    return `${format(new Date(startDate), 'dd/MM/yyyy')} - !`;
-  } else if (endDate) {
-    return `! - ${format(new Date(endDate), 'dd/MM/yyyy')}`;
-  } else {
-    return 'All time';
-  }
-};
-
 export const calculateGroupedExpenses = (transactions: Transaction[]) => {
   const groupedExpenses: { [category: string]: number } = {};
 

@@ -36,6 +36,7 @@ import {
   useMaterialReactTable,
 } from 'material-react-table';
 import React, { useEffect, useMemo } from 'react';
+import DateRangeSelector from '../../../components/DateRangeSelector';
 import { useData } from '../../../context/DataContext';
 import { useSettings } from '../../../context/SettingsContext';
 import { Transaction } from '../../../types/Transaction';
@@ -46,7 +47,6 @@ import {
   formatTransactionType,
   generateAvatarProps,
   getAggregatedDataForType,
-  getBillingPeriodText,
   getStartEndDate,
   getTransactionsFetchOptions,
   getUserTransactionSummary,
@@ -355,14 +355,14 @@ const Transactions: React.FC = () => {
     }
     return filter;
   });
+  const { startDate, endDate } = getStartEndDate(settings);
 
   useEffect(() => {
-    const { startDate, endDate } = getStartEndDate(settings);
     refetchData(
       ['transactions'],
       getTransactionsFetchOptions(searchParameters, startDate, endDate),
     );
-  }, [searchParameters, settings?.currency]);
+  }, [searchParameters, startDate, endDate]);
 
   const columns = useMemo<MRT_ColumnDef<MRT_RowData>[]>(
     () => [
@@ -707,9 +707,12 @@ const Transactions: React.FC = () => {
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={enGB}>
-      <Typography variant="h6" gutterBottom>
-        Billing Period: {getBillingPeriodText(settings)}
-      </Typography>
+      <Box display="flex" alignItems="center" gap={2} mb={2}>
+        <Typography variant="h6" gutterBottom>
+          Billing Period:
+        </Typography>
+        <DateRangeSelector />
+      </Box>
       <TransactionsSummery transactions={transactions} />
       <MaterialReactTable table={table} />
     </LocalizationProvider>
