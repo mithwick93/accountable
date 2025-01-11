@@ -53,7 +53,8 @@ const SummedTransactions: React.FC<SummedTransactionsProps> = ({
 }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const { settings } = useSettings();
+  const { settings, update } = useSettings();
+  const expandSummery = settings?.transactions?.expandSummery || false;
   const currency: string = settings?.currency || 'USD';
 
   const transactionsForCurrency = transactions.filter(
@@ -74,9 +75,16 @@ const SummedTransactions: React.FC<SummedTransactionsProps> = ({
     'TRANSFER',
   );
 
-  const expenseTotal = formatCurrency(groupedExpenses.Expense || 0, currency);
-  const incomeTotal = formatCurrency(groupedExpenses.Income || 0, currency);
-  const transferTotal = formatCurrency(groupedExpenses.Transfer || 0, currency);
+  const expenses = groupedExpenses.Expense || 0;
+  const income = groupedExpenses.Income || 0;
+  const incomeExpenseDifference =
+    (groupedExpenses.Income || 0) - (groupedExpenses.Expense || 0);
+  const transfers = groupedExpenses.Transfer || 0;
+
+  const expenseTotal = formatCurrency(expenses, currency);
+  const incomeTotal = formatCurrency(income, currency);
+  const cashFlow = formatCurrency(incomeExpenseDifference, currency);
+  const transferTotal = formatCurrency(transfers, currency);
 
   const renderChart = (
     title: string,
@@ -130,9 +138,19 @@ const SummedTransactions: React.FC<SummedTransactionsProps> = ({
     </Grid>
   );
 
+  const onExpandSummeryChange = () => {
+    update({
+      ...settings,
+      transactions: {
+        ...(settings?.transactions || {}),
+        expandSummery: !expandSummery,
+      },
+    });
+  };
+
   return (
     <Box component="div" mb={2}>
-      <Accordion defaultExpanded>
+      <Accordion expanded={expandSummery} onChange={onExpandSummeryChange}>
         <AccordionSummary
           expandIcon={<ExpandMoreIcon />}
           aria-controls="panel1-content"
@@ -144,21 +162,7 @@ const SummedTransactions: React.FC<SummedTransactionsProps> = ({
         </AccordionSummary>
         <AccordionDetails>
           <Grid container spacing={2} mb={2}>
-            <Grid size={{ xs: 12, sm: 12, lg: 4 }}>
-              <Card>
-                <CardHeader title="Expenses" />
-                <CardContent>
-                  <Typography
-                    variant="h5"
-                    component="div"
-                    style={{ fontWeight: 'bold' }}
-                  >
-                    {expenseTotal}
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-            <Grid size={{ xs: 12, sm: 12, lg: 4 }}>
+            <Grid size={{ xs: 12, sm: 12, lg: 3 }}>
               <Card>
                 <CardHeader title="Income" />
                 <CardContent>
@@ -172,7 +176,35 @@ const SummedTransactions: React.FC<SummedTransactionsProps> = ({
                 </CardContent>
               </Card>
             </Grid>
-            <Grid size={{ xs: 12, sm: 12, lg: 4 }}>
+            <Grid size={{ xs: 12, sm: 12, lg: 3 }}>
+              <Card>
+                <CardHeader title="Expenses" />
+                <CardContent>
+                  <Typography
+                    variant="h5"
+                    component="div"
+                    style={{ fontWeight: 'bold' }}
+                  >
+                    {expenseTotal}
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+            <Grid size={{ xs: 12, sm: 12, lg: 3 }}>
+              <Card>
+                <CardHeader title="Cash Flow" />
+                <CardContent>
+                  <Typography
+                    variant="h5"
+                    component="div"
+                    style={{ fontWeight: 'bold' }}
+                  >
+                    {cashFlow}
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+            <Grid size={{ xs: 12, sm: 12, lg: 3 }}>
               <Card>
                 <CardHeader title="Transfers" />
                 <CardContent>
@@ -199,12 +231,12 @@ const SummedTransactions: React.FC<SummedTransactionsProps> = ({
             </AccordionSummary>
             <AccordionDetails>
               <Grid container spacing={2}>
+                {renderChart(`Income : ${incomeTotal}`, incomeData, currency)}
                 {renderChart(
                   `Expenses : ${expenseTotal}`,
                   expenseData,
                   currency,
                 )}
-                {renderChart(`Income : ${incomeTotal}`, incomeData, currency)}
                 {renderChart(
                   `Transfer : ${transferTotal}`,
                   transferData,
