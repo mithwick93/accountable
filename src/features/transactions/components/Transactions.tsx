@@ -284,7 +284,7 @@ const Transactions: React.FC = () => {
       ['transactions'],
       getTransactionsFetchOptions(searchParameters, startDate, endDate),
     );
-  }, [searchParameters, settings]);
+  }, [searchParameters, settings?.currency]);
 
   const columns = useMemo<MRT_ColumnDef<MRT_RowData>[]>(
     () => [
