@@ -13,6 +13,9 @@ import {
 import Accordion from '@mui/material/Accordion';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import AccordionSummary from '@mui/material/AccordionSummary';
+import Checkbox from '@mui/material/Checkbox';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import FormGroup from '@mui/material/FormGroup';
 import Grid from '@mui/material/Grid2';
 import Paper from '@mui/material/Paper';
 import Table from '@mui/material/Table';
@@ -39,6 +42,7 @@ import React, { useEffect, useMemo } from 'react';
 import DateRangeSelector from '../../../components/DateRangeSelector';
 import { useData } from '../../../context/DataContext';
 import { useSettings } from '../../../context/SettingsContext';
+import { SharedTransaction } from '../../../types/SharedTransaction';
 import { Transaction } from '../../../types/Transaction';
 import {
   calculateGroupedExpenses,
@@ -343,6 +347,7 @@ const Transactions: React.FC = () => {
     settings?.transactions?.search?.parameters || {};
   const pageIndex = searchParameters.pageIndex || 0;
   const pageSize = searchParameters.pageSize || 100;
+  const hasSharedTransactions = searchParameters.hasSharedTransactions || false;
 
   const columnFilters = (
     settings?.transactions?.search?.columnFilters || []
@@ -363,6 +368,24 @@ const Transactions: React.FC = () => {
       getTransactionsFetchOptions(searchParameters, startDate, endDate),
     );
   }, [searchParameters, startDate, endDate]);
+
+  const onSharedTransactionsChange = (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    update({
+      ...settings,
+      transactions: {
+        ...(settings?.transactions || {}),
+        search: {
+          ...(settings?.transactions?.search || {}),
+          parameters: {
+            ...searchParameters,
+            hasSharedTransactions: event.target.checked,
+          },
+        },
+      },
+    });
+  };
 
   const columns = useMemo<MRT_ColumnDef<MRT_RowData>[]>(
     () => [
@@ -665,6 +688,82 @@ const Transactions: React.FC = () => {
         pageSize: pageSize,
       },
       columnFilters: columnFilters,
+    },
+    renderTopToolbarCustomActions: () => (
+      <FormGroup>
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={hasSharedTransactions}
+              onChange={onSharedTransactionsChange}
+            />
+          }
+          label="View shared transactions only"
+        />
+      </FormGroup>
+    ),
+    renderDetailPanel: ({ row }) => {
+      if (
+        !row.original.sharedTransactions ||
+        row.original.sharedTransactions.length === 0
+      ) {
+        return null;
+      }
+
+      return (
+        <Box p={2}>
+          <Typography variant="h6" gutterBottom>
+            Shared Transactions
+          </Typography>
+          <TableContainer component={Paper}>
+            <Table size="medium" stickyHeader>
+              <TableHead>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 'bold' }}>Name</TableCell>
+                  <TableCell align="right" sx={{ fontWeight: 'bold' }}>
+                    Share
+                  </TableCell>
+                  <TableCell align="right" sx={{ fontWeight: 'bold' }}>
+                    Paid
+                  </TableCell>
+                  <TableCell align="right" sx={{ fontWeight: 'bold' }}>
+                    Settled
+                  </TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {row.original.sharedTransactions.map(
+                  (sharedTransaction: SharedTransaction) => (
+                    <TableRow key={sharedTransaction.user.id}>
+                      <TableCell component="th" scope="row">
+                        {`${sharedTransaction.user.firstName} ${sharedTransaction.user.lastName}`}
+                      </TableCell>
+                      <TableCell align="right">
+                        {formatCurrency(
+                          sharedTransaction.share,
+                          row.original.currency,
+                        )}
+                      </TableCell>
+                      <TableCell align="right">
+                        {formatCurrency(
+                          sharedTransaction.paidAmount,
+                          row.original.currency,
+                        )}
+                      </TableCell>
+                      <TableCell align="right">
+                        <Checkbox
+                          checked={sharedTransaction.isSettled}
+                          disabled
+                        />
+                      </TableCell>
+                    </TableRow>
+                  ),
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Box>
+      );
     },
     onColumnFiltersChange: (updaterOrValue) => {
       const newColumnFilters =

@@ -377,9 +377,7 @@ export const getTransactionsFetchOptions = (
   transactions: {
     search: {
       parameters: {
-        pageIndex: searchParameters.pageIndex || 0,
-        pageSize: searchParameters.pageSize || 100,
-        sorting: searchParameters.sorting,
+        ...searchParameters,
         dateFrom: startDate && format(startDate, 'yyyy-MM-dd'),
         dateTo: endDate && format(endDate, 'yyyy-MM-dd'),
       },
