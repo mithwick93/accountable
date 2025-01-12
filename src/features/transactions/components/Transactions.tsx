@@ -6,6 +6,7 @@ import {
   CardContent,
   CardHeader,
   Chip,
+  SelectChangeEvent,
   Tooltip,
   useMediaQuery,
   useTheme,
@@ -14,10 +15,12 @@ import Accordion from '@mui/material/Accordion';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import AccordionSummary from '@mui/material/AccordionSummary';
 import Checkbox from '@mui/material/Checkbox';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import FormGroup from '@mui/material/FormGroup';
+import FormControl from '@mui/material/FormControl';
 import Grid from '@mui/material/Grid2';
+import InputLabel from '@mui/material/InputLabel';
+import MenuItem from '@mui/material/MenuItem';
 import Paper from '@mui/material/Paper';
+import Select from '@mui/material/Select';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -347,7 +350,13 @@ const Transactions: React.FC = () => {
     settings?.transactions?.search?.parameters || {};
   const pageIndex = searchParameters.pageIndex || 0;
   const pageSize = searchParameters.pageSize || 100;
-  const hasSharedTransactions = searchParameters.hasSharedTransactions || false;
+  const sharedTransactions =
+    searchParameters.hasSharedTransactions === null ||
+    searchParameters.hasSharedTransactions === undefined
+      ? 'all'
+      : searchParameters.hasSharedTransactions
+        ? 'include'
+        : 'exclude';
 
   const columnFilters = (
     settings?.transactions?.search?.columnFilters || []
@@ -369,9 +378,7 @@ const Transactions: React.FC = () => {
     );
   }, [searchParameters, startDate, endDate]);
 
-  const onSharedTransactionsChange = (
-    event: React.ChangeEvent<HTMLInputElement>,
-  ) => {
+  const handleSharedTransactionsChange = (event: SelectChangeEvent) => {
     update({
       ...settings,
       transactions: {
@@ -380,7 +387,12 @@ const Transactions: React.FC = () => {
           ...(settings?.transactions?.search || {}),
           parameters: {
             ...searchParameters,
-            hasSharedTransactions: event.target.checked,
+            hasSharedTransactions:
+              event.target.value === 'include'
+                ? true
+                : event.target.value === 'exclude'
+                  ? false
+                  : null,
           },
         },
       },
@@ -690,17 +702,22 @@ const Transactions: React.FC = () => {
       columnFilters: columnFilters,
     },
     renderTopToolbarCustomActions: () => (
-      <FormGroup>
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={hasSharedTransactions}
-              onChange={onSharedTransactionsChange}
-            />
-          }
-          label="View shared transactions only"
-        />
-      </FormGroup>
+      <FormControl sx={{ m: 1, minWidth: 140 }} size="small">
+        <InputLabel id="shared-transactions-select-label">
+          Shared Transactions
+        </InputLabel>
+        <Select
+          labelId="shared-transactions-select-label"
+          id="shared-transactions-select"
+          label="Shared Transactions"
+          value={sharedTransactions}
+          onChange={handleSharedTransactionsChange}
+        >
+          <MenuItem value="all">All</MenuItem>
+          <MenuItem value="include">Include</MenuItem>
+          <MenuItem value="exclude">Exclude</MenuItem>
+        </Select>
+      </FormControl>
     ),
     renderDetailPanel: ({ row }) => {
       if (
