@@ -6,6 +6,8 @@ import { ColumnFilter } from '@tanstack/table-core/src/features/ColumnFiltering'
 import {
   addMonths,
   addYears,
+  endOfMonth,
+  endOfYear,
   format,
   startOfMonth,
   startOfYear,
@@ -25,59 +27,59 @@ const DateRangeSelector = () => {
       { label: 'All', value: 'all', start: null, end: null },
       {
         label: format(now, 'MMMM yyyy'),
-        value: `${startOfMonth(now).toISOString()}|${startOfMonth(
-          addMonths(now, 1),
+        value: `${startOfMonth(now).toISOString()}|${endOfMonth(
+          now,
         ).toISOString()}`,
         start: startOfMonth(now),
-        end: startOfMonth(addMonths(now, 1)),
+        end: endOfMonth(now),
       },
       {
         label: format(addMonths(now, 1), 'MMMM yyyy'),
-        value: `${startOfMonth(addMonths(now, 1)).toISOString()}|${startOfMonth(
-          addMonths(now, 2),
+        value: `${startOfMonth(addMonths(now, 1)).toISOString()}|${endOfMonth(
+          addMonths(now, 1),
         ).toISOString()}`,
         start: startOfMonth(addMonths(now, 1)),
-        end: startOfMonth(addMonths(now, 2)),
+        end: endOfMonth(addMonths(now, 1)),
       },
       {
         label: format(addMonths(now, -1), 'MMMM yyyy'),
-        value: `${startOfMonth(
+        value: `${startOfMonth(addMonths(now, -1)).toISOString()}|${endOfMonth(
           addMonths(now, -1),
-        ).toISOString()}|${startOfMonth(now).toISOString()}`,
+        ).toISOString()}`,
         start: startOfMonth(addMonths(now, -1)),
-        end: startOfMonth(now),
+        end: endOfMonth(addMonths(now, -1)),
       },
       {
         label: format(addMonths(now, -2), 'MMMM yyyy'),
-        value: `${startOfMonth(
+        value: `${startOfMonth(addMonths(now, -2)).toISOString()}|${endOfMonth(
           addMonths(now, -2),
-        ).toISOString()}|${startOfMonth(addMonths(now, -1)).toISOString()}`,
+        ).toISOString()}`,
         start: startOfMonth(addMonths(now, -2)),
-        end: startOfMonth(addMonths(now, -1)),
+        end: endOfMonth(addMonths(now, -2)),
       },
       {
         label: format(now, 'yyyy'),
-        value: `${startOfYear(now).toISOString()}|${startOfYear(
-          addYears(now, 1),
+        value: `${startOfYear(now).toISOString()}|${endOfYear(
+          now,
         ).toISOString()}`,
         start: startOfYear(now),
-        end: startOfYear(addYears(now, 1)),
+        end: endOfYear(now),
       },
       {
         label: format(addYears(now, -1), 'yyyy'),
-        value: `${startOfYear(addYears(now, -1)).toISOString()}|${startOfYear(
-          now,
+        value: `${startOfYear(addYears(now, -1)).toISOString()}|${endOfYear(
+          addYears(now, -1),
         ).toISOString()}`,
         start: startOfYear(addYears(now, -1)),
-        end: startOfYear(now),
+        end: endOfYear(addYears(now, -1)),
       },
       {
         label: format(addYears(now, -2), 'yyyy'),
-        value: `${startOfYear(addYears(now, -2)).toISOString()}|${startOfYear(
-          addYears(now, -1),
+        value: `${startOfYear(addYears(now, -2)).toISOString()}|${endOfYear(
+          addYears(now, -2),
         ).toISOString()}`,
         start: startOfYear(addYears(now, -2)),
-        end: startOfYear(addYears(now, -1)),
+        end: endOfYear(addYears(now, -2)),
       },
     ];
   }, []);
