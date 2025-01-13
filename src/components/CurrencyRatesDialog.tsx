@@ -7,6 +7,7 @@ import TableCell from '@mui/material/TableCell';
 import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
+import { DialogProps } from '@toolpad/core/useDialogs';
 import React from 'react';
 import { useCurrencyRates } from '../context/CurrencyRatesContext';
 import { useSettings } from '../context/SettingsContext';
@@ -14,12 +15,7 @@ import { formatNumber } from '../utils/common';
 import { StyledTableCell, StyledTableRow } from './table/Table';
 import SlideUpTransition from './transition/SlideUpTransition';
 
-export interface SimpleDialogProps {
-  open: boolean;
-  onClose: () => void;
-}
-
-const CurrencyRatesDialog = ({ onClose, open }: SimpleDialogProps) => {
+const CurrencyRatesDialog = ({ onClose, open }: DialogProps) => {
   const { currencyRates } = useCurrencyRates();
   const { settings } = useSettings();
   const baseCurrency = settings?.currency || 'USD';

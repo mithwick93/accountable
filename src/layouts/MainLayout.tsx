@@ -11,7 +11,8 @@ import {
   PageHeader,
   PageHeaderToolbar,
 } from '@toolpad/core/PageContainer';
-import React, { useState } from 'react';
+import { DialogsProvider, useDialogs } from '@toolpad/core/useDialogs';
+import React from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import CurrencyRatesDialog from '../components/CurrencyRatesDialog';
 import ErrorBoundary from '../components/ErrorBoundary';
@@ -35,42 +36,25 @@ const SidebarFooter = ({ mini }: SidebarFooterProps) => (
 );
 
 const CustomPageToolbar = () => {
-  const [openCurrencyDialog, setOpenCurrencyDialog] = useState(false);
-  const [openCreateTransactionDialog, setOpenCreateTransactionDialog] =
-    useState(false);
-
-  const handleCurrencyDialogOpen = () => {
-    setOpenCurrencyDialog(true);
-  };
-
-  const handleCurrencyDialogClose = () => {
-    setOpenCurrencyDialog(false);
-  };
-
-  const handleCreateTransactionDialogOpen = () => {
-    setOpenCreateTransactionDialog(true);
-  };
-
-  const handleCreateTransactionDialogClose = () => {
-    setOpenCreateTransactionDialog(false);
-  };
-
+  const dialogs = useDialogs();
   return (
     <PageHeaderToolbar>
-      <IconButton onClick={handleCurrencyDialogOpen} color="primary">
+      <IconButton
+        onClick={async () => {
+          await dialogs.open(CurrencyRatesDialog);
+        }}
+        color="primary"
+      >
         <CurrencyExchangeIcon />
       </IconButton>
-      <IconButton onClick={handleCreateTransactionDialogOpen} color="primary">
+      <IconButton
+        onClick={async () => {
+          await dialogs.open(CreateTransactionDialog);
+        }}
+        color="primary"
+      >
         <PostAddIcon />
       </IconButton>
-      <CurrencyRatesDialog
-        open={openCurrencyDialog}
-        onClose={handleCurrencyDialogClose}
-      />
-      <CreateTransactionDialog
-        open={openCreateTransactionDialog}
-        onClose={handleCreateTransactionDialogClose}
-      />
     </PageHeaderToolbar>
   );
 };
@@ -104,16 +88,18 @@ export default function MainLayout() {
                 defaultSidebarCollapsed
               >
                 <ErrorBoundary>
-                  <PageContainer
-                    slots={{ header: CustomPageHeader }}
-                    sx={{
-                      '@media (min-width: 1200px)': {
-                        maxWidth: '2400px',
-                      },
-                    }}
-                  >
-                    <Outlet />
-                  </PageContainer>
+                  <DialogsProvider>
+                    <PageContainer
+                      slots={{ header: CustomPageHeader }}
+                      sx={{
+                        '@media (min-width: 1200px)': {
+                          maxWidth: '2400px',
+                        },
+                      }}
+                    >
+                      <Outlet />
+                    </PageContainer>
+                  </DialogsProvider>
                 </ErrorBoundary>
               </DashboardLayout>
             </CurrencyRatesProvider>

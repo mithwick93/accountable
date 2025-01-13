@@ -26,6 +26,7 @@ import Radio from '@mui/material/Radio';
 import RadioGroup from '@mui/material/RadioGroup';
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
+import { DialogProps } from '@toolpad/core/useDialogs';
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 import { useData } from '../../context/DataContext';
@@ -49,11 +50,6 @@ import {
 import { notifyBackendError } from '../../utils/notifications';
 import SlideUpTransition from '../transition/SlideUpTransition';
 
-interface CreateTransactionDialogProps {
-  open: boolean;
-  onClose: () => void;
-}
-
 type FormStateType = {
   updateAccounts: boolean;
   userId?: string;
@@ -71,10 +67,7 @@ type FormStateType = {
   toLiabilityId?: number;
 };
 
-const CreateTransactionDialog = ({
-  onClose,
-  open,
-}: CreateTransactionDialogProps) => {
+const CreateTransactionDialog = ({ onClose, open }: DialogProps) => {
   const { settings, update } = useSettings();
   const { currencies } = useStaticData();
   const {
