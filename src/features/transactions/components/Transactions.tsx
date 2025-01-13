@@ -1,7 +1,9 @@
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import MoneyIcon from '@mui/icons-material/Money';
 import {
   Avatar,
   Box,
+  Button,
   Card,
   CardContent,
   CardHeader,
@@ -33,6 +35,7 @@ import { axisClasses } from '@mui/x-charts/ChartsAxis';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFnsV3';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { ColumnFilter } from '@tanstack/table-core/src/features/ColumnFiltering';
+import { useDialogs } from '@toolpad/core/useDialogs';
 import { format } from 'date-fns';
 import { enGB } from 'date-fns/locale';
 import {
@@ -59,6 +62,7 @@ import {
   getUserTransactionSummary,
   stringToColor,
 } from '../../../utils/common';
+import SettleSharedTransactions from './SettleSharedTransactions';
 
 type TransactionsSummeryProps = {
   transactions: Transaction[];
@@ -344,8 +348,17 @@ const Transactions: React.FC = () => {
   } = useData();
   const { settings, update } = useSettings();
   const theme = useTheme();
+  const dialogs = useDialogs();
 
   const transactions = transactionsResponse?.content || [];
+  const transactionsWithShares = transactions.filter(
+    (transaction) =>
+      transaction.sharedTransactions &&
+      transaction.sharedTransactions.some(
+        (sharedTransaction) => !sharedTransaction.isSettled,
+      ),
+  );
+
   const searchParameters: Record<string, any> =
     settings?.transactions?.search?.parameters || {};
   const pageIndex = searchParameters.pageIndex || 0;
@@ -702,22 +715,48 @@ const Transactions: React.FC = () => {
       columnFilters: columnFilters,
     },
     renderTopToolbarCustomActions: () => (
-      <FormControl sx={{ m: 1, minWidth: 140 }} size="small">
-        <InputLabel id="shared-transactions-select-label">
-          Shared Transactions
-        </InputLabel>
-        <Select
-          labelId="shared-transactions-select-label"
-          id="shared-transactions-select"
-          label="Shared Transactions"
-          value={sharedTransactions}
-          onChange={handleSharedTransactionsChange}
-        >
-          <MenuItem value="all">All</MenuItem>
-          <MenuItem value="include">Include</MenuItem>
-          <MenuItem value="exclude">Exclude</MenuItem>
-        </Select>
-      </FormControl>
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 1,
+        }}
+      >
+        <FormControl sx={{ minWidth: 140 }} size="small">
+          <InputLabel id="shared-transactions-select-label">
+            Shared Transactions
+          </InputLabel>
+          <Select
+            labelId="shared-transactions-select-label"
+            id="shared-transactions-select"
+            label="Shared Transactions"
+            value={sharedTransactions}
+            onChange={handleSharedTransactionsChange}
+          >
+            <MenuItem value="all">All</MenuItem>
+            <MenuItem value="include">Include</MenuItem>
+            <MenuItem value="exclude">Exclude</MenuItem>
+          </Select>
+        </FormControl>
+        <Tooltip title="Settle Shared Transactions">
+          <span>
+            <Button
+              variant="outlined"
+              disabled={transactionsWithShares.length === 0}
+              onClick={async () => {
+                await dialogs.open(
+                  SettleSharedTransactions,
+                  transactionsWithShares,
+                );
+              }}
+              startIcon={<MoneyIcon />}
+            >
+              Settle
+            </Button>
+          </span>
+        </Tooltip>
+      </Box>
     ),
     renderDetailPanel: ({ row }) => {
       if (
