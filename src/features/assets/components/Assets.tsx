@@ -172,6 +172,32 @@ const Assets: React.FC = () => {
             }),
         },
       },
+      {
+        accessorKey: 'active',
+        header: 'Status',
+        Cell: ({ cell }) => (
+          <Chip
+            label={cell.getValue() ? 'Active' : 'Inactive'}
+            color={cell.getValue() ? 'success' : 'default'}
+          />
+        ),
+        editVariant: 'select',
+        editSelectOptions: [
+          { label: 'Active', value: true },
+          { label: 'Inactive', value: false },
+        ],
+        muiEditTextFieldProps: {
+          required: true,
+          select: true,
+          error: !!validationErrors?.active,
+          helperText: validationErrors?.active,
+          onFocus: () =>
+            setValidationErrors({
+              ...validationErrors,
+              active: undefined,
+            }),
+        },
+      },
     ],
     [validationErrors],
   );
@@ -197,6 +223,15 @@ const Assets: React.FC = () => {
     ) {
       errors.balance = 'Balance is required';
     }
+
+    if (
+      asset.active === undefined ||
+      asset.active === null ||
+      asset.active === ''
+    ) {
+      errors.active = 'Status is required';
+    }
+
     return errors;
   };
 
@@ -209,6 +244,7 @@ const Assets: React.FC = () => {
         type: getOriginalAssetType(asset.type),
         currency: asset.currency,
         balance: +asset.balance,
+        active: asset.active,
       });
       await refetchData(['assets']);
 
@@ -231,6 +267,7 @@ const Assets: React.FC = () => {
         type: getOriginalAssetType(asset.type),
         currency: asset.currency,
         balance: +asset.balance,
+        active: asset.active,
       });
       await refetchData(['assets']);
 

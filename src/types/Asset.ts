@@ -5,4 +5,5 @@ export type Asset = {
   description: string;
   balance: number;
   currency: string;
+  active: boolean;
 };
