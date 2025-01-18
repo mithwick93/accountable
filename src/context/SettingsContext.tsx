@@ -1,4 +1,5 @@
 import { AxiosError } from 'axios';
+import deepEqual from 'deep-equal';
 import { debounce } from 'lodash-es';
 import React, {
   createContext,
@@ -139,6 +140,9 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
       value={{
         settings: userSettings.settings,
         update: (newSettings) => {
+          if (deepEqual(userSettings.settings, newSettings, { strict: true })) {
+            return;
+          }
           setUserSettings({
             loading: false,
             settings: newSettings,
