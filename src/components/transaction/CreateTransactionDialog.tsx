@@ -27,7 +27,7 @@ import RadioGroup from '@mui/material/RadioGroup';
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { DialogProps } from '@toolpad/core/useDialogs';
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useData } from '../../context/DataContext';
 import { useSettings } from '../../context/SettingsContext';
@@ -44,6 +44,8 @@ import { TransactionCategory } from '../../types/TransactionCategory';
 import { User } from '../../types/User';
 import {
   formatCurrency,
+  getActiveAssets,
+  getActiveLiabilities,
   getStartEndDate,
   getTransactionsFetchOptions,
 } from '../../utils/common';
@@ -71,8 +73,8 @@ const CreateTransactionDialog = ({ onClose, open }: DialogProps) => {
   const { settings, update } = useSettings();
   const { currencies } = useStaticData();
   const {
-    assets,
-    liabilities,
+    assets: rawAssets,
+    liabilities: rawLiabilities,
     paymentSystems,
     categories,
     refetchData,
@@ -80,6 +82,15 @@ const CreateTransactionDialog = ({ onClose, open }: DialogProps) => {
   } = useData();
   const { loggedInUser, users } = useUser();
   const theme = useTheme();
+
+  const assets = useMemo<Asset[]>(
+    () => getActiveAssets(rawAssets),
+    [rawAssets],
+  );
+  const liabilities = useMemo<Liability[]>(
+    () => getActiveLiabilities(rawLiabilities),
+    [rawLiabilities],
+  );
   const baseCurrency = settings?.currency || 'USD';
   const updateAccounts = settings?.transactions.updateAccounts ?? false;
   const initialFormValues: FormStateType = {

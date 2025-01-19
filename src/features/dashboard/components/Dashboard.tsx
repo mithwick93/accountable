@@ -24,6 +24,8 @@ import { Liability } from '../../../types/Liability';
 import {
   formatCurrency,
   formatLiabilityType,
+  getActiveAssets,
+  getActiveLiabilities,
   getCreditUtilizationColor,
   getDueDateColor,
   stringToColor,
@@ -140,7 +142,7 @@ const NetSummary: React.FC<NetSummeryProps> = ({
 };
 
 const Dashboard: React.FC = () => {
-  const { assets, liabilities, loading } = useData();
+  const { assets: rawAssets, liabilities: rawLiabilities, loading } = useData();
   const [assetTotals, setAssetTotals] = useState<{
     [currency: string]: number;
   }>({});
@@ -149,6 +151,14 @@ const Dashboard: React.FC = () => {
   }>({});
   const { currencyRates } = useCurrencyRates();
   const { settings } = useSettings();
+  const assets = useMemo<Asset[]>(
+    () => getActiveAssets(rawAssets),
+    [rawAssets],
+  );
+  const liabilities = useMemo<Liability[]>(
+    () => getActiveLiabilities(rawLiabilities),
+    [rawLiabilities],
+  );
   const currency: string = settings?.currency || 'USD';
 
   const calculateTotals = (items: (Asset | Liability)[]) =>
