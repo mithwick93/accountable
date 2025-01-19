@@ -152,6 +152,35 @@ const Liabilities: React.FC = () => {
         },
       },
       {
+        accessorFn: (row) => formatLiabilityStatus(row.status),
+        accessorKey: 'status',
+        header: 'Status',
+        Cell: ({ cell }) => (
+          <Chip
+            label={cell.getValue() as string}
+            sx={(theme) => ({
+              backgroundColor: stringToColor(
+                cell.getValue() as string,
+                theme.palette.mode === 'dark',
+              ),
+            })}
+          />
+        ),
+        editVariant: 'select',
+        editSelectOptions: getLiabilityStatusOptions(),
+        muiEditTextFieldProps: {
+          select: true,
+          required: true,
+          error: !!validationErrors?.status,
+          helperText: validationErrors?.status,
+          onFocus: () =>
+            setValidationErrors({
+              ...validationErrors,
+              status: undefined,
+            }),
+        },
+      },
+      {
         accessorKey: 'currency',
         header: 'Currency',
         editVariant: 'select',
@@ -367,24 +396,6 @@ const Liabilities: React.FC = () => {
             }),
         },
       },
-      {
-        accessorFn: (row) => formatLiabilityStatus(row.status),
-        accessorKey: 'status',
-        header: 'Status',
-        editVariant: 'select',
-        editSelectOptions: getLiabilityStatusOptions(),
-        muiEditTextFieldProps: {
-          select: true,
-          required: true,
-          error: !!validationErrors?.status,
-          helperText: validationErrors?.status,
-          onFocus: () =>
-            setValidationErrors({
-              ...validationErrors,
-              status: undefined,
-            }),
-        },
-      },
     ],
     [validationErrors],
   );
@@ -522,7 +533,6 @@ const Liabilities: React.FC = () => {
         id: false,
         description: false,
         interestRate: false,
-        status: false,
       },
       pagination: {
         pageIndex: 0,
@@ -533,39 +543,24 @@ const Liabilities: React.FC = () => {
       isLoading: loading,
       isSaving: saving || updating || deleting,
     },
-    renderDetailPanel: ({ row }) => {
-      const formattedStatus = formatLiabilityStatus(row.original.status);
-      return (
-        <Box
-          sx={{
-            display: 'grid',
-            margin: 'auto',
-            gridTemplateColumns: '1fr 1fr',
-            width: '100%',
-          }}
-        >
-          <Typography>Id: {row.original.id}</Typography>
-          {row.original.description && (
-            <Typography>Description: {row.original.description}%</Typography>
-          )}
-          <Typography>
-            Status:{' '}
-            <Chip
-              label={formattedStatus}
-              sx={(theme) => ({
-                backgroundColor: stringToColor(
-                  formattedStatus as string,
-                  theme.palette.mode === 'dark',
-                ),
-              })}
-            />
-          </Typography>
-          {row.original.interestRate && (
-            <Typography>Interest Rate: {row.original.interestRate}%</Typography>
-          )}
-        </Box>
-      );
-    },
+    renderDetailPanel: ({ row }) => (
+      <Box
+        sx={{
+          display: 'grid',
+          margin: 'auto',
+          gridTemplateColumns: '1fr 1fr',
+          width: '100%',
+        }}
+      >
+        <Typography>Id: {row.original.id}</Typography>
+        {row.original.description && (
+          <Typography>Description: {row.original.description}%</Typography>
+        )}
+        {row.original.interestRate && (
+          <Typography>Interest Rate: {row.original.interestRate}%</Typography>
+        )}
+      </Box>
+    ),
     onCreatingRowSave: async ({ table, values }) => {
       //validate data
       const newValidationErrors = validateLiability(values);
