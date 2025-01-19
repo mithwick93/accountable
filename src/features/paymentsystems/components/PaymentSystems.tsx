@@ -21,8 +21,10 @@ import {
   type MRT_RowData,
   useMaterialReactTable,
 } from 'material-react-table';
+import Payment from 'payment';
 import React, { useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
+import CardDetails from '../../../components/CardDetails';
 import { useData } from '../../../context/DataContext';
 import { useStaticData } from '../../../context/StaticDataContext';
 import apiClient from '../../../services/ApiService';
@@ -30,6 +32,7 @@ import { Asset } from '../../../types/Asset';
 import { Liability } from '../../../types/Liability';
 import { PaymentSystemCredit } from '../../../types/PaymentSystemCredit';
 import { PaymentSystemDebit } from '../../../types/PaymentSystemDebit';
+import { getCardDetails, isValidCard } from '../../../utils/cardUtils';
 import { notSelectedOption, stringToColor } from '../../../utils/common';
 import log from '../../../utils/logger';
 import { notifyBackendError } from '../../../utils/notifications';
@@ -51,6 +54,7 @@ const PaymentSystems: React.FC = () => {
   const currencyCodes = currencies?.map((currency) => currency.code) ?? [];
 
   const columns = useMemo<MRT_ColumnDef<MRT_RowData>[]>(
+    // eslint-disable-next-line complexity
     () => [
       {
         accessorKey: 'id',
@@ -166,6 +170,7 @@ const PaymentSystems: React.FC = () => {
         accessorFn: (row) => row.asset?.id,
         accessorKey: 'assetId',
         header: 'Asset',
+        Cell: () => null,
         editVariant: 'select',
         editSelectOptions: assetsOptions,
         muiEditTextFieldProps: {
@@ -184,6 +189,7 @@ const PaymentSystems: React.FC = () => {
         accessorFn: (row) => row.liability?.id,
         accessorKey: 'liabilityId',
         header: 'Liability',
+        Cell: () => null,
         editVariant: 'select',
         editSelectOptions: liabilitiesOptions,
         muiEditTextFieldProps: {
@@ -195,6 +201,81 @@ const PaymentSystems: React.FC = () => {
             setValidationErrors({
               ...validationErrors,
               liability: undefined,
+            }),
+        },
+      },
+      {
+        accessorKey: 'cardHolderName',
+        header: 'Card holder name',
+        Cell: () => null,
+        muiEditTextFieldProps: {
+          required: false,
+          error: !!validationErrors?.cardHolderName,
+          helperText: validationErrors?.cardHolderName,
+          onFocus: () =>
+            setValidationErrors({
+              ...validationErrors,
+              cardHolderName: undefined,
+            }),
+        },
+      },
+      {
+        accessorKey: 'cardNumber',
+        header: 'Card number',
+        Cell: () => null,
+        muiEditTextFieldProps: {
+          required: false,
+          error: !!validationErrors?.cardNumber,
+          helperText: validationErrors?.cardNumber,
+          onFocus: () =>
+            setValidationErrors({
+              ...validationErrors,
+              cardNumber: undefined,
+            }),
+        },
+      },
+      {
+        accessorKey: 'securityCode',
+        header: 'Security code',
+        Cell: () => null,
+        muiEditTextFieldProps: {
+          required: false,
+          error: !!validationErrors?.securityCode,
+          helperText: validationErrors?.securityCode,
+          onFocus: () =>
+            setValidationErrors({
+              ...validationErrors,
+              securityCode: undefined,
+            }),
+        },
+      },
+      {
+        accessorKey: 'expiryDate',
+        header: 'Expiry date',
+        Cell: () => null,
+        muiEditTextFieldProps: {
+          required: false,
+          error: !!validationErrors?.expiryDate,
+          helperText: validationErrors?.expiryDate,
+          onFocus: () =>
+            setValidationErrors({
+              ...validationErrors,
+              expiryDate: undefined,
+            }),
+        },
+      },
+      {
+        accessorKey: 'additionalNote',
+        header: 'Additional note',
+        Cell: () => null,
+        muiEditTextFieldProps: {
+          required: false,
+          error: !!validationErrors?.additionalNote,
+          helperText: validationErrors?.additionalNote,
+          onFocus: () =>
+            setValidationErrors({
+              ...validationErrors,
+              additionalNote: undefined,
             }),
         },
       },
@@ -282,6 +363,49 @@ const PaymentSystems: React.FC = () => {
       errors.liability = 'Liability is not required for Debit payment system';
     }
 
+    if (
+      paymentSystem.cardHolderName &&
+      paymentSystem.cardHolderName.length > 255
+    ) {
+      errors.cardHolderName =
+        'Card holder name should be less than 255 characters';
+    }
+
+    if (
+      paymentSystem.cardNumber &&
+      !Payment.fns.validateCardNumber(paymentSystem.cardNumber)
+    ) {
+      errors.cardNumber = 'Invalid card number';
+    }
+
+    const issuer =
+      paymentSystem.cardNumber &&
+      Payment.fns.cardType(paymentSystem.cardNumber);
+    if (
+      paymentSystem.securityCode &&
+      !Payment.fns.validateCardCVC(
+        paymentSystem.securityCode,
+        issuer || undefined,
+      )
+    ) {
+      errors.securityCode = 'Invalid security code';
+    }
+
+    if (
+      paymentSystem.expiryDate &&
+      !Payment.fns.validateCardExpiry(paymentSystem.expiryDate)
+    ) {
+      errors.expiryDate = 'Invalid expiry date';
+    }
+
+    if (
+      paymentSystem.additionalNote &&
+      paymentSystem.additionalNote.length > 1000
+    ) {
+      errors.additionalNote =
+        'Additional note should be less than 1000 characters';
+    }
+
     return errors;
   };
 
@@ -289,12 +413,21 @@ const PaymentSystems: React.FC = () => {
     setSaving(true);
     const { type } = paymentSystem;
     try {
+      const basePayload = {
+        name: paymentSystem.name,
+        currency: paymentSystem.currency,
+        active: paymentSystem.active,
+        cardHolderName: paymentSystem.cardHolderName,
+        cardNumber: paymentSystem.cardNumber,
+        securityCode: paymentSystem.securityCode,
+        expiryDate: paymentSystem.expiryDate,
+        additionalNote: paymentSystem.additionalNote,
+      };
+
       if (type === 'Debit') {
         const response = await apiClient.post('/payment-systems/debits', {
-          name: paymentSystem.name,
-          currency: paymentSystem.currency,
+          ...basePayload,
           assetId: paymentSystem.assetId,
-          active: paymentSystem.active,
         });
         await refetchData(['paymentSystems']);
 
@@ -305,10 +438,8 @@ const PaymentSystems: React.FC = () => {
         return;
       } else if (type === 'Credit') {
         const response = await apiClient.post('/payment-systems/credits', {
-          name: paymentSystem.name,
-          currency: paymentSystem.currency,
+          ...basePayload,
           liabilityId: paymentSystem.liabilityId,
-          active: paymentSystem.active,
         });
         await refetchData(['paymentSystems']);
 
@@ -329,12 +460,20 @@ const PaymentSystems: React.FC = () => {
     setUpdating(true);
     const { id, type } = paymentSystem;
     try {
+      const basePayload = {
+        name: paymentSystem.name,
+        currency: paymentSystem.currency,
+        active: paymentSystem.active,
+        cardHolderName: paymentSystem.cardHolderName,
+        cardNumber: paymentSystem.cardNumber,
+        securityCode: paymentSystem.securityCode,
+        expiryDate: paymentSystem.expiryDate,
+        additionalNote: paymentSystem.additionalNote,
+      };
       if (type === 'Debit') {
         const response = await apiClient.put(`/payment-systems/debits/${id}`, {
-          name: paymentSystem.name,
-          currency: paymentSystem.currency,
+          ...basePayload,
           assetId: paymentSystem.assetId,
-          active: paymentSystem.active,
         });
         await refetchData(['paymentSystems']);
 
@@ -345,10 +484,8 @@ const PaymentSystems: React.FC = () => {
         return;
       } else if (type === 'Credit') {
         const response = await apiClient.put(`/payment-systems/credits/${id}`, {
-          name: paymentSystem.name,
-          currency: paymentSystem.currency,
+          ...basePayload,
           liabilityId: paymentSystem.liabilityId,
-          active: paymentSystem.active,
         });
         await refetchData(['paymentSystems']);
 
@@ -410,6 +547,11 @@ const PaymentSystems: React.FC = () => {
         id: false,
         assetId: false,
         liabilityId: false,
+        cardHolderName: false,
+        cardNumber: false,
+        securityCode: false,
+        expiryDate: false,
+        additionalNote: false,
       },
       pagination: {
         pageIndex: 0,
@@ -420,24 +562,35 @@ const PaymentSystems: React.FC = () => {
       isLoading: loading,
       isSaving: saving || updating || deleting,
     },
-    renderDetailPanel: ({ row }) => (
-      <Box
-        sx={{
-          display: 'grid',
-          margin: 'auto',
-          gridTemplateColumns: '1fr 1fr',
-          width: '100%',
-        }}
-      >
-        <Typography>Id: {row.original.id}</Typography>
-        {row.original.type === 'Debit' && (
-          <Typography>Asset: {row.original.asset.name}</Typography>
-        )}
-        {row.original.type === 'Credit' && (
-          <Typography>Liability: {row.original.liability.name}</Typography>
-        )}
-      </Box>
-    ),
+    renderDetailPanel: ({ row }) => {
+      const validCard = isValidCard(
+        row.original as PaymentSystemCredit | PaymentSystemDebit,
+      );
+      const cardDetails = getCardDetails(
+        row.original as PaymentSystemCredit | PaymentSystemDebit,
+      );
+      return (
+        <>
+          <Box
+            sx={{
+              display: 'grid',
+              margin: 'auto',
+              gridTemplateColumns: '1fr 1fr',
+              width: '100%',
+            }}
+          >
+            <Typography>Id: {row.original.id}</Typography>
+            {row.original.type === 'Debit' && (
+              <Typography>Asset: {row.original.asset.name}</Typography>
+            )}
+            {row.original.type === 'Credit' && (
+              <Typography>Liability: {row.original.liability.name}</Typography>
+            )}
+          </Box>
+          {validCard && <CardDetails card={cardDetails} />}
+        </>
+      );
+    },
     onCreatingRowSave: async ({ table, values }) => {
       const newValidationErrors = validatePaymentSystem(values);
       if (Object.values(newValidationErrors).some((error) => error)) {
