@@ -82,6 +82,7 @@ const Liabilities: React.FC = () => {
         accessorKey: 'id',
         header: 'ID',
         Edit: () => null,
+        visibleInShowHideMenu: false,
       },
       {
         accessorKey: 'name',
@@ -115,6 +116,7 @@ const Liabilities: React.FC = () => {
               description: undefined,
             }),
         },
+        visibleInShowHideMenu: false,
       },
       {
         accessorFn: (row) => formatLiabilityType(row.type),
@@ -199,6 +201,7 @@ const Liabilities: React.FC = () => {
               currency: undefined,
             }),
         },
+        visibleInShowHideMenu: false,
       },
       {
         accessorKey: 'statementDay',
@@ -302,6 +305,7 @@ const Liabilities: React.FC = () => {
               interestRate: undefined,
             }),
         },
+        visibleInShowHideMenu: false,
       },
       {
         accessorKey: 'balance',

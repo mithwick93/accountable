@@ -60,6 +60,7 @@ const PaymentSystems: React.FC = () => {
         accessorKey: 'id',
         header: 'ID',
         Edit: () => null,
+        visibleInShowHideMenu: false,
       },
       {
         accessorKey: 'currency',
@@ -170,7 +171,6 @@ const PaymentSystems: React.FC = () => {
         accessorFn: (row) => row.asset?.id,
         accessorKey: 'assetId',
         header: 'Asset',
-        Cell: () => null,
         editVariant: 'select',
         editSelectOptions: assetsOptions,
         muiEditTextFieldProps: {
@@ -184,12 +184,12 @@ const PaymentSystems: React.FC = () => {
               asset: undefined,
             }),
         },
+        visibleInShowHideMenu: false,
       },
       {
         accessorFn: (row) => row.liability?.id,
         accessorKey: 'liabilityId',
         header: 'Liability',
-        Cell: () => null,
         editVariant: 'select',
         editSelectOptions: liabilitiesOptions,
         muiEditTextFieldProps: {
@@ -203,11 +203,11 @@ const PaymentSystems: React.FC = () => {
               liability: undefined,
             }),
         },
+        visibleInShowHideMenu: false,
       },
       {
         accessorKey: 'cardHolderName',
         header: 'Card holder name',
-        Cell: () => null,
         muiEditTextFieldProps: {
           required: false,
           error: !!validationErrors?.cardHolderName,
@@ -218,11 +218,11 @@ const PaymentSystems: React.FC = () => {
               cardHolderName: undefined,
             }),
         },
+        visibleInShowHideMenu: false,
       },
       {
         accessorKey: 'cardNumber',
         header: 'Card number',
-        Cell: () => null,
         muiEditTextFieldProps: {
           required: false,
           error: !!validationErrors?.cardNumber,
@@ -233,11 +233,11 @@ const PaymentSystems: React.FC = () => {
               cardNumber: undefined,
             }),
         },
+        visibleInShowHideMenu: false,
       },
       {
         accessorKey: 'securityCode',
         header: 'Security code',
-        Cell: () => null,
         muiEditTextFieldProps: {
           required: false,
           error: !!validationErrors?.securityCode,
@@ -248,11 +248,11 @@ const PaymentSystems: React.FC = () => {
               securityCode: undefined,
             }),
         },
+        visibleInShowHideMenu: false,
       },
       {
         accessorKey: 'expiryDate',
         header: 'Expiry date',
-        Cell: () => null,
         muiEditTextFieldProps: {
           required: false,
           error: !!validationErrors?.expiryDate,
@@ -263,11 +263,11 @@ const PaymentSystems: React.FC = () => {
               expiryDate: undefined,
             }),
         },
+        visibleInShowHideMenu: false,
       },
       {
         accessorKey: 'additionalNote',
         header: 'Additional note',
-        Cell: () => null,
         muiEditTextFieldProps: {
           required: false,
           error: !!validationErrors?.additionalNote,
@@ -278,6 +278,7 @@ const PaymentSystems: React.FC = () => {
               additionalNote: undefined,
             }),
         },
+        visibleInShowHideMenu: false,
       },
     ],
     [validationErrors],

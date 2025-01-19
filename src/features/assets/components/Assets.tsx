@@ -51,6 +51,7 @@ const Assets: React.FC = () => {
         accessorKey: 'id',
         header: 'ID',
         Edit: () => null,
+        visibleInShowHideMenu: false,
       },
       {
         accessorKey: 'name',
@@ -84,6 +85,7 @@ const Assets: React.FC = () => {
               description: undefined,
             }),
         },
+        visibleInShowHideMenu: false,
       },
       {
         accessorFn: (row) => formatAssetType(row.type),
@@ -170,6 +172,7 @@ const Assets: React.FC = () => {
               currency: undefined,
             }),
         },
+        visibleInShowHideMenu: false,
       },
       {
         accessorFn: (row) => row.balance,

@@ -47,6 +47,7 @@ const TransactionCategories: React.FC = () => {
         accessorKey: 'id',
         header: 'ID',
         Edit: () => null,
+        visibleInShowHideMenu: false,
       },
       {
         accessorKey: 'name',
