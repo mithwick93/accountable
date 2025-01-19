@@ -1,6 +1,8 @@
 import { PaletteMode } from '@mui/material/styles/createPalette';
 import { ColumnFilter } from '@tanstack/table-core/src/features/ColumnFiltering';
 import { format } from 'date-fns';
+import { Asset } from '../types/Asset';
+import { Liability } from '../types/Liability';
 import { Transaction } from '../types/Transaction';
 import { User } from '../types/User';
 
@@ -91,8 +93,6 @@ export const getOriginalLiabilityType = (type: string | undefined) => {
 
 export const getLiabilityStatusOptions = () => [
   'Active',
-  'Paid Off',
-  'Overdue',
   'Settled',
   'Defaulted',
   'Closed',
@@ -105,10 +105,6 @@ export const formatLiabilityStatus = (status: string | undefined) => {
   switch (status) {
     case 'ACTIVE':
       return 'Active';
-    case 'PAID_OFF':
-      return 'Paid Off';
-    case 'OVERDUE':
-      return 'Overdue';
     case 'SETTLED':
       return 'Settled';
     case 'DEFAULTED':
@@ -384,3 +380,12 @@ export const getTransactionsFetchOptions = (
     },
   },
 });
+
+export const getActiveAssets = (assets: Asset[]) =>
+  assets.filter((asset) => asset.active);
+
+export const getActiveLiabilities = (liabilities: Liability[]) =>
+  liabilities.filter(
+    (liability) =>
+      liability.status === 'ACTIVE' || liability.status === 'DEFAULTED',
+  );
