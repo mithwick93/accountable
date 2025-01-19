@@ -26,3 +26,4 @@ yarn-error.log*
 
 /infrastructure/ssl/*
 *.env
+*.run.xml
