@@ -102,7 +102,7 @@ const CardDetails: React.FC<CardDetailsProps> = ({ card }) => {
   const IssuerLogo = getCardLogo(card.cardNumber);
 
   return (
-    <Card sx={{ maxWidth: 400, boxShadow: 3, marginTop: 2 }}>
+    <Card sx={{ maxWidth: 350, marginTop: 2 }}>
       <CardContent>
         <Box
           display="flex"
@@ -149,6 +149,13 @@ const CardDetails: React.FC<CardDetailsProps> = ({ card }) => {
             onCopy={() => handleCopy(card.securityCode)}
           />
         </Box>
+        <CardField
+          label="Additional note"
+          value={card.additionalNote || ''}
+          maskedValue="*****"
+          showSensitive={showSensitive}
+          onCopy={() => handleCopy(card.additionalNote || '')}
+        />
       </CardContent>
     </Card>
   );
