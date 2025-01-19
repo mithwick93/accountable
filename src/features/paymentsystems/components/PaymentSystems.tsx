@@ -110,6 +110,32 @@ const PaymentSystems: React.FC = () => {
         },
       },
       {
+        accessorKey: 'active',
+        header: 'Status',
+        Cell: ({ cell }) => (
+          <Chip
+            label={cell.getValue() ? 'Active' : 'Inactive'}
+            color={cell.getValue() ? 'success' : 'default'}
+          />
+        ),
+        editVariant: 'select',
+        editSelectOptions: [
+          { label: 'Active', value: true },
+          { label: 'Inactive', value: false },
+        ],
+        muiEditTextFieldProps: {
+          required: true,
+          select: true,
+          error: !!validationErrors?.active,
+          helperText: validationErrors?.active,
+          onFocus: () =>
+            setValidationErrors({
+              ...validationErrors,
+              active: undefined,
+            }),
+        },
+      },
+      {
         accessorKey: 'name',
         header: 'Name',
         muiTableBodyCellProps: {
@@ -189,6 +215,7 @@ const PaymentSystems: React.FC = () => {
     fetchPaymentSystems();
   }, [assets, liabilities]);
 
+  // eslint-disable-next-line complexity
   const validatePaymentSystem = (paymentSystem: Record<string, any>) => {
     const errors: Record<string, string | undefined> = {};
     if (!paymentSystem.name) {
@@ -196,6 +223,13 @@ const PaymentSystems: React.FC = () => {
     }
     if (!paymentSystem.type) {
       errors.type = 'Type is required';
+    }
+    if (
+      paymentSystem.active === undefined ||
+      paymentSystem.active === null ||
+      paymentSystem.active === ''
+    ) {
+      errors.active = 'Status is required';
     }
     if (!paymentSystem.currency) {
       errors.currency = 'Currency is required';
@@ -252,6 +286,7 @@ const PaymentSystems: React.FC = () => {
           name: paymentSystem.name,
           currency: paymentSystem.currency,
           assetId: paymentSystem.assetId,
+          active: paymentSystem.active,
         });
         await refetchData(['paymentSystems']);
 
@@ -265,6 +300,7 @@ const PaymentSystems: React.FC = () => {
           name: paymentSystem.name,
           currency: paymentSystem.currency,
           liabilityId: paymentSystem.liabilityId,
+          active: paymentSystem.active,
         });
         await refetchData(['paymentSystems']);
 
@@ -290,6 +326,7 @@ const PaymentSystems: React.FC = () => {
           name: paymentSystem.name,
           currency: paymentSystem.currency,
           assetId: paymentSystem.assetId,
+          active: paymentSystem.active,
         });
         await refetchData(['paymentSystems']);
 
@@ -303,6 +340,7 @@ const PaymentSystems: React.FC = () => {
           name: paymentSystem.name,
           currency: paymentSystem.currency,
           liabilityId: paymentSystem.liabilityId,
+          active: paymentSystem.active,
         });
         await refetchData(['paymentSystems']);
 
