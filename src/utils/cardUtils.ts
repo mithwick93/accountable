@@ -59,8 +59,18 @@ export const formatCreditCardNumber = (value: string | undefined | null) => {
 export const formatExpirationDate = (value: string) => {
   const clearValue = clearNumber(value);
 
-  if (clearValue.length >= 3) {
-    return `${clearValue.slice(0, 2)}/${clearValue.slice(2, 4)}`;
+  if (clearValue.length >= 6) {
+    // If input is in MM/YYYY
+    const month = clearValue.slice(0, 2);
+    const year = clearValue.slice(4, 6);
+    return `${month}/${year}`;
+  }
+
+  if (clearValue.length >= 4) {
+    // If input is in MM/YY or similar
+    const month = clearValue.slice(0, 2);
+    const year = clearValue.slice(2, 4);
+    return `${month}/${year}`;
   }
 
   return clearValue;
@@ -74,8 +84,10 @@ export const formatCVC = (value: string, issuer: string) => {
 
 export const isCardExpired = (expiryDate: string) => {
   const [month, year] = expiryDate.split('/').map(Number);
+  const fullYear = year < 100 ? 2000 + year : year;
+
   const parsedDate = endOfMonth(
-    parse(`${month}/20${year}`, 'MM/yyyy', new Date()),
+    parse(`${month}/${fullYear}`, 'MM/yyyy', new Date()),
   );
 
   return isBefore(parsedDate, new Date());
