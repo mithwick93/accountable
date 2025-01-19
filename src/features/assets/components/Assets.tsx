@@ -121,6 +121,32 @@ const Assets: React.FC = () => {
         },
       },
       {
+        accessorKey: 'active',
+        header: 'Status',
+        Cell: ({ cell }) => (
+          <Chip
+            label={cell.getValue() ? 'Active' : 'Inactive'}
+            color={cell.getValue() ? 'success' : 'default'}
+          />
+        ),
+        editVariant: 'select',
+        editSelectOptions: [
+          { label: 'Active', value: true },
+          { label: 'Inactive', value: false },
+        ],
+        muiEditTextFieldProps: {
+          required: true,
+          select: true,
+          error: !!validationErrors?.active,
+          helperText: validationErrors?.active,
+          onFocus: () =>
+            setValidationErrors({
+              ...validationErrors,
+              active: undefined,
+            }),
+        },
+      },
+      {
         accessorKey: 'currency',
         header: 'Currency',
         editVariant: 'select',
@@ -169,32 +195,6 @@ const Assets: React.FC = () => {
             setValidationErrors({
               ...validationErrors,
               balance: undefined,
-            }),
-        },
-      },
-      {
-        accessorKey: 'active',
-        header: 'Status',
-        Cell: ({ cell }) => (
-          <Chip
-            label={cell.getValue() ? 'Active' : 'Inactive'}
-            color={cell.getValue() ? 'success' : 'default'}
-          />
-        ),
-        editVariant: 'select',
-        editSelectOptions: [
-          { label: 'Active', value: true },
-          { label: 'Inactive', value: false },
-        ],
-        muiEditTextFieldProps: {
-          required: true,
-          select: true,
-          error: !!validationErrors?.active,
-          helperText: validationErrors?.active,
-          onFocus: () =>
-            setValidationErrors({
-              ...validationErrors,
-              active: undefined,
             }),
         },
       },
