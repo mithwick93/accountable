@@ -7,6 +7,7 @@ import { PaymentSystemCredit } from '../types/PaymentSystemCredit';
 import { PaymentSystemDebit } from '../types/PaymentSystemDebit';
 import { Transaction } from '../types/Transaction';
 import { User } from '../types/User';
+import { isCardExpired } from './cardUtils';
 
 export const alertColors = {
   green: { dark: '#81C784', light: '#388E3C' },
@@ -388,7 +389,12 @@ export const getActiveAssets = (assets: Asset[]) =>
 
 export const getActivePaymentSystems = (
   paymentSystems: (PaymentSystemCredit | PaymentSystemDebit)[],
-) => paymentSystems.filter((paymentSystem) => paymentSystem.active);
+) =>
+  paymentSystems.filter(
+    (paymentSystem) =>
+      paymentSystem.active &&
+      !(paymentSystem.expiryDate && isCardExpired(paymentSystem.expiryDate)),
+  );
 
 export const getActiveLiabilities = (liabilities: Liability[]) =>
   liabilities.filter(

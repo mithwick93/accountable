@@ -1,3 +1,4 @@
+import { endOfMonth, isBefore, parse } from 'date-fns';
 import Payment from 'payment';
 import { PaymentSystemCredit } from '../types/PaymentSystemCredit';
 import { PaymentSystemDebit } from '../types/PaymentSystemDebit';
@@ -69,4 +70,13 @@ export const formatCVC = (value: string, issuer: string) => {
   const clearValue = clearNumber(value);
   const maxLength = issuer === 'amex' ? 4 : 3;
   return clearValue.slice(0, maxLength);
+};
+
+export const isCardExpired = (expiryDate: string) => {
+  const [month, year] = expiryDate.split('/').map(Number);
+  const parsedDate = endOfMonth(
+    parse(`${month}/20${year}`, 'MM/yyyy', new Date()),
+  );
+
+  return isBefore(parsedDate, new Date());
 };
