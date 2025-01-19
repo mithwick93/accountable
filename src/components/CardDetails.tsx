@@ -5,6 +5,7 @@ import {
   Box,
   Card,
   CardContent,
+  Chip,
   IconButton,
   TextField,
   Tooltip,
@@ -25,6 +26,7 @@ import {
   formatCreditCardNumber,
   formatCVC,
   formatExpirationDate,
+  isCardExpired,
 } from '../utils/cardUtils';
 
 const cardTypeLogos: Record<string, IconType> = {
@@ -97,6 +99,7 @@ const CardDetails: React.FC<CardDetailsProps> = ({ card }) => {
     toast.success(`Copied to clipboard`);
   };
 
+  const cardExpired = isCardExpired(card.expiryDate);
   const maskedCardNumber = `**** **** **** ${card.cardNumber.slice(-4)}`;
   const maskedCVV = '***';
   const IssuerLogo = getCardLogo(card.cardNumber);
@@ -111,6 +114,7 @@ const CardDetails: React.FC<CardDetailsProps> = ({ card }) => {
           mb={2}
         >
           <Typography variant="h6">Card Details</Typography>
+          {cardExpired && <Chip label="Expired" color="error" />}
           <Tooltip title={showSensitive ? 'Hide' : 'Show'}>
             <IconButton onClick={handleToggleShow}>
               {showSensitive ? <VisibilityOff /> : <Visibility />}
