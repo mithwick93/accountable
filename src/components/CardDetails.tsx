@@ -55,18 +55,28 @@ const CardField: React.FC<{
   label: string;
   value: string;
   maskedValue?: string;
+  multiline?: boolean;
   showSensitive: boolean;
   onCopy: () => void;
   startAdornment?: React.ReactNode;
-}> = ({ label, value, maskedValue, showSensitive, onCopy, startAdornment }) => (
+}> = ({
+  label,
+  value,
+  maskedValue,
+  multiline,
+  showSensitive,
+  onCopy,
+  startAdornment,
+}) => (
   <Box mb={2}>
-    <Typography variant="body2" color="textSecondary">
-      {label}
-    </Typography>
     <TextField
       variant="outlined"
+      label={label}
       value={showSensitive ? value : maskedValue || value}
       fullWidth
+      multiline={multiline}
+      minRows={1}
+      maxRows={5}
       size="small"
       disabled
       slotProps={{
@@ -157,6 +167,7 @@ const CardDetails: React.FC<CardDetailsProps> = ({ card }) => {
           label="Additional note"
           value={card.additionalNote || ''}
           maskedValue="*****"
+          multiline
           showSensitive={showSensitive}
           onCopy={() => handleCopy(card.additionalNote || '')}
         />

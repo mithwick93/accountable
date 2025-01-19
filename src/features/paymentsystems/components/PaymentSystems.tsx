@@ -270,6 +270,9 @@ const PaymentSystems: React.FC = () => {
         header: 'Additional note',
         muiEditTextFieldProps: {
           required: false,
+          multiline: true,
+          minRows: 1,
+          maxRows: 5,
           error: !!validationErrors?.additionalNote,
           helperText: validationErrors?.additionalNote,
           onFocus: () =>
