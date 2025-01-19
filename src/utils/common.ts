@@ -3,6 +3,8 @@ import { ColumnFilter } from '@tanstack/table-core/src/features/ColumnFiltering'
 import { format } from 'date-fns';
 import { Asset } from '../types/Asset';
 import { Liability } from '../types/Liability';
+import { PaymentSystemCredit } from '../types/PaymentSystemCredit';
+import { PaymentSystemDebit } from '../types/PaymentSystemDebit';
 import { Transaction } from '../types/Transaction';
 import { User } from '../types/User';
 
@@ -383,6 +385,10 @@ export const getTransactionsFetchOptions = (
 
 export const getActiveAssets = (assets: Asset[]) =>
   assets.filter((asset) => asset.active);
+
+export const getActivePaymentSystems = (
+  paymentSystems: (PaymentSystemCredit | PaymentSystemDebit)[],
+) => paymentSystems.filter((paymentSystem) => paymentSystem.active);
 
 export const getActiveLiabilities = (liabilities: Liability[]) =>
   liabilities.filter(

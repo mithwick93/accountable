@@ -46,6 +46,7 @@ import {
   formatCurrency,
   getActiveAssets,
   getActiveLiabilities,
+  getActivePaymentSystems,
   getStartEndDate,
   getTransactionsFetchOptions,
 } from '../../utils/common';
@@ -75,7 +76,7 @@ const CreateTransactionDialog = ({ onClose, open }: DialogProps) => {
   const {
     assets: rawAssets,
     liabilities: rawLiabilities,
-    paymentSystems,
+    paymentSystems: rawPaymentSystems,
     categories,
     refetchData,
     loading,
@@ -90,6 +91,10 @@ const CreateTransactionDialog = ({ onClose, open }: DialogProps) => {
   const liabilities = useMemo<Liability[]>(
     () => getActiveLiabilities(rawLiabilities),
     [rawLiabilities],
+  );
+  const paymentSystems = useMemo<(PaymentSystemCredit | PaymentSystemDebit)[]>(
+    () => getActivePaymentSystems(rawPaymentSystems),
+    [rawPaymentSystems],
   );
   const baseCurrency = settings?.currency || 'USD';
   const updateAccounts = settings?.transactions.updateAccounts ?? false;
