@@ -155,17 +155,20 @@ const Liabilities: React.FC = () => {
         accessorFn: (row) => formatLiabilityStatus(row.status),
         accessorKey: 'status',
         header: 'Status',
-        Cell: ({ cell }) => (
-          <Chip
-            label={cell.getValue() as string}
-            sx={(theme) => ({
-              backgroundColor: stringToColor(
-                cell.getValue() as string,
-                theme.palette.mode === 'dark',
-              ),
-            })}
-          />
-        ),
+        Cell: ({ cell }) => {
+          const label = cell.getValue() as string;
+          return (
+            <Chip
+              label={label}
+              sx={(theme) => ({
+                backgroundColor: stringToColor(
+                  label,
+                  theme.palette.mode === 'dark',
+                ),
+              })}
+            />
+          );
+        },
         editVariant: 'select',
         editSelectOptions: getLiabilityStatusOptions(),
         muiEditTextFieldProps: {

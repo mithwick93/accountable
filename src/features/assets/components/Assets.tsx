@@ -123,12 +123,20 @@ const Assets: React.FC = () => {
       {
         accessorKey: 'active',
         header: 'Status',
-        Cell: ({ cell }) => (
-          <Chip
-            label={cell.getValue() ? 'Active' : 'Inactive'}
-            color={cell.getValue() ? 'success' : 'default'}
-          />
-        ),
+        Cell: ({ cell }) => {
+          const label = cell.getValue() ? 'Active' : 'Inactive';
+          return (
+            <Chip
+              label={label}
+              sx={(theme) => ({
+                backgroundColor: stringToColor(
+                  label,
+                  theme.palette.mode === 'dark',
+                ),
+              })}
+            />
+          );
+        },
         editVariant: 'select',
         editSelectOptions: [
           { label: 'Active', value: true },
