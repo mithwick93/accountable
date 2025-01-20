@@ -5,13 +5,13 @@ import React, {
   useEffect,
   useState,
 } from 'react';
-import BackdropLoader from '../components/BackdropLoader';
 import apiClient from '../services/ApiService';
 import log from '../utils/logger';
 import { useSettings } from './SettingsContext';
 
 interface CurrencyRatesType {
   currencyRates: { [currency: string]: number };
+  loading: boolean;
 }
 
 interface CurrencyRatesProviderProps {
@@ -62,12 +62,8 @@ export const CurrencyRatesProvider: React.FC<CurrencyRatesProviderProps> = ({
     fetchCurrencyRates();
   }, [currency]);
 
-  if (loading) {
-    return <BackdropLoader />;
-  }
-
   return (
-    <CurrencyRatesContext.Provider value={{ currencyRates }}>
+    <CurrencyRatesContext.Provider value={{ currencyRates, loading }}>
       {children}
     </CurrencyRatesContext.Provider>
   );

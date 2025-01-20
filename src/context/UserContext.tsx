@@ -6,7 +6,6 @@ import React, {
   useEffect,
   useState,
 } from 'react';
-import BackdropLoader from '../components/BackdropLoader';
 import apiClient from '../services/ApiService';
 import { LoggedInUser } from '../types/LoggedInUser';
 import { User } from '../types/User';
@@ -16,6 +15,7 @@ import { TokenStorage } from '../utils/TokenStorage';
 interface UserContextType {
   loggedInUser: LoggedInUser | null;
   users: User[] | null;
+  loading: boolean;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -48,12 +48,8 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     fetchUser();
   }, []);
 
-  if (loading) {
-    return <BackdropLoader />;
-  }
-
   return (
-    <UserContext.Provider value={{ loggedInUser, users }}>
+    <UserContext.Provider value={{ loggedInUser, users, loading }}>
       {children}
     </UserContext.Provider>
   );

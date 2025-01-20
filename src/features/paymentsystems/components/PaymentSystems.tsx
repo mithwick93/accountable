@@ -38,8 +38,15 @@ import log from '../../../utils/logger';
 import { notifyBackendError } from '../../../utils/notifications';
 
 const PaymentSystems: React.FC = () => {
-  const { assets, liabilities, paymentSystems, refetchData, loading } =
-    useData();
+  const {
+    assets,
+    liabilities,
+    paymentSystems,
+    refetchData,
+    loading: dataLoading,
+  } = useData();
+  const { currencies, loading: staticDataLoading } = useStaticData();
+
   const [validationErrors, setValidationErrors] = useState<
     Record<string, string | undefined>
   >({});
@@ -50,7 +57,8 @@ const PaymentSystems: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [updating, setUpdating] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const { currencies } = useStaticData();
+
+  const loading = dataLoading || staticDataLoading;
   const currencyCodes = currencies?.map((currency) => currency.code) ?? [];
 
   const columns = useMemo<MRT_ColumnDef<MRT_RowData>[]>(

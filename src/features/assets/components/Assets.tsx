@@ -36,14 +36,17 @@ import {
 import { notifyBackendError } from '../../../utils/notifications';
 
 const Assets: React.FC = () => {
-  const { assets, refetchData, loading } = useData();
+  const { assets, refetchData, loading: dataLoading } = useData();
+  const { currencies, loading: staticDataLoading } = useStaticData();
+
   const [validationErrors, setValidationErrors] = useState<
     Record<string, string | undefined>
   >({});
   const [saving, setSaving] = useState(false);
   const [updating, setUpdating] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const { currencies } = useStaticData();
+
+  const loading = dataLoading || staticDataLoading;
   const currencyCodes = currencies?.map((currency) => currency.code) ?? [];
   const columns = useMemo<MRT_ColumnDef<MRT_RowData>[]>(
     () => [

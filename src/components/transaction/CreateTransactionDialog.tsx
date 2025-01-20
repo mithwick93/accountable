@@ -71,18 +71,21 @@ type FormStateType = {
 };
 
 const CreateTransactionDialog = ({ onClose, open }: DialogProps) => {
-  const { settings, update } = useSettings();
-  const { currencies } = useStaticData();
+  const { settings, update, loading: settingsLoading } = useSettings();
+  const { currencies, loading: staticDataLoading } = useStaticData();
   const {
     assets: rawAssets,
     liabilities: rawLiabilities,
     paymentSystems: rawPaymentSystems,
     categories,
     refetchData,
-    loading,
+    loading: dataLoading,
   } = useData();
-  const { loggedInUser, users } = useUser();
+  const { loggedInUser, users, loading: userLoading } = useUser();
   const theme = useTheme();
+
+  const loading =
+    settingsLoading || staticDataLoading || dataLoading || userLoading;
 
   const assets = useMemo<Asset[]>(
     () => getActiveAssets(rawAssets),

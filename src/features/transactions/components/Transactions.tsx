@@ -9,6 +9,7 @@ import {
   CardHeader,
   Chip,
   SelectChangeEvent,
+  Skeleton,
   Tooltip,
   useMediaQuery,
   useTheme,
@@ -72,7 +73,11 @@ const TransactionsSummery: React.FC<TransactionsSummeryProps> = ({
 }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const { settings, update } = useSettings();
+  const { settings, update, loading } = useSettings();
+
+  if (loading) {
+    return <Skeleton variant="rounded" width="100%" height={56} />;
+  }
   const expandSummery = settings?.transactions?.expandSummery || false;
   const currency: string = settings?.currency || 'USD';
 
@@ -343,13 +348,14 @@ const TransactionsSummery: React.FC<TransactionsSummeryProps> = ({
 const Transactions: React.FC = () => {
   const {
     transactions: transactionsResponse,
-    loading,
+    loading: dataLoading,
     refetchData,
   } = useData();
-  const { settings, update } = useSettings();
+  const { settings, update, loading: settingsLoading } = useSettings();
   const theme = useTheme();
   const dialogs = useDialogs();
 
+  const loading = dataLoading || settingsLoading;
   const transactions = transactionsResponse?.content || [];
   const transactionsWithShares = transactions.filter(
     (transaction) =>

@@ -5,7 +5,6 @@ import React, {
   useEffect,
   useState,
 } from 'react';
-import BackdropLoader from '../components/BackdropLoader';
 import apiClient from '../services/ApiService';
 import { AssetType } from '../types/AssetType';
 import { Currency } from '../types/Currency';
@@ -16,6 +15,7 @@ interface StaticDataContextType {
   currencies: Currency[] | null;
   liabilityTypes: LiabilityType[] | null;
   assetTypes: AssetType[] | null;
+  loading: boolean;
 }
 
 interface StaticDataProviderProps {
@@ -33,6 +33,7 @@ export const StaticDataProvider: React.FC<StaticDataProviderProps> = ({
     currencies: null,
     liabilityTypes: null,
     assetTypes: null,
+    loading: true,
   });
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -57,6 +58,7 @@ export const StaticDataProvider: React.FC<StaticDataProviderProps> = ({
           assetTypes: assetTypes.data.sort((a: AssetType, b: AssetType) =>
             a.name.localeCompare(b.name),
           ),
+          loading: false,
         });
       } catch (error) {
         log.error('Failed to fetch static data:', error);
@@ -68,12 +70,8 @@ export const StaticDataProvider: React.FC<StaticDataProviderProps> = ({
     fetchStaticData();
   }, []);
 
-  if (loading) {
-    return <BackdropLoader />;
-  }
-
   return (
-    <StaticDataContext.Provider value={staticData}>
+    <StaticDataContext.Provider value={{ ...staticData, loading }}>
       {children}
     </StaticDataContext.Provider>
   );

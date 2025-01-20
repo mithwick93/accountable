@@ -15,9 +15,9 @@ import {
 import React, { useEffect, useMemo, useState } from 'react';
 import { useSettings } from '../context/SettingsContext';
 import { getStartEndDate } from '../utils/common';
-
+import Skeleton from '@mui/material/Skeleton';
 const DateRangeSelector = () => {
-  const { settings, update } = useSettings();
+  const { settings, update, loading } = useSettings();
   const { startDate, endDate } = getStartEndDate(settings);
 
   const predefinedRanges = useMemo(() => {
@@ -138,6 +138,10 @@ const DateRangeSelector = () => {
       },
     });
   };
+
+  if (loading) {
+    return <Skeleton variant="rounded" width={145} height={40} />;
+  }
 
   return (
     <FormControl sx={{ m: 1, minWidth: 120 }} size="small">

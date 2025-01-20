@@ -14,6 +14,7 @@ import log from '../utils/logger';
 
 interface SettingsContextType {
   settings: Record<string, any> | null;
+  loading: boolean;
   // eslint-disable-next-line no-unused-vars
   update: (newSettings: Record<string, any>) => void;
 }
@@ -139,6 +140,7 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({
     <SettingsContext.Provider
       value={{
         settings: userSettings.settings,
+        loading: userSettings.loading,
         update: (newSettings) => {
           if (deepEqual(userSettings.settings, newSettings, { strict: true })) {
             return;

@@ -4,6 +4,7 @@ import {
   MenuItem,
   Select,
   SelectChangeEvent,
+  Skeleton,
   Tooltip,
   Typography,
   useMediaQuery,
@@ -31,13 +32,15 @@ const formatDate = () =>
   });
 
 const ToolbarActions = () => {
-  const { loggedInUser } = useUser();
-  const { currencies } = useStaticData();
-  const { settings, update } = useSettings();
+  const { loggedInUser, loading: userLoading } = useUser();
+  const { currencies, loading: staticDataLoading } = useStaticData();
+  const { settings, update, loading: settingsLoading } = useSettings();
+  const theme = useTheme();
+
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [currentTime, setCurrentTime] = useState<string>(formatDate());
+  const loading = userLoading || staticDataLoading || settingsLoading;
 
-  const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
 
   useEffect(() => {
@@ -61,6 +64,10 @@ const ToolbarActions = () => {
 
   const userName =
     `${loggedInUser?.firstName || ''} ${loggedInUser?.lastName || ''}`.trim();
+
+  if (loading) {
+    return <Skeleton variant="circular" width={40} height={40} />;
+  }
 
   return (
     <Stack direction="row" spacing={1} alignItems="center">

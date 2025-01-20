@@ -79,11 +79,12 @@ const SettleSharedTransactions = ({
   open,
   payload: transactions,
 }: DialogProps<Transaction[]>) => {
-  const { settings } = useSettings();
-  const { refetchData } = useData();
+  const { settings, loading: settingsLoading } = useSettings();
+  const { refetchData, loading: dataLoading } = useData();
   const theme = useTheme();
   const [rowSelection, setRowSelection] = useState<MRT_RowSelectionState>({});
 
+  const loading = settingsLoading || dataLoading;
   const candidates = useMemo(
     () => getSettleTransactionCandidates(transactions),
     [transactions],
@@ -276,13 +277,13 @@ const SettleSharedTransactions = ({
         },
       ],
     },
+    state: { rowSelection, isLoading: loading },
     columnFilterDisplayMode: 'popover',
     enableFacetedValues: true,
     isMultiSortEvent: () => true,
     enableRowSelection: true,
     getRowId: (row) => row.sharedTransactionId,
     onRowSelectionChange: setRowSelection,
-    state: { rowSelection },
   });
 
   return (

@@ -142,15 +142,21 @@ const NetSummary: React.FC<NetSummeryProps> = ({
 };
 
 const Dashboard: React.FC = () => {
-  const { assets: rawAssets, liabilities: rawLiabilities, loading } = useData();
+  const {
+    assets: rawAssets,
+    liabilities: rawLiabilities,
+    loading: dataLoading,
+  } = useData();
+  const { currencyRates, loading: currencyRatesLoading } = useCurrencyRates();
+  const { settings, loading: settingsLoading } = useSettings();
+
   const [assetTotals, setAssetTotals] = useState<{
     [currency: string]: number;
   }>({});
   const [liabilityTotals, setLiabilityTotals] = useState<{
     [currency: string]: number;
   }>({});
-  const { currencyRates } = useCurrencyRates();
-  const { settings } = useSettings();
+
   const assets = useMemo<Asset[]>(
     () => getActiveAssets(rawAssets),
     [rawAssets],
@@ -159,6 +165,7 @@ const Dashboard: React.FC = () => {
     () => getActiveLiabilities(rawLiabilities),
     [rawLiabilities],
   );
+  const loading = dataLoading || currencyRatesLoading || settingsLoading;
   const currency: string = settings?.currency || 'USD';
 
   const calculateTotals = (items: (Asset | Liability)[]) =>

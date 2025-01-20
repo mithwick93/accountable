@@ -12,16 +12,21 @@ import React from 'react';
 import { useCurrencyRates } from '../context/CurrencyRatesContext';
 import { useSettings } from '../context/SettingsContext';
 import { formatNumber } from '../utils/common';
+import LoadingSkeleton from './LoadingSkeleton';
 import { StyledTableCell, StyledTableRow } from './table/Table';
 import SlideUpTransition from './transition/SlideUpTransition';
 
 const CurrencyRatesDialog = ({ onClose, open }: DialogProps) => {
-  const { currencyRates } = useCurrencyRates();
+  const { currencyRates, loading } = useCurrencyRates();
   const { settings } = useSettings();
   const baseCurrency = settings?.currency || 'USD';
   const handleClose = () => {
     onClose();
   };
+
+  if (loading) {
+    return <LoadingSkeleton />;
+  }
 
   return (
     <Dialog

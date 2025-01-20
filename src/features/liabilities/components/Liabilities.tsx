@@ -66,14 +66,17 @@ const createPayload = (liability: Liability) => {
 };
 
 const Liabilities: React.FC = () => {
-  const { liabilities, refetchData, loading } = useData();
+  const { liabilities, refetchData, loading: dataLoading } = useData();
+  const { currencies, loading: staticDataLoading } = useStaticData();
+
   const [validationErrors, setValidationErrors] = useState<
     Record<string, string | undefined>
   >({});
   const [saving, setSaving] = useState(false);
   const [updating, setUpdating] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const { currencies } = useStaticData();
+
+  const loading = dataLoading || staticDataLoading;
   const currencyCodes = currencies?.map((currency) => currency.code) ?? [];
   const columns = useMemo<MRT_ColumnDef<MRT_RowData>[]>(
     // eslint-disable-next-line complexity
