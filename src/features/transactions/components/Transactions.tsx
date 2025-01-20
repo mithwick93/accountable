@@ -514,29 +514,6 @@ const Transactions: React.FC = () => {
         filterFn: 'betweenInclusive',
       },
       {
-        accessorKey: 'description',
-        header: 'Description',
-        grow: false,
-        minSize: 150,
-        size: 150,
-        maxSize: 200,
-        Cell: ({ cell }) => (
-          <Tooltip title={cell.getValue<string>()}>
-            <Box
-              component="span"
-              sx={{
-                maxWidth: 150,
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-              }}
-            >
-              {cell.getValue<string>()}
-            </Box>
-          </Tooltip>
-        ),
-      },
-      {
         accessorFn: (row) => formatTransactionType(row.type),
         accessorKey: 'type',
         header: 'Type',
@@ -575,6 +552,29 @@ const Transactions: React.FC = () => {
           />
         ),
         filterVariant: 'multi-select',
+      },
+      {
+        accessorKey: 'description',
+        header: 'Description',
+        grow: false,
+        minSize: 150,
+        size: 150,
+        maxSize: 200,
+        Cell: ({ cell }) => (
+          <Tooltip title={cell.getValue<string>()}>
+            <Box
+              component="span"
+              sx={{
+                maxWidth: 150,
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }}
+            >
+              {cell.getValue<string>()}
+            </Box>
+          </Tooltip>
+        ),
       },
       {
         accessorFn: (row) =>

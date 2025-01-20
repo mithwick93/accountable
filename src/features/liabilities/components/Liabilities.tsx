@@ -131,6 +131,9 @@ const Liabilities: React.FC = () => {
         muiTableBodyCellProps: {
           align: 'center',
         },
+        minSize: 150,
+        size: 150,
+        maxSize: 150,
         Cell: ({ renderedCellValue }) => (
           <Chip
             label={renderedCellValue}
@@ -160,6 +163,9 @@ const Liabilities: React.FC = () => {
         accessorFn: (row) => formatLiabilityStatus(row.status),
         accessorKey: 'status',
         header: 'Status',
+        minSize: 100,
+        size: 100,
+        maxSize: 100,
         Cell: ({ cell }) => {
           const label = cell.getValue() as string;
           return (
@@ -215,6 +221,9 @@ const Liabilities: React.FC = () => {
         muiTableBodyCellProps: {
           align: 'right',
         },
+        minSize: 150,
+        size: 150,
+        maxSize: 150,
         Cell: ({ cell }) => (
           <Box component="span">
             {
@@ -253,6 +262,9 @@ const Liabilities: React.FC = () => {
         muiTableBodyCellProps: {
           align: 'right',
         },
+        minSize: 150,
+        size: 150,
+        maxSize: 150,
         Cell: ({ cell }) => {
           const { dueDate } = calculateLiabilityDates(
             new Date(),
