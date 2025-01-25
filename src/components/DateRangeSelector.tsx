@@ -2,6 +2,7 @@ import { SelectChangeEvent } from '@mui/material';
 import FormControl from '@mui/material/FormControl';
 import MenuItem from '@mui/material/MenuItem';
 import Select from '@mui/material/Select';
+import Skeleton from '@mui/material/Skeleton';
 import { ColumnFilter } from '@tanstack/table-core/src/features/ColumnFiltering';
 import {
   addMonths,
@@ -15,7 +16,7 @@ import {
 import React, { useEffect, useMemo, useState } from 'react';
 import { useSettings } from '../context/SettingsContext';
 import { getStartEndDate } from '../utils/common';
-import Skeleton from '@mui/material/Skeleton';
+
 const DateRangeSelector = () => {
   const { settings, update, loading } = useSettings();
   const { startDate, endDate } = getStartEndDate(settings);
