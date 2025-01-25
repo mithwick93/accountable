@@ -42,6 +42,7 @@ const NumberInput: React.FC<NumberInputProps> = ({
     helperText={helperText}
     onFocus={onFocus}
     variant="outlined"
+    autoComplete="off"
     customInput={TextField}
     allowedDecimalSeparators={[',', '.']}
     allowLeadingZeros={allowLeadingZeros}
