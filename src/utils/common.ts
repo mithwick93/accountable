@@ -43,13 +43,13 @@ export const getOriginalAssetType = (type: string | undefined) => {
 };
 
 export const getLiabilityTypeOptions = () => [
-  'Credit Card',
-  'Personal Loan',
-  'Mortgage',
   'Auto Loan',
-  'Student Loan',
-  'Line of Credit',
   'Business Loan',
+  'Credit Card',
+  'Line of Credit',
+  'Mortgage',
+  'Personal Loan',
+  'Student Loan',
 ];
 
 export const formatLiabilityType = (type: string | undefined) => {
@@ -96,12 +96,12 @@ export const getOriginalLiabilityType = (type: string | undefined) => {
 
 export const getLiabilityStatusOptions = () => [
   'Active',
-  'Settled',
-  'Defaulted',
   'Closed',
+  'Defaulted',
   'In Dispute',
-  'Suspended',
   'Pending Activation',
+  'Settled',
+  'Suspended',
 ];
 
 export const formatLiabilityStatus = (status: string | undefined) => {

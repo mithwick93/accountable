@@ -84,7 +84,7 @@ const TransactionCategories: React.FC = () => {
           />
         ),
         editVariant: 'select',
-        editSelectOptions: ['Income', 'Expense', 'Transfer'],
+        editSelectOptions: ['Expense', 'Income', 'Transfer'],
         muiEditTextFieldProps: {
           select: true,
           required: true,
