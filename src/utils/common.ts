@@ -260,7 +260,7 @@ export const getDueDateColor = (
 export const formatNumber = (amount: number) =>
   new Intl.NumberFormat('en-US', {
     style: 'decimal',
-    minimumFractionDigits: 0,
+    minimumFractionDigits: 2,
     maximumFractionDigits: 4,
   }).format(amount);
 
