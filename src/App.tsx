@@ -1,6 +1,6 @@
-import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
+import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
+import CardTravelIcon from '@mui/icons-material/CardTravel';
 import CategoryIcon from '@mui/icons-material/Category';
-import CreditCardIcon from '@mui/icons-material/CreditCard';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import PaymentsIcon from '@mui/icons-material/Payments';
 import ReceiptIcon from '@mui/icons-material/Receipt';
@@ -23,12 +23,12 @@ const NAVIGATION: Navigation = [
   {
     segment: 'assets',
     title: 'Assets',
-    icon: <AccountBalanceWalletIcon />,
+    icon: <AccountBalanceIcon />,
   },
   {
     segment: 'liabilities',
     title: 'Liabilities',
-    icon: <CreditCardIcon />,
+    icon: <CardTravelIcon />,
   },
   {
     segment: 'payment-systems',
