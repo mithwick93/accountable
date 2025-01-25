@@ -36,8 +36,9 @@ const cardTypeLogos: Record<string, IconType> = {
   default: LiaCreditCardSolid,
 };
 
-type CardDetailsProps = {
+export type CardDetailsProps = {
   card: {
+    name: string;
     cardHolderName: string;
     cardNumber: string;
     securityCode: string;
@@ -115,7 +116,7 @@ const CardDetails: React.FC<CardDetailsProps> = ({ card }) => {
   const IssuerLogo = getCardLogo(card.cardNumber);
 
   return (
-    <Card sx={{ maxWidth: 350, marginTop: 2 }}>
+    <Card>
       <CardContent>
         <Box
           display="flex"
@@ -123,7 +124,14 @@ const CardDetails: React.FC<CardDetailsProps> = ({ card }) => {
           alignItems="center"
           mb={2}
         >
-          <Typography variant="h6">Card Details</Typography>
+          <Typography
+            variant="h6"
+            sx={{
+              textTransform: 'capitalize',
+            }}
+          >
+            {card.name || 'Card Details'}
+          </Typography>
           {cardExpired && <Chip label="Expired" color="error" />}
           <Tooltip title={showSensitive ? 'Hide' : 'Show'}>
             <IconButton onClick={handleToggleShow}>

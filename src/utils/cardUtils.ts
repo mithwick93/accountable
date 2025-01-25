@@ -14,6 +14,7 @@ export const isValidCard = (
 export const getCardDetails = (
   paymentSystem: PaymentSystemCredit | PaymentSystemDebit,
 ) => ({
+  name: paymentSystem.name || '',
   cardHolderName: paymentSystem.cardHolderName || '',
   cardNumber: paymentSystem.cardNumber || '',
   securityCode: paymentSystem.securityCode || '',

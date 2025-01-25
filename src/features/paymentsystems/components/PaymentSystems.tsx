@@ -1,4 +1,5 @@
 import AddIcon from '@mui/icons-material/Add';
+import CreditCardIcon from '@mui/icons-material/CreditCard';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import {
@@ -12,6 +13,8 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
+import Dialog from '@mui/material/Dialog';
+import { DialogProps, useDialogs } from '@toolpad/core/useDialogs';
 import {
   DropdownOption,
   MaterialReactTable,
@@ -24,7 +27,8 @@ import {
 import Payment from 'payment';
 import React, { useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
-import CardDetails from '../../../components/CardDetails';
+import CardDetails, { CardDetailsProps } from '../../../components/CardDetails';
+import SlideUpTransition from '../../../components/transition/SlideUpTransition';
 import { useData } from '../../../context/DataContext';
 import { useStaticData } from '../../../context/StaticDataContext';
 import apiClient from '../../../services/ApiService';
@@ -37,6 +41,27 @@ import { notSelectedOption, stringToColor } from '../../../utils/common';
 import log from '../../../utils/logger';
 import { notifyBackendError } from '../../../utils/notifications';
 
+const CardDetailsDialog = ({
+  onClose,
+  open,
+  payload,
+}: DialogProps<CardDetailsProps>) => {
+  const handleClose = () => {
+    onClose();
+  };
+
+  return (
+    <Dialog
+      onClose={handleClose}
+      open={open}
+      TransitionComponent={SlideUpTransition}
+      keepMounted
+    >
+      <CardDetails card={payload.card} />
+    </Dialog>
+  );
+};
+
 const PaymentSystems: React.FC = () => {
   const {
     assets,
@@ -45,6 +70,7 @@ const PaymentSystems: React.FC = () => {
     refetchData,
     loading: dataLoading,
   } = useData();
+  const dialogs = useDialogs();
   const { currencies, loading: staticDataLoading } = useStaticData();
 
   const [validationErrors, setValidationErrors] = useState<
@@ -574,35 +600,26 @@ const PaymentSystems: React.FC = () => {
       isLoading: loading,
       isSaving: saving || updating || deleting,
     },
-    renderDetailPanel: ({ row }) => {
-      const validCard = isValidCard(
-        row.original as PaymentSystemCredit | PaymentSystemDebit,
-      );
-      const cardDetails = getCardDetails(
-        row.original as PaymentSystemCredit | PaymentSystemDebit,
-      );
-      return (
-        <>
-          <Box
-            sx={{
-              display: 'grid',
-              margin: 'auto',
-              gridTemplateColumns: '1fr 1fr',
-              width: '100%',
-            }}
-          >
-            <Typography>Id: {row.original.id}</Typography>
-            {row.original.type === 'Debit' && (
-              <Typography>Asset: {row.original.asset.name}</Typography>
-            )}
-            {row.original.type === 'Credit' && (
-              <Typography>Liability: {row.original.liability.name}</Typography>
-            )}
-          </Box>
-          {validCard && <CardDetails card={cardDetails} />}
-        </>
-      );
-    },
+    renderDetailPanel: ({ row }) => (
+      <>
+        <Box
+          sx={{
+            display: 'grid',
+            margin: 'auto',
+            gridTemplateColumns: '1fr 1fr',
+            width: '100%',
+          }}
+        >
+          <Typography>Id: {row.original.id}</Typography>
+          {row.original.type === 'Debit' && (
+            <Typography>Asset: {row.original.asset.name}</Typography>
+          )}
+          {row.original.type === 'Credit' && (
+            <Typography>Liability: {row.original.liability.name}</Typography>
+          )}
+        </Box>
+      </>
+    ),
     onCreatingRowSave: async ({ table, values }) => {
       const newValidationErrors = validatePaymentSystem(values);
       if (Object.values(newValidationErrors).some((error) => error)) {
@@ -664,31 +681,52 @@ const PaymentSystems: React.FC = () => {
         </DialogActions>
       </>
     ),
-    renderRowActions: ({ row, table }) => (
-      <Box sx={{ display: 'flex', gap: '1rem' }}>
-        <Tooltip title="Edit">
-          <IconButton onClick={() => table.setEditingRow(row)}>
-            <EditIcon />
-          </IconButton>
-        </Tooltip>
-        <Tooltip title="Delete">
-          <IconButton
-            color="error"
-            onClick={async () => {
-              if (
-                window.confirm(
-                  `Are you sure you want to delete '${row.original.name}' payment system?`,
-                )
-              ) {
-                await deletePaymentSystem(row);
-              }
-            }}
-          >
-            <DeleteIcon />
-          </IconButton>
-        </Tooltip>
-      </Box>
-    ),
+    renderRowActions: ({ row, table }) => {
+      const validCard = isValidCard(
+        row.original as PaymentSystemCredit | PaymentSystemDebit,
+      );
+      const cardDetails = getCardDetails(
+        row.original as PaymentSystemCredit | PaymentSystemDebit,
+      );
+
+      return (
+        <Box sx={{ display: 'flex', gap: '1rem' }}>
+          <Tooltip title="Card Info">
+            <span>
+              <IconButton
+                onClick={async () => {
+                  await dialogs.open(CardDetailsDialog, { card: cardDetails });
+                }}
+                disabled={!validCard}
+              >
+                <CreditCardIcon />
+              </IconButton>
+            </span>
+          </Tooltip>
+          <Tooltip title="Edit">
+            <IconButton onClick={() => table.setEditingRow(row)}>
+              <EditIcon />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Delete">
+            <IconButton
+              color="error"
+              onClick={async () => {
+                if (
+                  window.confirm(
+                    `Are you sure you want to delete '${row.original.name}' payment system?`,
+                  )
+                ) {
+                  await deletePaymentSystem(row);
+                }
+              }}
+            >
+              <DeleteIcon />
+            </IconButton>
+          </Tooltip>
+        </Box>
+      );
+    },
   });
 
   return <MaterialReactTable table={table} />;
