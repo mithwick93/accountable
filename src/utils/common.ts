@@ -257,11 +257,15 @@ export const getDueDateColor = (
   }
 };
 
-export const formatNumber = (amount: number) =>
+export const formatNumber = (
+  amount: number,
+  minimumFractionDigits: number = 2,
+  maximumFractionDigits: number = 4,
+) =>
   new Intl.NumberFormat('en-US', {
     style: 'decimal',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 4,
+    minimumFractionDigits: minimumFractionDigits,
+    maximumFractionDigits: maximumFractionDigits,
   }).format(amount);
 
 export const formatCurrency = (amount: number, currency: string) => {
@@ -273,6 +277,21 @@ export const formatCurrency = (amount: number, currency: string) => {
     style: 'currency',
     currency,
   });
+};
+
+export const calculateTotalInBaseCurrency = (
+  totals: { [p: string]: number },
+  currencyRates: { [p: string]: number },
+) => {
+  let total = 0;
+  Object.keys(totals).forEach((key) => {
+    const totalValue = totals[key];
+    const exchangeRate = currencyRates[key];
+    if (exchangeRate) {
+      total += totalValue / exchangeRate;
+    }
+  });
+  return total;
 };
 
 export const getStartEndDate = (settings: Record<string, any> | null) => {

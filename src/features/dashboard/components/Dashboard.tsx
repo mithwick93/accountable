@@ -22,6 +22,7 @@ import { useSettings } from '../../../context/SettingsContext';
 import { Asset } from '../../../types/Asset';
 import { Liability } from '../../../types/Liability';
 import {
+  calculateTotalInBaseCurrency,
   formatCurrency,
   formatLiabilityType,
   getActiveAssets,
@@ -51,19 +52,8 @@ const NetSummary: React.FC<NetSummeryProps> = ({
   const [netValue, setNetValue] = useState<number>(0);
 
   useEffect(() => {
-    const calculateNetValue = () => {
-      let total = 0;
-      Object.keys(totals).forEach((key) => {
-        const totalValue = totals[key];
-        const exchangeRate = currencyRates[key];
-        if (exchangeRate) {
-          total += totalValue / exchangeRate;
-        }
-      });
-      setNetValue(total);
-    };
-
-    calculateNetValue();
+    const netTotal = calculateTotalInBaseCurrency(totals, currencyRates);
+    setNetValue(netTotal);
   }, [totals, currencyRates]);
 
   const getArcLabel = (params: { value: number }) => {

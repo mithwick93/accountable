@@ -3,15 +3,20 @@ import {
   Avatar,
   Box,
   Button,
+  Card,
+  CardContent,
   Chip,
   DialogActions,
   DialogContent,
   IconButton,
   Tooltip,
+  Typography,
   useTheme,
 } from '@mui/material';
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
+import Divider from '@mui/material/Divider';
+import Grid from '@mui/material/Grid2';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFnsV3';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DialogProps } from '@toolpad/core/useDialogs';
@@ -27,11 +32,13 @@ import {
 import React, { useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import SlideUpTransition from '../../../components/transition/SlideUpTransition';
+import { useCurrencyRates } from '../../../context/CurrencyRatesContext';
 import { useData } from '../../../context/DataContext';
 import { useSettings } from '../../../context/SettingsContext';
 import apiClient from '../../../services/ApiService';
 import { Transaction } from '../../../types/Transaction';
 import {
+  calculateTotalInBaseCurrency,
   formatNumber,
   generateAvatarProps,
   getStartEndDate,
@@ -72,6 +79,133 @@ const getSettleTransactionCandidates = (transactions: Transaction[]) => {
     }
   });
   return candidates;
+};
+
+interface DueAmountsSummaryProps {
+  selectedSharedTransactionIds: number[];
+  candidates: SettleTransactionCandidate[];
+}
+
+const DueAmountsSummary: React.FC<DueAmountsSummaryProps> = ({
+  selectedSharedTransactionIds,
+  candidates,
+}) => {
+  const { currencyRates, loading: currencyRatesLoading } = useCurrencyRates();
+  const { settings, loading: settingsLoading } = useSettings();
+  const baseCurrency: string = settings?.currency || 'USD';
+  const loading = currencyRatesLoading || settingsLoading;
+
+  const dueAmountsSummary = useMemo(() => {
+    const summaryMap: Record<string, Record<string, number>> = {};
+    selectedSharedTransactionIds.forEach((sharedTransactionId) => {
+      const settleTransactionCandidate = candidates.find(
+        (candidate) => candidate.sharedTransactionId === sharedTransactionId,
+      );
+      const {
+        sharedTransactionUserName = '',
+        transactionCurrency = '',
+        sharedTransactionShare = 0,
+      } = settleTransactionCandidate || {};
+
+      if (!summaryMap[sharedTransactionUserName]) {
+        summaryMap[sharedTransactionUserName] = {};
+      }
+      if (!summaryMap[sharedTransactionUserName][transactionCurrency]) {
+        summaryMap[sharedTransactionUserName][transactionCurrency] = 0;
+      }
+      summaryMap[sharedTransactionUserName][transactionCurrency] +=
+        sharedTransactionShare;
+    });
+    return summaryMap;
+  }, [selectedSharedTransactionIds, candidates]);
+
+  const dueTotals = useMemo(() => {
+    const summaryMap: Record<string, number> = {};
+
+    Object.entries(dueAmountsSummary).forEach(([userName, currencyMap]) => {
+      summaryMap[userName] = calculateTotalInBaseCurrency(
+        currencyMap,
+        currencyRates,
+      );
+    });
+
+    return summaryMap;
+  }, [dueAmountsSummary, currencyRates]);
+
+  if (!selectedSharedTransactionIds.length || loading) {
+    return null;
+  }
+
+  return (
+    <Box sx={{ mt: 2, flexShrink: 0 }}>
+      <Typography variant="h6" gutterBottom>
+        {`Due Amounts Summary (${selectedSharedTransactionIds.length} records)`}
+      </Typography>
+      <Grid container spacing={2}>
+        {Object.entries(dueAmountsSummary)
+          .sort(([userNameA], [userNameB]) =>
+            userNameA.localeCompare(userNameB),
+          )
+          .map(([userName, currencyMap]) => (
+            <Grid key={userName} size={{ xs: 12, sm: 4, lg: 3 }}>
+              <Card
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  height: '100%',
+                }}
+              >
+                <CardContent sx={{ flexGrow: 1 }}>
+                  <Typography variant="body1" gutterBottom>
+                    {userName}
+                  </Typography>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <Typography variant="body2">
+                      {`Total (${baseCurrency})`}
+                    </Typography>
+                    <Typography variant="body2" sx={{ textAlign: 'right' }}>
+                      {formatNumber(dueTotals[userName], 2, 2)}
+                    </Typography>
+                  </Box>
+                  <Divider sx={{ my: 1 }} />
+                  {Object.entries(currencyMap)
+                    .sort(([currencyA], [currencyB]) =>
+                      currencyA.localeCompare(currencyB),
+                    )
+                    .map(([currency, amount]) => (
+                      <Box
+                        key={currency}
+                        sx={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                        }}
+                      >
+                        <Typography variant="body2" color="textSecondary">
+                          {currency}
+                        </Typography>
+                        <Typography
+                          variant="body2"
+                          color="textSecondary"
+                          sx={{ textAlign: 'right' }}
+                        >
+                          {formatNumber(amount, 2, 2)}
+                        </Typography>
+                      </Box>
+                    ))}
+                </CardContent>
+              </Card>
+            </Grid>
+          ))}
+      </Grid>
+    </Box>
+  );
 };
 
 const SettleSharedTransactions = ({
@@ -317,9 +451,26 @@ const SettleSharedTransactions = ({
           </Box>
         </Box>
       </DialogTitle>
-      <DialogContent>
+      <DialogContent
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100%',
+        }}
+      >
         <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={enGB}>
-          <MaterialReactTable table={table} />
+          <Box
+            sx={{
+              flexGrow: 1,
+              overflow: 'auto',
+            }}
+          >
+            <MaterialReactTable table={table} />
+          </Box>
+          <DueAmountsSummary
+            selectedSharedTransactionIds={selectedSharedTransactionIds}
+            candidates={candidates}
+          />
         </LocalizationProvider>
       </DialogContent>
       <DialogActions>
