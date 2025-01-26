@@ -81,37 +81,56 @@ const TransactionsSummery: React.FC<TransactionsSummeryProps> = ({
   const expandSummery = settings?.transactions?.expandSummery || false;
   const currency: string = settings?.currency || 'USD';
 
-  const transactionsForCurrency: Transaction[] = transactions.filter(
-    (transaction) => transaction.currency === currency,
-  );
-  const groupedExpenses = calculateGroupedExpenses(transactionsForCurrency);
-  const sharedTransactionsSummary = getUserTransactionSummary(
-    transactionsForCurrency,
+  const transactionsForCurrency = useMemo(
+    () =>
+      transactions.filter((transaction) => transaction.currency === currency),
+    [transactions, currency],
   );
 
-  const incomeData = getAggregatedDataForType(
-    transactionsForCurrency,
-    'INCOME',
+  const groupedExpenses = useMemo(
+    () => calculateGroupedExpenses(transactionsForCurrency),
+    [transactionsForCurrency],
   );
-  const expenseData = getAggregatedDataForType(
-    transactionsForCurrency,
-    'EXPENSE',
+
+  const sharedTransactionsSummary = useMemo(
+    () => getUserTransactionSummary(transactionsForCurrency),
+    [transactionsForCurrency],
   );
-  const transferData = getAggregatedDataForType(
-    transactionsForCurrency,
-    'TRANSFER',
+
+  const incomeData = useMemo(
+    () => getAggregatedDataForType(transactionsForCurrency, 'INCOME'),
+    [transactionsForCurrency],
+  );
+  const expenseData = useMemo(
+    () => getAggregatedDataForType(transactionsForCurrency, 'EXPENSE'),
+    [transactionsForCurrency],
+  );
+  const transferData = useMemo(
+    () => getAggregatedDataForType(transactionsForCurrency, 'TRANSFER'),
+    [transactionsForCurrency],
   );
 
   const expenses = groupedExpenses.Expense || 0;
   const income = groupedExpenses.Income || 0;
-  const incomeExpenseDifference =
-    (groupedExpenses.Income || 0) - (groupedExpenses.Expense || 0);
+  const incomeExpenseDifference = income - expenses;
   const transfers = groupedExpenses.Transfer || 0;
 
-  const expenseTotal = formatCurrency(expenses, currency);
-  const incomeTotal = formatCurrency(income, currency);
-  const cashFlow = formatCurrency(incomeExpenseDifference, currency);
-  const transferTotal = formatCurrency(transfers, currency);
+  const expenseTotal = useMemo(
+    () => formatCurrency(expenses, currency),
+    [expenses, currency],
+  );
+  const incomeTotal = useMemo(
+    () => formatCurrency(income, currency),
+    [income, currency],
+  );
+  const cashFlow = useMemo(
+    () => formatCurrency(incomeExpenseDifference, currency),
+    [incomeExpenseDifference, currency],
+  );
+  const transferTotal = useMemo(
+    () => formatCurrency(transfers, currency),
+    [transfers, currency],
+  );
 
   const renderChart = (
     title: string,
