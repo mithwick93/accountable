@@ -356,38 +356,54 @@ const Transactions: React.FC = () => {
   const dialogs = useDialogs();
 
   const loading = dataLoading || settingsLoading;
-  const transactions = transactionsResponse?.content || [];
-  const transactionsWithShares = transactions.filter(
-    (transaction) =>
-      transaction.sharedTransactions &&
-      transaction.sharedTransactions.some(
-        (sharedTransaction) => !sharedTransaction.isSettled,
+  const transactions = useMemo(
+    () => transactionsResponse?.content || [],
+    [transactionsResponse],
+  );
+  const transactionsWithShares = useMemo(
+    () =>
+      transactions.filter(
+        (transaction) =>
+          transaction.sharedTransactions &&
+          transaction.sharedTransactions.some(
+            (sharedTransaction) => !sharedTransaction.isSettled,
+          ),
       ),
+    [transactions],
   );
 
   const searchParameters: Record<string, any> =
     settings?.transactions?.search?.parameters || {};
   const pageIndex = searchParameters.pageIndex || 0;
   const pageSize = searchParameters.pageSize || 100;
-  const sharedTransactions =
-    searchParameters.hasSharedTransactions === null ||
-    searchParameters.hasSharedTransactions === undefined
-      ? 'all'
-      : searchParameters.hasSharedTransactions
-        ? 'include'
-        : 'exclude';
+  const sharedTransactions = useMemo(
+    () =>
+      searchParameters.hasSharedTransactions === null ||
+      searchParameters.hasSharedTransactions === undefined
+        ? 'all'
+        : searchParameters.hasSharedTransactions
+          ? 'include'
+          : 'exclude',
+    [searchParameters],
+  );
 
-  const columnFilters = (
-    settings?.transactions?.search?.columnFilters || []
-  ).map((filter: ColumnFilter) => {
-    if (filter.id === 'date' && Array.isArray(filter.value)) {
-      return {
-        ...filter,
-        value: filter.value.map((item) => (!item ? undefined : new Date(item))),
-      };
-    }
-    return filter;
-  });
+  const columnFilters = useMemo(
+    () =>
+      (settings?.transactions?.search?.columnFilters || []).map(
+        (filter: ColumnFilter) => {
+          if (filter.id === 'date' && Array.isArray(filter.value)) {
+            return {
+              ...filter,
+              value: filter.value.map((item) =>
+                !item ? undefined : new Date(item),
+              ),
+            };
+          }
+          return filter;
+        },
+      ),
+    [settings],
+  );
   const { startDate, endDate } = getStartEndDate(settings);
 
   useEffect(() => {
