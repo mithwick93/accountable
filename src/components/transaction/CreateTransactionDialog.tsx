@@ -67,6 +67,7 @@ type FormStateType = {
   categoryDisplayName?: string;
   currency?: string;
   amount?: number;
+  charges?: number;
   date?: string;
   toAssetId?: number;
   fromAssetId?: number;
@@ -149,18 +150,18 @@ const CreateTransactionDialog = ({ onClose, open }: DialogProps) => {
       setFormValues({
         ...formValues,
         [name]: value,
+        categoryId: initialFormValues.categoryId,
+        categoryDisplayName: initialFormValues.categoryDisplayName,
+        charges: undefined,
         toAssetId: initialFormValues.toAssetId,
         fromAssetId: initialFormValues.fromAssetId,
         fromPaymentSystemId: initialFormValues.fromPaymentSystemId,
         toLiabilityId: initialFormValues.toLiabilityId,
-        categoryId: initialFormValues.categoryId,
-        categoryDisplayName: initialFormValues.categoryDisplayName,
       });
       setSharedTransactions([]);
-    } else if (name === 'amount') {
+    } else if (name === 'amount' || name === 'charges') {
       setFormValues({
         ...formValues,
-        // @ts-expect-error value is always a number or undefined
         [name]: value ? parseFloat(value) : value,
       });
     } else {
@@ -210,7 +211,7 @@ const CreateTransactionDialog = ({ onClose, open }: DialogProps) => {
     setSharedTransactions(updatedTransactions);
   };
 
-  const handleCopyShredAmount = (index: number) => {
+  const handleCopySharedAmount = (index: number) => {
     const updatedTransactions = [...sharedTransactions];
 
     updatedTransactions[index]['paidAmount'] =
@@ -219,7 +220,9 @@ const CreateTransactionDialog = ({ onClose, open }: DialogProps) => {
   };
 
   const handleDivideEvenly = () => {
-    const totalAmount = formValues.amount || 0;
+    const totalAmount = parseFloat(
+      String((formValues.amount || 0) + (formValues.charges || 0)),
+    );
     const share = totalAmount / (sharedTransactions.length || 1);
     const updatedTransactions = sharedTransactions.map((transaction) => ({
       ...transaction,
@@ -413,10 +416,13 @@ const CreateTransactionDialog = ({ onClose, open }: DialogProps) => {
       sharedTransactions: [],
     };
 
-    if (formValues.type === 'INCOME') {
-      payload.toAssetId = formValues.toAssetId;
-    } else if (formValues.type === 'EXPENSE') {
+    if (formValues.type === 'EXPENSE') {
       payload.fromPaymentSystemId = formValues.fromPaymentSystemId;
+      payload.amount = parseFloat(
+        String((formValues.amount || 0) + (formValues.charges || 0)),
+      );
+    } else if (formValues.type === 'INCOME') {
+      payload.toAssetId = formValues.toAssetId;
     } else if (formValues.type === 'TRANSFER') {
       payload.fromAssetId = formValues.fromAssetId;
 
@@ -590,6 +596,17 @@ const CreateTransactionDialog = ({ onClose, open }: DialogProps) => {
               error={!!validationErrors?.amount}
               helperText={validationErrors?.amount}
             />
+            {formValues.type === 'EXPENSE' && (
+              <NumberInput
+                label="Transaction charges"
+                name="charges"
+                value={formValues.charges || ''}
+                onChange={handleInputChange}
+                onFocus={() => handleFocus('charges')}
+                error={!!validationErrors?.charges}
+                helperText={validationErrors?.charges}
+              />
+            )}
             <TextField
               value={formValues.date}
               label="Date"
@@ -768,7 +785,7 @@ const CreateTransactionDialog = ({ onClose, open }: DialogProps) => {
                           }
                         />
                         <IconButton
-                          onClick={() => handleCopyShredAmount(index)}
+                          onClick={() => handleCopySharedAmount(index)}
                         >
                           {!smallScreen && <KeyboardDoubleArrowRightIcon />}
                           {smallScreen && <KeyboardDoubleArrowDownIcon />}
