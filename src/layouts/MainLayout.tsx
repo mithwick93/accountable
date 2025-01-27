@@ -1,6 +1,6 @@
 import CurrencyExchangeIcon from '@mui/icons-material/CurrencyExchange';
 import PostAddIcon from '@mui/icons-material/PostAdd';
-import { IconButton } from '@mui/material';
+import { IconButton, Tooltip } from '@mui/material';
 import Typography from '@mui/material/Typography';
 import {
   DashboardLayout,
@@ -39,22 +39,26 @@ const CustomPageToolbar = () => {
   const dialogs = useDialogs();
   return (
     <PageHeaderToolbar>
-      <IconButton
-        onClick={async () => {
-          await dialogs.open(CurrencyRatesDialog);
-        }}
-        color="primary"
-      >
-        <CurrencyExchangeIcon />
-      </IconButton>
-      <IconButton
-        onClick={async () => {
-          await dialogs.open(CreateTransactionDialog);
-        }}
-        color="primary"
-      >
-        <PostAddIcon />
-      </IconButton>
+      <Tooltip title="Exchange Rates">
+        <IconButton
+          onClick={async () => {
+            await dialogs.open(CurrencyRatesDialog);
+          }}
+          color="primary"
+        >
+          <CurrencyExchangeIcon />
+        </IconButton>
+      </Tooltip>
+      <Tooltip title="Create Transaction">
+        <IconButton
+          onClick={async () => {
+            await dialogs.open(CreateTransactionDialog);
+          }}
+          color="primary"
+        >
+          <PostAddIcon />
+        </IconButton>
+      </Tooltip>
     </PageHeaderToolbar>
   );
 };
