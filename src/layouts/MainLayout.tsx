@@ -1,6 +1,7 @@
 import CurrencyExchangeIcon from '@mui/icons-material/CurrencyExchange';
 import PostAddIcon from '@mui/icons-material/PostAdd';
-import { IconButton, Tooltip } from '@mui/material';
+import { Box, IconButton, Tooltip } from '@mui/material';
+import Divider from '@mui/material/Divider';
 import Typography from '@mui/material/Typography';
 import {
   DashboardLayout,
@@ -64,7 +65,14 @@ const CustomPageToolbar = () => {
 };
 
 const CustomPageHeader = () => (
-  <PageHeader slots={{ toolbar: CustomPageToolbar }} />
+  <Box sx={{ height: '40px' }}>
+    <PageHeader slots={{ toolbar: CustomPageToolbar }} />
+    <Divider
+      sx={{
+        m: 1,
+      }}
+    />
+  </Box>
 );
 
 export default function MainLayout() {
@@ -96,12 +104,23 @@ export default function MainLayout() {
                     <PageContainer
                       slots={{ header: CustomPageHeader }}
                       sx={{
+                        marginTop: '-10px',
                         '@media (min-width: 1200px)': {
-                          maxWidth: '2400px',
+                          maxWidth: 'none',
+                        },
+                        '.MuiBreadcrumbs-ol': {
+                          display: 'none',
                         },
                       }}
                     >
-                      <Outlet />
+                      <Box
+                        sx={{
+                          height: 'calc(100vh - 150px)',
+                          overflowY: 'auto',
+                        }}
+                      >
+                        <Outlet />
+                      </Box>
                     </PageContainer>
                   </DialogsProvider>
                 </ErrorBoundary>

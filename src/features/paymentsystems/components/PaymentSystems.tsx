@@ -564,6 +564,7 @@ const PaymentSystems: React.FC = () => {
     columns,
     data: paymentSystems,
     enableStickyHeader: true,
+    enableStickyFooter: true,
     enableEditing: true,
     initialState: {
       density: 'compact',
@@ -599,6 +600,12 @@ const PaymentSystems: React.FC = () => {
     state: {
       isLoading: loading,
       isSaving: saving || updating || deleting,
+    },
+    muiTableContainerProps: {
+      sx: {
+        maxHeight: '500px',
+        overflowY: 'auto',
+      },
     },
     renderDetailPanel: ({ row }) => (
       <>

@@ -313,6 +313,7 @@ const Assets: React.FC = () => {
     columns,
     data: assets,
     enableStickyHeader: true,
+    enableStickyFooter: true,
     enableEditing: true,
     initialState: {
       density: 'compact',
@@ -343,6 +344,12 @@ const Assets: React.FC = () => {
     state: {
       isLoading: loading,
       isSaving: saving || updating || deleting,
+    },
+    muiTableContainerProps: {
+      sx: {
+        maxHeight: '500px',
+        overflowY: 'auto',
+      },
     },
     renderDetailPanel: ({ row }) => (
       <Box

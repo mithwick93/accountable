@@ -173,6 +173,7 @@ const TransactionCategories: React.FC = () => {
     columns,
     data: categories,
     enableStickyHeader: true,
+    enableStickyFooter: true,
     enableEditing: true,
     initialState: {
       density: 'compact',
@@ -197,6 +198,12 @@ const TransactionCategories: React.FC = () => {
     state: {
       isLoading: loading,
       isSaving: saving || updating || deleting,
+    },
+    muiTableContainerProps: {
+      sx: {
+        maxHeight: '500px',
+        overflowY: 'auto',
+      },
     },
     onCreatingRowSave: async ({ table, values }) => {
       //validate data

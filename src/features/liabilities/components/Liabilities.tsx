@@ -533,6 +533,7 @@ const Liabilities: React.FC = () => {
     columns,
     data: liabilities,
     enableStickyHeader: true,
+    enableStickyFooter: true,
     enableEditing: true,
     initialState: {
       density: 'compact',
@@ -564,6 +565,12 @@ const Liabilities: React.FC = () => {
     state: {
       isLoading: loading,
       isSaving: saving || updating || deleting,
+    },
+    muiTableContainerProps: {
+      sx: {
+        maxHeight: '500px',
+        overflowY: 'auto',
+      },
     },
     renderDetailPanel: ({ row }) => (
       <Box

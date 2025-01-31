@@ -721,13 +721,15 @@ const Transactions: React.FC = () => {
     data: transactions,
     enableRowNumbers: true,
     enableStickyHeader: true,
+    enableStickyFooter: true,
+    enableRowVirtualization: true,
     manualPagination: true,
     muiPaginationProps: {
       rowsPerPageOptions: [10, 25, 50, 100, 250, 500, 1000],
     },
     muiTableContainerProps: {
       sx: {
-        maxHeight: '1000px',
+        height: 'calc(100vh - 425px)',
         overflowY: 'auto',
       },
     },
@@ -903,7 +905,7 @@ const Transactions: React.FC = () => {
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={enGB}>
-      <Box display="flex" alignItems="center" gap={2} mb={2}>
+      <Box display="flex" alignItems="center" gap={2} mb={1}>
         <Typography variant="h6" gutterBottom>
           Billing Period:
         </Typography>

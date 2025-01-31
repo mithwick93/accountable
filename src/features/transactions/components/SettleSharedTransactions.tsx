@@ -400,6 +400,7 @@ const SettleSharedTransactions = ({
     data: candidates,
     enableRowNumbers: true,
     enableStickyHeader: true,
+    enableStickyFooter: true,
     enablePagination: false,
     initialState: {
       density: 'compact',
@@ -412,6 +413,12 @@ const SettleSharedTransactions = ({
       ],
     },
     state: { rowSelection, isLoading: loading },
+    muiTableContainerProps: {
+      sx: {
+        maxHeight: '500px',
+        overflowY: 'auto',
+      },
+    },
     columnFilterDisplayMode: 'popover',
     enableFacetedValues: true,
     isMultiSortEvent: () => true,
