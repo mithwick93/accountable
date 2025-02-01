@@ -42,7 +42,7 @@ const NAVIGATION: Navigation = [
   },
   {
     segment: 'transaction-categories',
-    title: 'Transaction Categories',
+    title: 'Categories',
     icon: <CategoryIcon />,
   },
 ];
