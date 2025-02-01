@@ -208,7 +208,7 @@ const DueAmountsSummary: React.FC<DueAmountsSummaryProps> = ({
   );
 };
 
-const SettleSharedTransactions = ({
+const SettleSharedTransactionsDialog = ({
   onClose,
   open,
   payload: transactions,
@@ -497,4 +497,4 @@ const SettleSharedTransactions = ({
   );
 };
 
-export default SettleSharedTransactions;
+export default SettleSharedTransactionsDialog;
