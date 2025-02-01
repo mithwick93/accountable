@@ -34,13 +34,13 @@ import {
 import { calculateLiabilityDates } from '../../../utils/date';
 import log from '../../../utils/logger';
 
-interface NetSummeryProps {
+type NetSummeryProps = {
   title: string;
   totals: { [currency: string]: number };
   currencyRates: { [currency: string]: number };
   currency: string;
   isLoading: boolean;
-}
+};
 
 const NetSummary: React.FC<NetSummeryProps> = ({
   title,

@@ -9,14 +9,14 @@ import apiClient from '../services/ApiService';
 import log from '../utils/logger';
 import { useSettings } from './SettingsContext';
 
-interface CurrencyRatesType {
+type CurrencyRatesType = {
   currencyRates: { [currency: string]: number };
   loading: boolean;
-}
+};
 
-interface CurrencyRatesProviderProps {
+type CurrencyRatesProviderProps = {
   children: ReactNode;
-}
+};
 
 const CurrencyRatesContext = createContext<CurrencyRatesType | undefined>(
   undefined,

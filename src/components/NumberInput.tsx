@@ -2,7 +2,7 @@ import TextField from '@mui/material/TextField';
 import React, { FocusEventHandler } from 'react';
 import { NumericFormat } from 'react-number-format';
 
-interface NumberInputProps {
+type NumberInputProps = {
   label: string;
   name: string;
   value: string | number | undefined;
@@ -15,7 +15,7 @@ interface NumberInputProps {
   fixedDecimalScale?: boolean;
   allowNegative?: boolean;
   allowLeadingZeros?: boolean;
-}
+};
 
 const NumberInput: React.FC<NumberInputProps> = ({
   label,

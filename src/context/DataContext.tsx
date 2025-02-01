@@ -36,7 +36,7 @@ type TransactionResponse = {
   size: number;
 };
 
-interface DataContextType {
+type DataContextType = {
   assets: Asset[];
   liabilities: Liability[];
   paymentSystems: (PaymentSystemCredit | PaymentSystemDebit)[];
@@ -50,7 +50,7 @@ interface DataContextType {
     // eslint-disable-next-line no-unused-vars
     options?: Record<string, any>,
   ) => Promise<void>;
-}
+};
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 

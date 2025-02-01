@@ -81,10 +81,10 @@ const getSettleTransactionCandidates = (transactions: Transaction[]) => {
   return candidates;
 };
 
-interface DueAmountsSummaryProps {
+type DueAmountsSummaryProps = {
   selectedSharedTransactionIds: number[];
   candidates: SettleTransactionCandidate[];
-}
+};
 
 const DueAmountsSummary: React.FC<DueAmountsSummaryProps> = ({
   selectedSharedTransactionIds,

@@ -12,11 +12,11 @@ import { User } from '../types/User';
 import log from '../utils/logger';
 import { TokenStorage } from '../utils/TokenStorage';
 
-interface UserContextType {
+type UserContextType = {
   loggedInUser: LoggedInUser | null;
   users: User[] | null;
   loading: boolean;
-}
+};
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 

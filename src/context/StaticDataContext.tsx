@@ -11,16 +11,16 @@ import { Currency } from '../types/Currency';
 import { LiabilityType } from '../types/LiabilityType';
 import log from '../utils/logger';
 
-interface StaticDataContextType {
+type StaticDataContextType = {
   currencies: Currency[] | null;
   liabilityTypes: LiabilityType[] | null;
   assetTypes: AssetType[] | null;
   loading: boolean;
-}
+};
 
-interface StaticDataProviderProps {
+type StaticDataProviderProps = {
   children: ReactNode;
-}
+};
 
 const StaticDataContext = createContext<StaticDataContextType | undefined>(
   undefined,

@@ -10,19 +10,19 @@ import './Register.css';
 const PASSWORD_PATTERN =
   /^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=]).{8,}$/;
 
-interface RegisterFormData {
+type RegisterFormData = {
   username: string;
   password: string;
   firstName: string;
   lastName: string;
-}
+};
 
-interface FormErrors {
+type FormErrors = {
   username?: string;
   password?: string;
   firstName?: string;
   lastName?: string;
-}
+};
 
 const Register: React.FC = () => {
   const [formData, setFormData] = useState<RegisterFormData>({

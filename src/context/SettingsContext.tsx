@@ -12,18 +12,18 @@ import BackdropLoader from '../components/BackdropLoader';
 import apiClient from '../services/ApiService';
 import log from '../utils/logger';
 
-interface SettingsContextType {
+type SettingsContextType = {
   settings: Record<string, any> | null;
   loading: boolean;
   // eslint-disable-next-line no-unused-vars
   update: (newSettings: Record<string, any>) => void;
-}
+};
 
-interface SettingsProviderProps {
+type SettingsProviderProps = {
   children: ReactNode;
   settingsKey: string;
   defaultValue: Record<string, any>;
-}
+};
 
 const SettingsContext = createContext<SettingsContextType | undefined>(
   undefined,

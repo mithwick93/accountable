@@ -1,7 +1,6 @@
 export const defaultUserSettings = {
   currency: 'SEK',
   transactions: {
-    expandSummery: false,
     updateAccounts: false,
     search: {
       parameters: {

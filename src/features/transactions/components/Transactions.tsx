@@ -1,22 +1,20 @@
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import CompareArrowsIcon from '@mui/icons-material/CompareArrows';
+import InputIcon from '@mui/icons-material/Input';
 import MoneyIcon from '@mui/icons-material/Money';
+import MoveDownIcon from '@mui/icons-material/MoveDown';
+import OpenInFullIcon from '@mui/icons-material/OpenInFull';
+import OutputIcon from '@mui/icons-material/Output';
 import {
   Avatar,
   Box,
   Button,
-  Card,
-  CardContent,
-  CardHeader,
   Chip,
+  IconButton,
   SelectChangeEvent,
-  Skeleton,
   Tooltip,
   useMediaQuery,
   useTheme,
 } from '@mui/material';
-import Accordion from '@mui/material/Accordion';
-import AccordionDetails from '@mui/material/AccordionDetails';
-import AccordionSummary from '@mui/material/AccordionSummary';
 import Checkbox from '@mui/material/Checkbox';
 import FormControl from '@mui/material/FormControl';
 import Grid from '@mui/material/Grid2';
@@ -31,8 +29,6 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Typography from '@mui/material/Typography';
-import { BarChart } from '@mui/x-charts';
-import { axisClasses } from '@mui/x-charts/ChartsAxis';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFnsV3';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { ColumnFilter } from '@tanstack/table-core/src/features/ColumnFiltering';
@@ -45,7 +41,7 @@ import {
   MRT_RowData,
   useMaterialReactTable,
 } from 'material-react-table';
-import React, { useEffect, useMemo } from 'react';
+import React, { ElementType, useEffect, useMemo } from 'react';
 import DateRangeSelector from '../../../components/DateRangeSelector';
 import { useData } from '../../../context/DataContext';
 import { useSettings } from '../../../context/SettingsContext';
@@ -57,13 +53,34 @@ import {
   formatNumber,
   formatTransactionType,
   generateAvatarProps,
-  getAggregatedDataForType,
   getStartEndDate,
   getTransactionsFetchOptions,
-  getUserTransactionSummary,
   stringToColor,
 } from '../../../utils/common';
-import SettleSharedTransactions from './SettleSharedTransactions';
+import SettleSharedTransactionsDialog from './SettleSharedTransactionsDialog';
+import TransactionSummeryDialog from './TransactionSummeryDialog';
+
+type GridItemWithIconProps = {
+  title: string;
+  value: string;
+  Icon: ElementType;
+};
+const GridItemWithIcon: React.FC<GridItemWithIconProps> = ({
+  title,
+  value,
+  Icon,
+}) => (
+  <Grid size={{ lg: 3 }}>
+    <Tooltip title={title}>
+      <Box display="flex" alignItems="center">
+        <Icon />
+        <Typography variant="body1" component="div" ml={1}>
+          {value}
+        </Typography>
+      </Box>
+    </Tooltip>
+  </Grid>
+);
 
 type TransactionsSummeryProps = {
   transactions: Transaction[];
@@ -72,13 +89,13 @@ const TransactionsSummery: React.FC<TransactionsSummeryProps> = ({
   transactions,
 }) => {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const { settings, update, loading } = useSettings();
+  const isMobile = useMediaQuery(theme.breakpoints.down('lg'));
+  const dialogs = useDialogs();
+  const { settings, loading } = useSettings();
 
   if (loading) {
-    return <Skeleton variant="rounded" width="100%" height={56} />;
+    return null;
   }
-  const expandSummery = settings?.transactions?.expandSummery || false;
   const currency: string = settings?.currency || 'USD';
 
   const transactionsForCurrency = useMemo(
@@ -89,24 +106,6 @@ const TransactionsSummery: React.FC<TransactionsSummeryProps> = ({
 
   const groupedExpenses = useMemo(
     () => calculateGroupedExpenses(transactionsForCurrency),
-    [transactionsForCurrency],
-  );
-
-  const sharedTransactionsSummary = useMemo(
-    () => getUserTransactionSummary(transactionsForCurrency),
-    [transactionsForCurrency],
-  );
-
-  const incomeData = useMemo(
-    () => getAggregatedDataForType(transactionsForCurrency, 'INCOME'),
-    [transactionsForCurrency],
-  );
-  const expenseData = useMemo(
-    () => getAggregatedDataForType(transactionsForCurrency, 'EXPENSE'),
-    [transactionsForCurrency],
-  );
-  const transferData = useMemo(
-    () => getAggregatedDataForType(transactionsForCurrency, 'TRANSFER'),
     [transactionsForCurrency],
   );
 
@@ -132,234 +131,45 @@ const TransactionsSummery: React.FC<TransactionsSummeryProps> = ({
     [transfers, currency],
   );
 
-  const renderChart = (
-    title: string,
-    data: { category: string; amount: number }[],
-    currency: string,
-  ) => (
-    <Grid size={{ xs: 12 }}>
-      <Card>
-        <CardHeader title={title} />
-        <CardContent
-          sx={{ display: 'flex', justifyContent: 'center', width: '100%' }}
-        >
-          {data.length > 0 ? (
-            <BarChart
-              dataset={data}
-              xAxis={[
-                {
-                  scaleType: 'band',
-                  dataKey: 'category',
-                  // @ts-expect-error library error
-                  barGapRatio: 0.1,
-                  categoryGapRatio: 0.7,
-                },
-              ]}
-              yAxis={[{ label: `Amount (${currency})` }]}
-              series={[
-                {
-                  dataKey: 'amount',
-                  label: 'Amount',
-                  valueFormatter: (value: number | null) =>
-                    formatCurrency(value || 0, currency),
-                },
-              ]}
-              grid={{ vertical: true, horizontal: true }}
-              borderRadius={5}
-              width={isMobile ? 400 : 800}
-              height={isMobile ? 250 : 500}
-              slotProps={{ legend: { hidden: true } }}
-              sx={{
-                [`& .${axisClasses.left} .${axisClasses.label}`]: {
-                  transform: 'translateX(-35px)',
-                },
-              }}
-              margin={{ top: 5, right: 5, bottom: 80, left: 100 }}
-            />
-          ) : (
-            <Typography component="span">No data to display</Typography>
-          )}
-        </CardContent>
-      </Card>
-    </Grid>
+  const renderShowSummeryButton = () => (
+    <Tooltip title="Show Transactions Summery">
+      <IconButton
+        onClick={async () => {
+          await dialogs.open(TransactionSummeryDialog, transactionsForCurrency);
+        }}
+        color="primary"
+        size="small"
+      >
+        <OpenInFullIcon />
+      </IconButton>
+    </Tooltip>
   );
 
-  const onExpandSummeryChange = () => {
-    update({
-      ...settings,
-      transactions: {
-        ...(settings?.transactions || {}),
-        expandSummery: !expandSummery,
-      },
-    });
-  };
+  if (isMobile) {
+    return renderShowSummeryButton();
+  }
 
   return (
-    <Box component="div" mb={2}>
-      <Accordion expanded={expandSummery} onChange={onExpandSummeryChange}>
-        <AccordionSummary
-          expandIcon={<ExpandMoreIcon />}
-          aria-controls="panel1-content"
-          id="panel1-header"
-        >
-          <Typography component="span" variant="h5">
-            Summery
-          </Typography>
-        </AccordionSummary>
-        <AccordionDetails>
-          <Grid container spacing={2} mb={2}>
-            <Grid size={{ xs: 12, sm: 12, lg: 3 }}>
-              <Card>
-                <CardHeader title="Income" />
-                <CardContent>
-                  <Typography
-                    variant="h5"
-                    component="div"
-                    style={{ fontWeight: 'bold' }}
-                  >
-                    {incomeTotal}
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-            <Grid size={{ xs: 12, sm: 12, lg: 3 }}>
-              <Card>
-                <CardHeader title="Expenses" />
-                <CardContent>
-                  <Typography
-                    variant="h5"
-                    component="div"
-                    style={{ fontWeight: 'bold' }}
-                  >
-                    {expenseTotal}
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-            <Grid size={{ xs: 12, sm: 12, lg: 3 }}>
-              <Card>
-                <CardHeader title="Cash Flow" />
-                <CardContent>
-                  <Typography
-                    variant="h5"
-                    component="div"
-                    style={{ fontWeight: 'bold' }}
-                  >
-                    {cashFlow}
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-            <Grid size={{ xs: 12, sm: 12, lg: 3 }}>
-              <Card>
-                <CardHeader title="Transfers" />
-                <CardContent>
-                  <Typography
-                    variant="h5"
-                    component="div"
-                    style={{ fontWeight: 'bold' }}
-                  >
-                    {transferTotal}
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-          </Grid>
-          <Accordion>
-            <AccordionSummary
-              expandIcon={<ExpandMoreIcon />}
-              aria-controls="panel2-content"
-              id="panel2-header"
-            >
-              <Typography component="span" variant="h6">
-                Breakdown
-              </Typography>
-            </AccordionSummary>
-            <AccordionDetails>
-              <Grid container spacing={2}>
-                {renderChart(`Income : ${incomeTotal}`, incomeData, currency)}
-                {renderChart(
-                  `Expenses : ${expenseTotal}`,
-                  expenseData,
-                  currency,
-                )}
-                {renderChart(
-                  `Transfer : ${transferTotal}`,
-                  transferData,
-                  currency,
-                )}
-              </Grid>
-            </AccordionDetails>
-          </Accordion>
-          <Accordion>
-            <AccordionSummary
-              expandIcon={<ExpandMoreIcon />}
-              aria-controls="panel3-content"
-              id="panel3-header"
-            >
-              <Typography component="span" variant="h6">
-                Shared Transactions
-              </Typography>
-            </AccordionSummary>
-            <AccordionDetails>
-              {sharedTransactionsSummary.length > 0 ? (
-                <TableContainer component={Paper}>
-                  <Table size="medium" stickyHeader>
-                    <TableHead>
-                      <TableRow>
-                        <TableCell sx={{ fontWeight: 'bold' }}>Name</TableCell>
-                        <TableCell align="right" sx={{ fontWeight: 'bold' }}>
-                          Paid
-                        </TableCell>
-                        <TableCell align="right" sx={{ fontWeight: 'bold' }}>
-                          Owed
-                        </TableCell>
-                        <TableCell align="right" sx={{ fontWeight: 'bold' }}>
-                          Total
-                        </TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {sharedTransactionsSummary.map((row) => (
-                        <TableRow
-                          key={row.user.id}
-                          sx={{
-                            '&:last-child td, &:last-child th': { border: 0 },
-                          }}
-                        >
-                          <TableCell component="th" scope="row">
-                            {`${row.user.firstName} ${row.user.lastName}`}
-                          </TableCell>
-                          <TableCell align="right">
-                            {formatCurrency(row.totalPaid, currency)}
-                          </TableCell>
-                          <TableCell align="right">
-                            {formatCurrency(row.totalOwed, currency)}
-                          </TableCell>
-                          <TableCell align="right">
-                            {formatCurrency(row.totalShare, currency)}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              ) : (
-                <Typography
-                  component="span"
-                  sx={{
-                    display: 'flex',
-                    justifyContent: 'center',
-                    width: '100%',
-                  }}
-                >
-                  No data to display
-                </Typography>
-              )}
-            </AccordionDetails>
-          </Accordion>
-        </AccordionDetails>
-      </Accordion>
+    <Box display="flex" alignItems="center" sx={{ width: '100%' }}>
+      <Grid container sx={{ width: '100%' }}>
+        <GridItemWithIcon title="Income" value={incomeTotal} Icon={InputIcon} />
+        <GridItemWithIcon
+          title="Expenses"
+          value={expenseTotal}
+          Icon={OutputIcon}
+        />
+        <GridItemWithIcon
+          title="Cash Flow"
+          value={cashFlow}
+          Icon={CompareArrowsIcon}
+        />
+        <GridItemWithIcon
+          title="Transfers"
+          value={transferTotal}
+          Icon={MoveDownIcon}
+        />
+      </Grid>
+      {renderShowSummeryButton()}
     </Box>
   );
 };
@@ -729,7 +539,7 @@ const Transactions: React.FC = () => {
     },
     muiTableContainerProps: {
       sx: {
-        height: 'calc(100vh - 425px)',
+        height: 'calc(100vh - 350px)',
         overflowY: 'auto',
       },
     },
@@ -789,7 +599,7 @@ const Transactions: React.FC = () => {
               disabled={transactionsWithShares.length === 0}
               onClick={async () => {
                 await dialogs.open(
-                  SettleSharedTransactions,
+                  SettleSharedTransactionsDialog,
                   transactionsWithShares,
                 );
               }}
@@ -905,13 +715,21 @@ const Transactions: React.FC = () => {
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={enGB}>
-      <Box display="flex" alignItems="center" gap={2} mb={1}>
-        <Typography variant="h6" gutterBottom>
-          Billing Period:
-        </Typography>
-        <DateRangeSelector />
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          mb: 1,
+        }}
+      >
+        <Box display="flex" alignItems="center" gap={2} flexGrow={1}>
+          <Typography variant="h6">Billing Period:</Typography>
+          <DateRangeSelector />
+        </Box>
+        <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'flex-end' }}>
+          <TransactionsSummery transactions={transactions} />
+        </Box>
       </Box>
-      <TransactionsSummery transactions={transactions} />
       <MaterialReactTable table={table} />
     </LocalizationProvider>
   );
