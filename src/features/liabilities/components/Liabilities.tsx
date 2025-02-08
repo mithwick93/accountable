@@ -125,12 +125,6 @@ const Liabilities: React.FC = () => {
         accessorFn: (row) => formatLiabilityType(row.type),
         accessorKey: 'type',
         header: 'Type',
-        muiTableHeadCellProps: {
-          align: 'center',
-        },
-        muiTableBodyCellProps: {
-          align: 'center',
-        },
         minSize: 150,
         size: 150,
         maxSize: 150,

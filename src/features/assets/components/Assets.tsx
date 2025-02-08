@@ -94,12 +94,6 @@ const Assets: React.FC = () => {
         accessorFn: (row) => formatAssetType(row.type),
         accessorKey: 'type',
         header: 'Type',
-        muiTableHeadCellProps: {
-          align: 'center',
-        },
-        muiTableBodyCellProps: {
-          align: 'center',
-        },
         Cell: ({ renderedCellValue }) => (
           <Chip
             label={renderedCellValue}

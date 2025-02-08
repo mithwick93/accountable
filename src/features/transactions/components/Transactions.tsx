@@ -341,7 +341,7 @@ const Transactions: React.FC = () => {
           align: 'right',
         },
         minSize: 150,
-        size: 200,
+        size: 150,
         maxSize: 200,
         filterVariant: 'multi-select',
       },
@@ -356,7 +356,7 @@ const Transactions: React.FC = () => {
           align: 'right',
         },
         minSize: 150,
-        size: 200,
+        size: 150,
         maxSize: 200,
         Cell: ({ cell }) => (
           <Box component="span">{formatNumber(cell.row.original.amount)}</Box>

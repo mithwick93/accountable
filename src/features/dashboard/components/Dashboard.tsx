@@ -177,12 +177,6 @@ const Dashboard: React.FC = () => {
       {
         accessorKey: 'type',
         header: 'Type',
-        muiTableHeadCellProps: {
-          align: 'center',
-        },
-        muiTableBodyCellProps: {
-          align: 'center',
-        },
         size: 200,
         Cell: ({ renderedCellValue }) => (
           <Chip
@@ -244,12 +238,6 @@ const Dashboard: React.FC = () => {
         accessorFn: (row) => formatLiabilityType(row.type),
         accessorKey: 'type',
         header: 'Type',
-        muiTableHeadCellProps: {
-          align: 'center',
-        },
-        muiTableBodyCellProps: {
-          align: 'center',
-        },
         size: 200,
         Cell: ({ renderedCellValue }) => (
           <Chip

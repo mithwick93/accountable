@@ -116,12 +116,6 @@ const PaymentSystems: React.FC = () => {
       {
         accessorKey: 'type',
         header: 'Type',
-        muiTableHeadCellProps: {
-          align: 'center',
-        },
-        muiTableBodyCellProps: {
-          align: 'center',
-        },
         size: 50,
         Cell: ({ renderedCellValue }) => (
           <Chip
