@@ -175,6 +175,7 @@ const TransactionCategories: React.FC = () => {
     enableStickyHeader: true,
     enableStickyFooter: true,
     enableEditing: true,
+    enablePagination: false,
     initialState: {
       density: 'compact',
       sorting: [
@@ -201,7 +202,7 @@ const TransactionCategories: React.FC = () => {
     },
     muiTableContainerProps: {
       sx: {
-        maxHeight: '500px',
+        height: 'calc(100vh - 300px)',
         overflowY: 'auto',
       },
     },

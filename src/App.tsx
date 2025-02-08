@@ -36,14 +36,14 @@ const NAVIGATION: Navigation = [
     icon: <PaymentsIcon />,
   },
   {
-    segment: 'transactions',
-    title: 'Transactions',
-    icon: <ReceiptIcon />,
-  },
-  {
     segment: 'transaction-categories',
     title: 'Categories',
     icon: <CategoryIcon />,
+  },
+  {
+    segment: 'transactions',
+    title: 'Transactions',
+    icon: <ReceiptIcon />,
   },
 ];
 
