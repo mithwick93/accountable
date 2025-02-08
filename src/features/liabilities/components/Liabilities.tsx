@@ -484,7 +484,7 @@ const Liabilities: React.FC = () => {
     try {
       const payload = createPayload(liability);
       const response = await apiClient.post('/liabilities', payload);
-      await refetchData(['liabilities']);
+      await refetchData(['liabilities', 'paymentSystems']);
 
       const newLiability = response.data;
       toast.success(`Created Liability: '${newLiability.name}' successfully`);
@@ -501,7 +501,7 @@ const Liabilities: React.FC = () => {
       const { id } = liability;
       const payload = createPayload(liability);
       const response = await apiClient.put(`/liabilities/${id}`, payload);
-      await refetchData(['liabilities']);
+      await refetchData(['liabilities', 'paymentSystems']);
 
       const updatedLiability = response.data;
       toast.success(
@@ -519,7 +519,7 @@ const Liabilities: React.FC = () => {
     try {
       const { id } = row.original;
       await apiClient.delete(`/liabilities/${id}`);
-      await refetchData(['liabilities']);
+      await refetchData(['liabilities', 'paymentSystems']);
 
       toast.success(`Deleted Liability: '${row.original.name}' successfully`);
     } catch (error) {

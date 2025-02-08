@@ -260,7 +260,7 @@ const Assets: React.FC = () => {
         balance: +asset.balance,
         active: asset.active,
       });
-      await refetchData(['assets']);
+      await refetchData(['assets', 'paymentSystems']);
 
       const newAsset = response.data;
       toast.success(`Created Asset: '${newAsset.name}' successfully`);
@@ -283,7 +283,7 @@ const Assets: React.FC = () => {
         balance: +asset.balance,
         active: asset.active,
       });
-      await refetchData(['assets']);
+      await refetchData(['assets', 'paymentSystems']);
 
       const updatedAsset = response.data;
       toast.success(`Updated Asset: '${updatedAsset.name}' successfully`);
@@ -299,7 +299,7 @@ const Assets: React.FC = () => {
     try {
       const { id } = row.original;
       await apiClient.delete(`/assets/${id}`);
-      await refetchData(['assets']);
+      await refetchData(['assets', 'paymentSystems']);
 
       toast.success(`Deleted Asset: '${row.original.name}' successfully`);
     } catch (error) {
