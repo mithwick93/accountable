@@ -1,4 +1,5 @@
 import CompareArrowsIcon from '@mui/icons-material/CompareArrows';
+import DeleteIcon from '@mui/icons-material/Delete';
 import InputIcon from '@mui/icons-material/Input';
 import MoneyIcon from '@mui/icons-material/Money';
 import MoveDownIcon from '@mui/icons-material/MoveDown';
@@ -38,13 +39,16 @@ import { enGB } from 'date-fns/locale';
 import {
   MaterialReactTable,
   MRT_ColumnDef,
+  MRT_Row,
   MRT_RowData,
   useMaterialReactTable,
 } from 'material-react-table';
-import React, { ElementType, useEffect, useMemo } from 'react';
+import React, { ElementType, useEffect, useMemo, useState } from 'react';
+import { toast } from 'react-toastify';
 import DateRangeSelector from '../../../components/DateRangeSelector';
 import { useData } from '../../../context/DataContext';
 import { useSettings } from '../../../context/SettingsContext';
+import apiClient from '../../../services/ApiService';
 import { SharedTransaction } from '../../../types/SharedTransaction';
 import { Transaction } from '../../../types/Transaction';
 import {
@@ -57,6 +61,7 @@ import {
   getTransactionsFetchOptions,
   stringToColor,
 } from '../../../utils/common';
+import { notifyBackendError } from '../../../utils/notifications';
 import SettleSharedTransactionsDialog from './SettleSharedTransactionsDialog';
 import TransactionSummeryDialog from './TransactionSummeryDialog';
 
@@ -183,6 +188,7 @@ const Transactions: React.FC = () => {
   const { settings, update, loading: settingsLoading } = useSettings();
   const theme = useTheme();
   const dialogs = useDialogs();
+  const [deleting, setDeleting] = useState(false);
 
   const loading = dataLoading || settingsLoading;
   const transactions = useMemo(
@@ -526,12 +532,37 @@ const Transactions: React.FC = () => {
     [],
   );
 
+  const deleteTransaction = async (row: MRT_Row<MRT_RowData>) => {
+    setDeleting(true);
+    try {
+      const updateAccounts = settings?.transactions.updateAccounts ?? false;
+
+      const { id } = row.original;
+      await apiClient.delete(
+        `/transactions/${id}?updateAccounts=${updateAccounts}`,
+      );
+      await refetchData([
+        'transactions',
+        'assets',
+        'liabilities',
+        'paymentSystems',
+      ]);
+
+      toast.success(`Deleted transaction: '${row.original.name}' successfully`);
+    } catch (error) {
+      notifyBackendError('Error deleting transaction', error);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   const table = useMaterialReactTable({
     columns,
     data: transactions,
     enableRowNumbers: true,
     enableStickyHeader: true,
     enableStickyFooter: true,
+    enableEditing: true,
     enableRowVirtualization: true,
     manualPagination: true,
     muiPaginationProps: {
@@ -561,6 +592,7 @@ const Transactions: React.FC = () => {
     rowCount: transactionsResponse?.totalElements || 0,
     state: {
       isLoading: loading,
+      isSaving: deleting,
       pagination: {
         pageIndex: pageIndex,
         pageSize: pageSize,
@@ -711,6 +743,26 @@ const Transactions: React.FC = () => {
         },
       });
     },
+    renderRowActions: ({ row }) => (
+      <Box sx={{ display: 'flex', gap: '1rem' }}>
+        <Tooltip title="Delete">
+          <IconButton
+            color="error"
+            onClick={async () => {
+              if (
+                window.confirm(
+                  `Are you sure you want to delete '${row.original.name}' Transaction?`,
+                )
+              ) {
+                await deleteTransaction(row);
+              }
+            }}
+          >
+            <DeleteIcon />
+          </IconButton>
+        </Tooltip>
+      </Box>
+    ),
   });
 
   return (
