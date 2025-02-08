@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import PWAPrompt from 'react-ios-pwa-prompt';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-import { ToastContainer } from 'react-toastify';
+import { Slide, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import App from './App';
 import MainLayout from './layouts/MainLayout';
@@ -76,10 +76,12 @@ root.render(
   <React.StrictMode>
     <RouterProvider router={router} />
     <ToastContainer
-      position="top-right"
+      position="bottom-right"
       autoClose={3000}
+      newestOnTop
       closeOnClick
       theme="colored"
+      transition={Slide}
     />
     <PWAPrompt promptOnVisit={1} timesToShow={3} />
   </React.StrictMode>,
