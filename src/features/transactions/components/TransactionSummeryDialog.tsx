@@ -28,7 +28,7 @@ import { BarChart } from '@mui/x-charts';
 import { axisClasses } from '@mui/x-charts/ChartsAxis';
 import { DialogProps } from '@toolpad/core/useDialogs';
 import React, { useMemo } from 'react';
-import SlideUpTransition from '../../../components/transition/SlideUpTransition';
+import SlideUpTransition from '../../../components/SlideUpTransition';
 import { useSettings } from '../../../context/SettingsContext';
 import { Transaction } from '../../../types/Transaction';
 import {

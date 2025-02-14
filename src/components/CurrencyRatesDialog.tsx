@@ -13,8 +13,8 @@ import { useCurrencyRates } from '../context/CurrencyRatesContext';
 import { useSettings } from '../context/SettingsContext';
 import { formatNumber } from '../utils/common';
 import LoadingSkeleton from './LoadingSkeleton';
-import { StyledTableCell, StyledTableRow } from './table/Table';
-import SlideUpTransition from './transition/SlideUpTransition';
+import SlideUpTransition from './SlideUpTransition';
+import { StyledTableCell, StyledTableRow } from './Table';
 
 const CurrencyRatesDialog = ({ onClose, open }: DialogProps) => {
   const { currencyRates, loading } = useCurrencyRates();

@@ -28,7 +28,7 @@ import Payment from 'payment';
 import React, { useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import CardDetails, { CardDetailsProps } from '../../../components/CardDetails';
-import SlideUpTransition from '../../../components/transition/SlideUpTransition';
+import SlideUpTransition from '../../../components/SlideUpTransition';
 import { useData } from '../../../context/DataContext';
 import { useStaticData } from '../../../context/StaticDataContext';
 import apiClient from '../../../services/ApiService';

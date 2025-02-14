@@ -14,11 +14,11 @@ import Stack from '@mui/material/Stack';
 import { ThemeSwitcher } from '@toolpad/core/DashboardLayout';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
-import { useSettings } from '../../context/SettingsContext';
-import { useStaticData } from '../../context/StaticDataContext';
-import { useUser } from '../../context/UserContext';
-import { AuthService } from '../../services/AuthService';
-import { generateAvatarProps } from '../../utils/common';
+import { useSettings } from '../context/SettingsContext';
+import { useStaticData } from '../context/StaticDataContext';
+import { useUser } from '../context/UserContext';
+import { AuthService } from '../services/AuthService';
+import { generateAvatarProps } from '../utils/common';
 
 const clockUpdateInterval = 60000;
 

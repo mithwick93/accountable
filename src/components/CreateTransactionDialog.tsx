@@ -32,19 +32,19 @@ import useMediaQuery from '@mui/material/useMediaQuery';
 import { DialogProps } from '@toolpad/core/useDialogs';
 import React, { useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
-import { useData } from '../../context/DataContext';
-import { useSettings } from '../../context/SettingsContext';
-import { useStaticData } from '../../context/StaticDataContext';
-import { useUser } from '../../context/UserContext';
-import apiClient from '../../services/ApiService';
-import { Asset } from '../../types/Asset';
-import { Liability } from '../../types/Liability';
-import { PaymentSystem } from '../../types/PaymentSystem';
-import { PaymentSystemCredit } from '../../types/PaymentSystemCredit';
-import { PaymentSystemDebit } from '../../types/PaymentSystemDebit';
-import { SharedTransactionRequest } from '../../types/SharedTransactionRequest';
-import { TransactionCategory } from '../../types/TransactionCategory';
-import { User } from '../../types/User';
+import { useData } from '../context/DataContext';
+import { useSettings } from '../context/SettingsContext';
+import { useStaticData } from '../context/StaticDataContext';
+import { useUser } from '../context/UserContext';
+import apiClient from '../services/ApiService';
+import { Asset } from '../types/Asset';
+import { Liability } from '../types/Liability';
+import { PaymentSystem } from '../types/PaymentSystem';
+import { PaymentSystemCredit } from '../types/PaymentSystemCredit';
+import { PaymentSystemDebit } from '../types/PaymentSystemDebit';
+import { SharedTransactionRequest } from '../types/SharedTransactionRequest';
+import { TransactionCategory } from '../types/TransactionCategory';
+import { User } from '../types/User';
 import {
   formatCurrency,
   getActiveAssets,
@@ -52,10 +52,10 @@ import {
   getActivePaymentSystems,
   getStartEndDate,
   getTransactionsFetchOptions,
-} from '../../utils/common';
-import { notifyBackendError } from '../../utils/notifications';
-import NumberInput from '../NumberInput';
-import SlideUpTransition from '../transition/SlideUpTransition';
+} from '../utils/common';
+import { notifyBackendError } from '../utils/notifications';
+import NumberInput from './NumberInput';
+import SlideUpTransition from './SlideUpTransition';
 
 type FormStateType = {
   updateAccounts: boolean;

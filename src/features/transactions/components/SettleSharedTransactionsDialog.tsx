@@ -32,7 +32,7 @@ import {
 } from 'material-react-table';
 import React, { useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
-import SlideUpTransition from '../../../components/transition/SlideUpTransition';
+import SlideUpTransition from '../../../components/SlideUpTransition';
 import { useCurrencyRates } from '../../../context/CurrencyRatesContext';
 import { useData } from '../../../context/DataContext';
 import { useSettings } from '../../../context/SettingsContext';
