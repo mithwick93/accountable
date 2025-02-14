@@ -11,6 +11,7 @@ import {
   IconButton,
   Tooltip,
   Typography,
+  useMediaQuery,
   useTheme,
 } from '@mui/material';
 import Dialog from '@mui/material/Dialog';
@@ -56,6 +57,7 @@ type SettleTransactionCandidate = {
   sharedTransactionId: number;
   sharedTransactionUserName: string;
   sharedTransactionShare: number;
+  sharedTransactionRemaining: number;
 };
 
 const getSettleTransactionCandidates = (transactions: Transaction[]) => {
@@ -74,6 +76,8 @@ const getSettleTransactionCandidates = (transactions: Transaction[]) => {
             sharedTransactionId: sharedTransaction.id,
             sharedTransactionUserName: `${sharedTransaction.user.firstName} ${sharedTransaction.user.lastName}`,
             sharedTransactionShare: sharedTransaction.share,
+            sharedTransactionRemaining:
+              sharedTransaction.share - sharedTransaction.paidAmount,
           });
         });
     }
@@ -104,7 +108,7 @@ const DueAmountsSummary: React.FC<DueAmountsSummaryProps> = ({
       const {
         sharedTransactionUserName = '',
         transactionCurrency = '',
-        sharedTransactionShare = 0,
+        sharedTransactionRemaining = 0,
       } = settleTransactionCandidate || {};
 
       if (!summaryMap[sharedTransactionUserName]) {
@@ -114,7 +118,7 @@ const DueAmountsSummary: React.FC<DueAmountsSummaryProps> = ({
         summaryMap[sharedTransactionUserName][transactionCurrency] = 0;
       }
       summaryMap[sharedTransactionUserName][transactionCurrency] +=
-        sharedTransactionShare;
+        sharedTransactionRemaining;
     });
     return summaryMap;
   }, [selectedSharedTransactionIds, candidates]);
@@ -216,6 +220,7 @@ const SettleSharedTransactionsDialog = ({
   const { settings, loading: settingsLoading } = useSettings();
   const { refetchData, loading: dataLoading } = useData();
   const theme = useTheme();
+  const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
   const [rowSelection, setRowSelection] = useState<MRT_RowSelectionState>({});
 
   const loading = settingsLoading || dataLoading;
@@ -287,7 +292,7 @@ const SettleSharedTransactionsDialog = ({
       {
         accessorKey: 'transactionName',
         header: 'Name',
-        minSize: 250,
+        minSize: 150,
         Cell: ({ cell }) => (
           <Tooltip title={cell.getValue<string>()}>
             <Box
@@ -391,6 +396,24 @@ const SettleSharedTransactionsDialog = ({
           </Box>
         ),
       },
+      {
+        accessorKey: 'sharedTransactionRemaining',
+        header: 'Remaining',
+        muiTableHeadCellProps: {
+          align: 'right',
+        },
+        muiTableBodyCellProps: {
+          align: 'right',
+        },
+        minSize: 150,
+        size: 150,
+        maxSize: 150,
+        Cell: ({ cell }) => (
+          <Box component="span">
+            {formatNumber(cell.row.original.sharedTransactionRemaining)}
+          </Box>
+        ),
+      },
     ],
     [],
   );
@@ -415,7 +438,12 @@ const SettleSharedTransactionsDialog = ({
     state: { rowSelection, isLoading: loading },
     muiTableContainerProps: {
       sx: {
-        maxHeight: '500px',
+        height:
+          selectedSharedTransactionIds.length > 0
+            ? isSmallScreen
+              ? 'calc(100vh - 500px)'
+              : 'calc(100vh - 450px)'
+            : 'calc(100vh - 300px)',
         overflowY: 'auto',
       },
     },
