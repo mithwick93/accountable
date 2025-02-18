@@ -584,6 +584,7 @@ const Transactions: React.FC = () => {
           desc: true,
         },
       ],
+      columnVisibility: { user: false },
     },
     columnFilterDisplayMode: 'popover',
     enableFacetedValues: true,
