@@ -44,6 +44,7 @@ import { PaymentSystemCredit } from '../types/PaymentSystemCredit';
 import { PaymentSystemDebit } from '../types/PaymentSystemDebit';
 import { SharedTransactionRequest } from '../types/SharedTransactionRequest';
 import { TransactionCategory } from '../types/TransactionCategory';
+import { TransactionTemplate } from '../types/TransactionTemplate';
 import { User } from '../types/User';
 import {
   formatCurrency,
@@ -83,6 +84,7 @@ const CreateTransactionDialog = ({ onClose, open }: DialogProps) => {
     liabilities: rawLiabilities,
     paymentSystems: rawPaymentSystems,
     categories,
+    templates,
     refetchData,
     loading: dataLoading,
   } = useData();
@@ -142,6 +144,27 @@ const CreateTransactionDialog = ({ onClose, open }: DialogProps) => {
     sharedTransactions.length > 1 &&
     formValues.amount &&
     formValues.amount > 0;
+
+  const handleSetFromTemplate = (template: TransactionTemplate | null) => {
+    if (!template) {
+      setFormValues(initialFormValues);
+    } else {
+      setFormValues({
+        ...initialFormValues,
+        name: template.name,
+        description: template.description,
+        type: template.type,
+        categoryId: template.category.id,
+        amount: template.amount,
+        currency: template.currency,
+      });
+    }
+
+    setSharedTransactions([]);
+    setValidationErrors({});
+    setSharedTransactionValidationErrors([]);
+    setSharedTransactionCommonValidationErrors([]);
+  };
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
@@ -470,6 +493,20 @@ const CreateTransactionDialog = ({ onClose, open }: DialogProps) => {
 
     return (
       <>
+        <Autocomplete
+          options={templates}
+          autoComplete
+          getOptionLabel={(option) => option.name}
+          groupBy={(option) =>
+            option.type.charAt(0).toUpperCase() +
+            option.type.slice(1).toLowerCase()
+          }
+          renderInput={(params) => <TextField {...params} label="Template" />}
+          sx={{ mt: 1 }}
+          onChange={(_event: any, newValue: TransactionTemplate | null) => {
+            handleSetFromTemplate(newValue);
+          }}
+        />
         <FormControl required error={!!validationErrors?.type}>
           <FormLabel id="controlled-radio-buttons-group">Type</FormLabel>
           <RadioGroup
