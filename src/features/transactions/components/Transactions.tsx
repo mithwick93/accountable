@@ -1,5 +1,6 @@
 import CompareArrowsIcon from '@mui/icons-material/CompareArrows';
 import DeleteIcon from '@mui/icons-material/Delete';
+import FormatClearIcon from '@mui/icons-material/FormatClear';
 import InputIcon from '@mui/icons-material/Input';
 import MoneyIcon from '@mui/icons-material/Money';
 import MoveDownIcon from '@mui/icons-material/MoveDown';
@@ -8,21 +9,16 @@ import OutputIcon from '@mui/icons-material/Output';
 import {
   Avatar,
   Box,
-  Button,
   Chip,
   IconButton,
-  SelectChangeEvent,
   Tooltip,
   useMediaQuery,
   useTheme,
 } from '@mui/material';
+
 import Checkbox from '@mui/material/Checkbox';
-import FormControl from '@mui/material/FormControl';
 import Grid from '@mui/material/Grid2';
-import InputLabel from '@mui/material/InputLabel';
-import MenuItem from '@mui/material/MenuItem';
 import Paper from '@mui/material/Paper';
-import Select from '@mui/material/Select';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -64,6 +60,8 @@ import {
 import { notifyBackendError } from '../../../utils/notifications';
 import SettleSharedTransactionsDialog from './SettleSharedTransactionsDialog';
 import TransactionSummeryDialog from './TransactionSummeryDialog';
+
+const FILTER_COLUMNS = ['name', 'description', 'currency', 'type', 'category'];
 
 type GridItemWithIconProps = {
   title: string;
@@ -211,16 +209,6 @@ const Transactions: React.FC = () => {
     settings?.transactions?.search?.parameters || {};
   const pageIndex = searchParameters.pageIndex || 0;
   const pageSize = searchParameters.pageSize || 100;
-  const sharedTransactions = useMemo(
-    () =>
-      searchParameters.hasSharedTransactions === null ||
-      searchParameters.hasSharedTransactions === undefined
-        ? 'all'
-        : searchParameters.hasSharedTransactions
-          ? 'include'
-          : 'exclude',
-    [searchParameters],
-  );
 
   const columnFilters = useMemo(
     () =>
@@ -239,7 +227,84 @@ const Transactions: React.FC = () => {
       ),
     [settings],
   );
+  const appliedFilters = useMemo(
+    () =>
+      columnFilters
+        .filter(
+          // @ts-expect-error ignore
+          ({ id, value }) => FILTER_COLUMNS.includes(id) && value.length > 0,
+        )
+        // @ts-expect-error ignore
+        .map(({ id }) => id),
+    [columnFilters, FILTER_COLUMNS],
+  );
+  const appliedFiltersString = useMemo(
+    () => (appliedFilters.length > 0 ? ` (${appliedFilters.join(', ')})` : ''),
+    [appliedFilters],
+  );
   const { startDate, endDate } = getStartEndDate(settings);
+
+  const filteredTransactions = useMemo(
+    () =>
+      transactions.filter((transaction) =>
+        // @ts-expect-error ignore
+        columnFilters.every(({ id, value }) => {
+          switch (id) {
+            case 'name':
+              return transaction.name
+                .toLowerCase()
+                .includes(value.toLowerCase());
+            case 'description':
+              return transaction.description
+                ? transaction.description
+                    .toLowerCase()
+                    .includes(value.toLowerCase())
+                : false;
+            case 'currency':
+              return value.includes(transaction.currency);
+            case 'type':
+              return value.includes(
+                transaction.type.charAt(0) +
+                  transaction.type.slice(1).toLowerCase(),
+              );
+            case 'category':
+              return value.includes(transaction.category.name);
+            default:
+              return true;
+          }
+        }),
+      ),
+    [transactions, columnFilters],
+  );
+
+  const transactionCurrencies = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          filteredTransactions.map((transaction) => transaction.currency),
+        ),
+      ).sort((a, b) => a.localeCompare(b)),
+    [filteredTransactions],
+  );
+
+  const totalAmountByCurrency = useMemo(() => {
+    const totals = filteredTransactions.reduce(
+      (acc, transaction) => {
+        const { currency, amount } = transaction;
+        if (!acc[currency]) {
+          acc[currency] = 0;
+        }
+        acc[currency] += amount;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
+    return Object.fromEntries(
+      Object.entries(totals).sort(([currencyA], [currencyB]) =>
+        currencyA.localeCompare(currencyB),
+      ),
+    );
+  }, [filteredTransactions]);
 
   useEffect(() => {
     refetchData(
@@ -247,27 +312,6 @@ const Transactions: React.FC = () => {
       getTransactionsFetchOptions(searchParameters, startDate, endDate),
     );
   }, [searchParameters, startDate, endDate]);
-
-  const handleSharedTransactionsChange = (event: SelectChangeEvent) => {
-    update({
-      ...settings,
-      transactions: {
-        ...(settings?.transactions || {}),
-        search: {
-          ...(settings?.transactions?.search || {}),
-          parameters: {
-            ...searchParameters,
-            hasSharedTransactions:
-              event.target.value === 'include'
-                ? true
-                : event.target.value === 'exclude'
-                  ? false
-                  : null,
-          },
-        },
-      },
-    });
-  };
 
   const columns = useMemo<MRT_ColumnDef<MRT_RowData>[]>(
     () => [
@@ -344,6 +388,26 @@ const Transactions: React.FC = () => {
         size: 150,
         maxSize: 200,
         filterVariant: 'multi-select',
+        Footer: () => (
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'flex-end',
+              width: '100%',
+            }}
+          >
+            {transactionCurrencies.map((currency) => (
+              <Typography
+                key={currency}
+                variant="caption"
+                sx={{ fontWeight: 'bold' }}
+              >
+                {currency}
+              </Typography>
+            ))}
+          </Box>
+        ),
       },
       {
         accessorFn: (row) => row.amount,
@@ -363,6 +427,26 @@ const Transactions: React.FC = () => {
         ),
         filterVariant: 'range-slider',
         filterFn: 'betweenInclusive',
+        Footer: () => (
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'flex-end',
+              width: '100%',
+            }}
+          >
+            {Object.entries(totalAmountByCurrency).map(([currency, total]) => (
+              <Typography
+                key={currency}
+                variant="caption"
+                sx={{ fontWeight: 'bold' }}
+              >
+                {formatNumber(total)}
+              </Typography>
+            ))}
+          </Box>
+        ),
       },
       {
         accessorFn: (row) => formatTransactionType(row.type),
@@ -529,7 +613,7 @@ const Transactions: React.FC = () => {
         filterVariant: 'multi-select',
       },
     ],
-    [],
+    [filteredTransactions],
   );
 
   const deleteTransaction = async (row: MRT_Row<MRT_RowData>) => {
@@ -556,6 +640,23 @@ const Transactions: React.FC = () => {
     }
   };
 
+  const clearFilters = () => {
+    const resetColumnFilters = columnFilters.filter(
+      // @ts-expect-error ignore
+      ({ id }) => !FILTER_COLUMNS.includes(id),
+    );
+    update({
+      ...settings,
+      transactions: {
+        ...(settings?.transactions || {}),
+        search: {
+          ...(settings?.transactions?.search || {}),
+          columnFilters: resetColumnFilters,
+        },
+      },
+    });
+  };
+
   const table = useMaterialReactTable({
     columns,
     data: transactions,
@@ -570,7 +671,7 @@ const Transactions: React.FC = () => {
     },
     muiTableContainerProps: {
       sx: {
-        height: 'calc(100vh - 350px)',
+        height: 'calc(100vh - 327px)',
         overflowY: 'auto',
       },
     },
@@ -609,26 +710,9 @@ const Transactions: React.FC = () => {
           gap: 1,
         }}
       >
-        <FormControl sx={{ minWidth: 140 }} size="small">
-          <InputLabel id="shared-transactions-select-label">
-            Shared Transactions
-          </InputLabel>
-          <Select
-            labelId="shared-transactions-select-label"
-            id="shared-transactions-select"
-            label="Shared Transactions"
-            value={sharedTransactions}
-            onChange={handleSharedTransactionsChange}
-          >
-            <MenuItem value="all">All</MenuItem>
-            <MenuItem value="include">Include</MenuItem>
-            <MenuItem value="exclude">Exclude</MenuItem>
-          </Select>
-        </FormControl>
         <Tooltip title="Settle Shared Transactions">
           <span>
-            <Button
-              variant="outlined"
+            <IconButton
               disabled={transactionsWithShares.length === 0}
               onClick={async () => {
                 await dialogs.open(
@@ -636,10 +720,19 @@ const Transactions: React.FC = () => {
                   transactionsWithShares,
                 );
               }}
-              startIcon={<MoneyIcon />}
             >
-              Settle
-            </Button>
+              <MoneyIcon />
+            </IconButton>
+          </span>
+        </Tooltip>
+        <Tooltip title={`Clear filters${appliedFiltersString}`}>
+          <span>
+            <IconButton
+              disabled={appliedFilters.length === 0}
+              onClick={clearFilters}
+            >
+              <FormatClearIcon />
+            </IconButton>
           </span>
         </Tooltip>
       </Box>
