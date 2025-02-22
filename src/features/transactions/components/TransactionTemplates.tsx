@@ -12,7 +12,6 @@ import {
 } from '@mui/material';
 import DialogTitle from '@mui/material/DialogTitle';
 import {
-  LiteralUnion,
   MaterialReactTable,
   type MRT_ColumnDef,
   MRT_EditActionButtons,
@@ -376,34 +375,51 @@ const TransactionTemplates: React.FC = () => {
     [validationErrors, categoryOptions, currencyCodes],
   );
 
-  const validateTemplate = (template: Record<LiteralUnion<string>, any>) => {
+  const validateTemplate = (
+    template: Record<string, any>,
+  ): Record<string, string | undefined> => {
     const errors: Record<string, string | undefined> = {};
-    if (!template.name) {
-      errors.name = 'Name is required';
-    }
-    if (!template.type) {
-      errors.type = 'Type is required';
-    }
-    if (!template.category) {
-      errors.category = 'Category is required';
-    }
-    if (!template.amount) {
-      errors.amount = 'Amount is required';
-    }
-    if (!template.currency) {
-      errors.currency = 'Currency is required';
+
+    const requiredFields = ['name', 'type', 'category', 'amount', 'currency'];
+    requiredFields.forEach((field) => {
+      if (!template[field]) {
+        errors[field] =
+          `${field.charAt(0).toUpperCase() + field.slice(1)} is required`;
+      }
+    });
+
+    const validateDayOfMonth = () => {
+      const day = Number(template.dayOfMonth);
+      if (!template.dayOfMonth) {
+        errors.dayOfMonth = 'Day of month is required';
+      } else if (day < 1 || day > 31) {
+        errors.dayOfMonth = 'Day of month must be between 1 and 31';
+      }
+    };
+
+    if (template.frequency === 'MONTHLY' || template.frequency === 'YEARLY') {
+      validateDayOfMonth();
     }
 
-    if (template.frequency === 'MONTHLY' && !template.dayOfMonth) {
-      errors.dayOfMonth = 'Day of month is required';
+    if (template.frequency === 'YEARLY') {
+      const month = Number(template.monthOfYear);
+      if (!template.monthOfYear) {
+        errors.monthOfYear = 'Month of year is required';
+      } else if (month < 1 || month > 12) {
+        errors.monthOfYear = 'Month of year must be between 1 and 12';
+      }
     }
 
-    if (template.frequency === 'YEARLY' && !template.dayOfMonth) {
-      errors.dayOfMonth = 'Day of month is required';
-    }
-
-    if (template.frequency === 'YEARLY' && !template.monthOfYear) {
-      errors.monthOfYear = 'Month of year is required';
+    if (template.type && template.category) {
+      const transactionCategory = categories.find(
+        (cat) => cat.id === Number(template.category),
+      );
+      if (
+        transactionCategory &&
+        transactionCategory.type !== getOriginalTransactionType(template.type)
+      ) {
+        errors.category = `Category type must be ${template.type}`;
+      }
     }
 
     return errors;
