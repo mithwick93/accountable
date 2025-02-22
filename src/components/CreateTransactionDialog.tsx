@@ -155,7 +155,7 @@ const CreateTransactionDialog = ({ onClose, open }: DialogProps) => {
         description: template.description,
         type: template.type,
         categoryId: template.category.id,
-        amount: template.amount,
+        amount: template.amount !== 0 ? template.amount : undefined,
         currency: template.currency,
       });
     }

@@ -41,7 +41,7 @@ const generateRequestPayload = (template: Record<string, any>) => {
     description: template.description,
     type: getOriginalTransactionType(template.type),
     categoryId: template.category,
-    amount: parseFloat(template.amount),
+    amount: template.amount ? parseFloat(template.amount) : 0,
     currency: template.currency,
   };
 
@@ -262,7 +262,11 @@ const TransactionTemplates: React.FC = () => {
           align: 'right',
         },
         Cell: ({ cell }) => (
-          <Box component="span">{formatNumber(cell.row.original.amount)}</Box>
+          <Box component="span">
+            {cell.row.original.amount
+              ? formatNumber(cell.row.original.amount)
+              : ''}
+          </Box>
         ),
         muiEditTextFieldProps: {
           type: 'number',
@@ -380,7 +384,7 @@ const TransactionTemplates: React.FC = () => {
   ): Record<string, string | undefined> => {
     const errors: Record<string, string | undefined> = {};
 
-    const requiredFields = ['name', 'type', 'category', 'amount', 'currency'];
+    const requiredFields = ['name', 'type', 'category', 'currency'];
     requiredFields.forEach((field) => {
       if (!template[field]) {
         errors[field] =
