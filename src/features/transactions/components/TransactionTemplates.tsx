@@ -30,6 +30,7 @@ import {
   formatNumber,
   formatTransactionType,
   getOriginalTransactionType,
+  notSelectedOption,
   stringToColor,
 } from '../../../utils/common';
 import log from '../../../utils/logger';
@@ -45,7 +46,7 @@ const generateRequestPayload = (template: Record<string, any>) => {
     currency: template.currency,
   };
 
-  if (template.frequency) {
+  if (template.frequency && template.frequency !== notSelectedOption.value) {
     request.frequency = template.frequency;
 
     if (request.frequency === 'MONTHLY') {
@@ -130,7 +131,7 @@ const TransactionTemplates: React.FC = () => {
         header: 'Name',
         minSize: 100,
         size: 150,
-        maxSize: 250,
+        maxSize: 200,
         Cell: ({ cell }) => (
           <Tooltip title={cell.getValue<string>()}>
             <Box
@@ -160,7 +161,7 @@ const TransactionTemplates: React.FC = () => {
       {
         accessorKey: 'description',
         header: 'Description',
-        minSize: 150,
+        minSize: 100,
         size: 150,
         maxSize: 200,
         Cell: ({ cell }) => (
@@ -193,9 +194,9 @@ const TransactionTemplates: React.FC = () => {
         accessorFn: (row) => row.category?.id,
         accessorKey: 'category',
         header: 'Category',
-        minSize: 150,
-        size: 150,
-        maxSize: 200,
+        minSize: 125,
+        size: 125,
+        maxSize: 150,
         Cell: ({ cell }) => (
           <Chip
             label={cell.row.original.category?.name}
@@ -224,9 +225,9 @@ const TransactionTemplates: React.FC = () => {
       {
         accessorKey: 'currency',
         header: 'Currency',
-        minSize: 150,
-        size: 150,
-        maxSize: 200,
+        minSize: 100,
+        size: 125,
+        maxSize: 150,
         muiTableHeadCellProps: {
           align: 'right',
         },
@@ -252,9 +253,9 @@ const TransactionTemplates: React.FC = () => {
         accessorFn: (row) => row.amount,
         accessorKey: 'amount',
         header: 'Amount',
-        minSize: 150,
-        size: 150,
-        maxSize: 200,
+        minSize: 125,
+        size: 125,
+        maxSize: 150,
         muiTableHeadCellProps: {
           align: 'right',
         },
@@ -288,16 +289,18 @@ const TransactionTemplates: React.FC = () => {
       {
         accessorKey: 'frequency',
         header: 'Frequency',
-        minSize: 150,
-        size: 150,
-        maxSize: 200,
+        minSize: 125,
+        size: 125,
+        maxSize: 150,
         Cell: ({ cell }) => (
           <Box component="span" sx={{ textTransform: 'capitalize' }}>
-            {cell.getValue<string>()?.toLowerCase()}
+            {cell.getValue<string>()?.toLowerCase &&
+              cell.getValue<string>()?.toLowerCase()}
           </Box>
         ),
         editVariant: 'select',
         editSelectOptions: [
+          notSelectedOption,
           { value: 'MONTHLY', label: 'Monthly' },
           { value: 'YEARLY', label: 'Yearly' },
         ],
@@ -316,16 +319,10 @@ const TransactionTemplates: React.FC = () => {
       {
         accessorFn: (row) => row.dayOfMonth,
         accessorKey: 'dayOfMonth',
-        header: 'Day Of Month',
-        minSize: 150,
-        size: 150,
-        maxSize: 200,
-        muiTableHeadCellProps: {
-          align: 'right',
-        },
-        muiTableBodyCellProps: {
-          align: 'right',
-        },
+        header: 'DOM',
+        minSize: 125,
+        size: 125,
+        maxSize: 150,
         muiEditTextFieldProps: {
           type: 'number',
           slotProps: {
@@ -334,7 +331,6 @@ const TransactionTemplates: React.FC = () => {
               max: 31,
             },
           },
-          required: true,
           error: !!validationErrors?.dayOfMonth,
           helperText: validationErrors?.dayOfMonth,
           onFocus: () =>
@@ -347,16 +343,10 @@ const TransactionTemplates: React.FC = () => {
       {
         accessorFn: (row) => row.monthOfYear,
         accessorKey: 'monthOfYear',
-        header: 'Month Of Year',
-        minSize: 150,
-        size: 150,
-        maxSize: 200,
-        muiTableHeadCellProps: {
-          align: 'right',
-        },
-        muiTableBodyCellProps: {
-          align: 'right',
-        },
+        header: 'MoY',
+        minSize: 125,
+        size: 125,
+        maxSize: 150,
         muiEditTextFieldProps: {
           type: 'number',
           slotProps: {
@@ -365,7 +355,6 @@ const TransactionTemplates: React.FC = () => {
               max: 12,
             },
           },
-          required: true,
           error: !!validationErrors?.monthOfYear,
           helperText: validationErrors?.monthOfYear,
           onFocus: () =>
@@ -496,7 +485,7 @@ const TransactionTemplates: React.FC = () => {
       density: 'compact',
       sorting: [
         {
-          id: 'type',
+          id: 'dayOfMonth',
           desc: false,
         },
         {
