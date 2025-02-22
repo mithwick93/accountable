@@ -12,6 +12,7 @@ import { PaymentSystemCredit } from '../types/PaymentSystemCredit';
 import { PaymentSystemDebit } from '../types/PaymentSystemDebit';
 import { Transaction } from '../types/Transaction';
 import { TransactionCategory } from '../types/TransactionCategory';
+import { TransactionTemplate } from '../types/TransactionTemplate';
 import log from '../utils/logger';
 import { useSettings } from './SettingsContext';
 
@@ -20,6 +21,7 @@ type DATA_TYPES =
   | 'liabilities'
   | 'paymentSystems'
   | 'categories'
+  | 'templates'
   | 'transactions';
 
 type TransactionResponse = {
@@ -41,6 +43,7 @@ type DataContextType = {
   liabilities: Liability[];
   paymentSystems: (PaymentSystemCredit | PaymentSystemDebit)[];
   categories: TransactionCategory[];
+  templates: TransactionTemplate[];
   transactions: TransactionResponse | null;
   loading: boolean;
 
@@ -78,6 +81,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     (PaymentSystemCredit | PaymentSystemDebit)[]
   >([]);
   const [categories, setCategories] = useState<TransactionCategory[]>([]);
+  const [templates, setTemplates] = useState<TransactionTemplate[]>([]);
   const [transactions, setTransactions] = useState<TransactionResponse | null>(
     null,
   );
@@ -91,6 +95,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
       'liabilities',
       'paymentSystems',
       'categories',
+      'templates',
     ],
     options: Record<string, any> = {},
   ) => {
@@ -110,6 +115,10 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
       }
       if (dataTypes.includes('categories')) {
         promises.push(apiClient.get('/transactions/categories'));
+      }
+
+      if (dataTypes.includes('templates')) {
+        promises.push(apiClient.get('/transactions/templates'));
       }
 
       if (dataTypes.includes('transactions')) {
@@ -187,6 +196,15 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
           );
         setCategories(categories);
       }
+      if (dataTypes.includes('templates') && responses[0]) {
+        const templates = responses
+          .shift()
+          ?.data.sort(
+            (a: TransactionTemplate, b: TransactionTemplate) =>
+              a.type.localeCompare(b.type) || a.name.localeCompare(b.name),
+          );
+        setTemplates(templates);
+      }
       if (dataTypes.includes('transactions') && responses[0]) {
         const transactions = responses.shift()?.data;
         setTransactions(transactions);
@@ -214,6 +232,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         liabilities,
         paymentSystems,
         categories,
+        templates,
         transactions,
         refetchData,
         loading,
