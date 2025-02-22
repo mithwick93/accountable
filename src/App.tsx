@@ -10,7 +10,7 @@ import React from 'react';
 import { Outlet } from 'react-router-dom';
 import logoLight from './assets/logo-light.svg';
 import { theme } from './theme/theme';
-
+import BlurLinearIcon from '@mui/icons-material/BlurLinear';
 const NAVIGATION: Navigation = [
   {
     kind: 'header',
@@ -39,6 +39,11 @@ const NAVIGATION: Navigation = [
     segment: 'transaction-categories',
     title: 'Categories',
     icon: <CategoryIcon />,
+  },
+  {
+    segment: 'transaction-templates',
+    title: 'Templates',
+    icon: <BlurLinearIcon />,
   },
   {
     segment: 'transactions',

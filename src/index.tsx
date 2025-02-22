@@ -15,6 +15,7 @@ import PaymentSystemsPage from './pages/PaymentSystemsPage';
 import RegisterPage from './pages/RegisterPage';
 import TransactionCategoriesPage from './pages/TransactionCategoriesPage';
 import TransactionsPage from './pages/TransactionsPage';
+import TransactionTemplatesPage from './pages/TransactionTemplatesPage';
 import reportWebVitals from './reportWebVitals';
 import './index.css';
 import * as serviceWorkerRegistration from './serviceWorkerRegistration';
@@ -44,12 +45,16 @@ const router = createBrowserRouter([
             Component: PaymentSystemsPage,
           },
           {
-            path: '/transactions',
-            Component: TransactionsPage,
-          },
-          {
             path: '/transaction-categories',
             Component: TransactionCategoriesPage,
+          },
+          {
+            path: '/transaction-templates',
+            Component: TransactionTemplatesPage,
+          },
+          {
+            path: '/transactions',
+            Component: TransactionsPage,
           },
         ],
       },
