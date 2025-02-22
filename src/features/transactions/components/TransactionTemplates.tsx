@@ -202,7 +202,7 @@ const TransactionTemplates: React.FC = () => {
     },
     muiTableContainerProps: {
       sx: {
-        height: 'calc(100vh - 300px)',
+        height: 'calc(100vh - 265px)',
         overflowY: 'auto',
       },
     },
