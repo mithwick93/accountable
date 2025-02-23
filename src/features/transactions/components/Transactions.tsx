@@ -250,6 +250,10 @@ const Transactions: React.FC = () => {
         // @ts-expect-error ignore
         columnFilters.every(({ id, value }) => {
           switch (id) {
+            case 'user':
+              return value.includes(
+                `${transaction.user?.firstName} ${transaction.user?.lastName}`,
+              );
             case 'name':
               return transaction.name
                 .toLowerCase()
@@ -320,8 +324,8 @@ const Transactions: React.FC = () => {
         accessorKey: 'user',
         header: 'User',
         grow: false,
-        minSize: 150,
-        size: 150,
+        minSize: 125,
+        size: 125,
         maxSize: 150,
         Cell: ({ cell }) => (
           <Tooltip title={cell.getValue<string>()}>
@@ -339,9 +343,9 @@ const Transactions: React.FC = () => {
       {
         accessorKey: 'name',
         header: 'Name',
-        minSize: 200,
+        minSize: 150,
         size: 200,
-        maxSize: 500,
+        maxSize: 250,
         Cell: ({ cell }) => (
           <Tooltip title={cell.getValue<string>()}>
             <Box
@@ -368,9 +372,9 @@ const Transactions: React.FC = () => {
         muiTableBodyCellProps: {
           align: 'right',
         },
-        minSize: 150,
-        size: 150,
-        maxSize: 200,
+        minSize: 100,
+        size: 125,
+        maxSize: 150,
         Cell: ({ cell }) => format(cell.getValue<Date>(), 'dd/MM/yyyy'),
         filterVariant: 'date-range',
       },
@@ -384,9 +388,9 @@ const Transactions: React.FC = () => {
         muiTableBodyCellProps: {
           align: 'right',
         },
-        minSize: 150,
+        minSize: 100,
         size: 150,
-        maxSize: 200,
+        maxSize: 150,
         filterVariant: 'multi-select',
         Footer: () => (
           <Box
@@ -419,8 +423,8 @@ const Transactions: React.FC = () => {
         muiTableBodyCellProps: {
           align: 'right',
         },
-        minSize: 150,
-        size: 150,
+        minSize: 125,
+        size: 140,
         maxSize: 200,
         Cell: ({ cell }) => (
           <Box component="span">{formatNumber(cell.row.original.amount)}</Box>
@@ -452,8 +456,8 @@ const Transactions: React.FC = () => {
         accessorFn: (row) => formatTransactionType(row.type),
         accessorKey: 'type',
         header: 'Type',
-        minSize: 150,
-        size: 150,
+        minSize: 125,
+        size: 125,
         maxSize: 150,
         Cell: ({ renderedCellValue }) => (
           <Chip
@@ -472,8 +476,8 @@ const Transactions: React.FC = () => {
         accessorFn: (row) => row.category?.name,
         accessorKey: 'category',
         header: 'Category',
-        minSize: 150,
-        size: 200,
+        minSize: 125,
+        size: 150,
         maxSize: 200,
         Cell: ({ renderedCellValue }) => (
           <Chip
@@ -685,7 +689,6 @@ const Transactions: React.FC = () => {
           desc: true,
         },
       ],
-      columnVisibility: { user: false },
     },
     columnFilterDisplayMode: 'popover',
     enableFacetedValues: true,
@@ -873,7 +876,7 @@ const Transactions: React.FC = () => {
           <DateRangeSelector />
         </Box>
         <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'flex-end' }}>
-          <TransactionsSummery transactions={transactions} />
+          <TransactionsSummery transactions={filteredTransactions} />
         </Box>
       </Box>
       <MaterialReactTable table={table} />
