@@ -550,7 +550,15 @@ const SettleSharedTransactionsDialog = ({
         <Box sx={{ width: '1rem' }} />
         <Button
           disabled={selectedSharedTransactionIds.length === 0}
-          onClick={handleSettleSharedTransactions}
+          onClick={async () => {
+            if (
+              window.confirm(
+                `Are you sure you want to mark ${selectedSharedTransactionIds.length} shared transaction(s) as settled?`,
+              )
+            ) {
+              await handleSettleSharedTransactions();
+            }
+          }}
           variant="contained"
         >
           Settle
