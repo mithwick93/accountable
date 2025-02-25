@@ -136,6 +136,21 @@ const DueAmountsSummary: React.FC<DueAmountsSummaryProps> = ({
     return summaryMap;
   }, [dueAmountsSummary, currencyRates]);
 
+  const pairPayable = useMemo(() => {
+    const payableMap: Record<string, number> = {};
+    const users = Object.keys(dueTotals).sort((a, b) => a.localeCompare(b));
+    const userCount = users.length;
+    if (userCount !== 2) {
+      return payableMap;
+    }
+
+    const [firstUser, secondUser] = users;
+    payableMap[firstUser] = dueTotals[firstUser] - dueTotals[secondUser];
+    payableMap[secondUser] = dueTotals[secondUser] - dueTotals[firstUser];
+
+    return payableMap;
+  }, [dueTotals]);
+
   if (!selectedSharedTransactionIds.length || loading) {
     return null;
   }
@@ -177,6 +192,25 @@ const DueAmountsSummary: React.FC<DueAmountsSummaryProps> = ({
                       {formatNumber(dueTotals[userName], 2, 2)}
                     </Typography>
                   </Box>
+                  {Object.keys(pairPayable).length === 2 && (
+                    <>
+                      <Divider sx={{ my: 1 }} />
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                        }}
+                      >
+                        <Typography variant="body2">
+                          {`Payable (${baseCurrency})`}
+                        </Typography>
+                        <Typography variant="body2" sx={{ textAlign: 'right' }}>
+                          {formatNumber(pairPayable[userName], 2, 2)}
+                        </Typography>
+                      </Box>
+                    </>
+                  )}
                   <Divider sx={{ my: 1 }} />
                   {Object.entries(currencyMap)
                     .sort(([currencyA], [currencyB]) =>
