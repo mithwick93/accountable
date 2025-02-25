@@ -1,4 +1,5 @@
 import { Asset } from './Asset';
+import { Liability } from './Liability';
 import { PaymentSystemCredit } from './PaymentSystemCredit';
 import { PaymentSystemDebit } from './PaymentSystemDebit';
 import { SharedTransaction } from './SharedTransaction';
@@ -15,11 +16,10 @@ export type Transaction = {
   currency: string;
   date: string;
   user: User;
+  fromPaymentSystemCredit?: PaymentSystemCredit;
+  fromPaymentSystemDebit?: PaymentSystemDebit;
   fromAsset?: Asset;
   toAsset?: Asset;
-  fromPaymentSystemCredit?: PaymentSystemCredit;
-  toPaymentSystemCredit?: PaymentSystemCredit;
-  fromPaymentSystemDebit?: PaymentSystemDebit;
-  toPaymentSystemDebit?: PaymentSystemDebit;
+  toLiability?: Liability;
   sharedTransactions?: SharedTransaction[];
 };

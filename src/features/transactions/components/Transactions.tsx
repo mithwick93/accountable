@@ -61,7 +61,17 @@ import { notifyBackendError } from '../../../utils/notifications';
 import SettleSharedTransactionsDialog from './SettleSharedTransactionsDialog';
 import TransactionSummeryDialog from './TransactionSummeryDialog';
 
-const FILTER_COLUMNS = ['name', 'description', 'currency', 'type', 'category'];
+const FILTER_COLUMNS: Record<string, string> = {
+  name: 'Name',
+  description: 'Description',
+  currency: 'Currency',
+  type: 'Type',
+  category: 'Category',
+  fromPaymentSystem: 'From Payment System',
+  fromAsset: 'From Asset',
+  toAsset: 'To Asset',
+  toLiability: 'To Liability',
+};
 
 type GridItemWithIconProps = {
   title: string;
@@ -209,6 +219,7 @@ const Transactions: React.FC = () => {
     settings?.transactions?.search?.parameters || {};
   const pageIndex = searchParameters.pageIndex || 0;
   const pageSize = searchParameters.pageSize || 100;
+  const { startDate, endDate } = getStartEndDate(settings);
 
   const columnFilters = useMemo(
     () =>
@@ -227,22 +238,23 @@ const Transactions: React.FC = () => {
       ),
     [settings],
   );
-  const appliedFilters = useMemo(
-    () =>
-      columnFilters
-        .filter(
-          // @ts-expect-error ignore
-          ({ id, value }) => FILTER_COLUMNS.includes(id) && value.length > 0,
-        )
+
+  const appliedFilters: string = useMemo(() => {
+    const filterKeys = Object.keys(FILTER_COLUMNS);
+    const presentFilters = columnFilters
+      .filter(
         // @ts-expect-error ignore
-        .map(({ id }) => id),
-    [columnFilters, FILTER_COLUMNS],
-  );
-  const appliedFiltersString = useMemo(
-    () => (appliedFilters.length > 0 ? ` (${appliedFilters.join(', ')})` : ''),
-    [appliedFilters],
-  );
-  const { startDate, endDate } = getStartEndDate(settings);
+        ({ id, value }) => filterKeys.includes(id) && value.length > 0,
+      )
+      // @ts-expect-error ignore
+      .map(({ id }) => FILTER_COLUMNS[id]);
+
+    if (presentFilters.length === 0) {
+      return '';
+    }
+
+    return ` (${presentFilters.join(', ')})`;
+  }, [columnFilters]);
 
   const filteredTransactions = useMemo(
     () =>
@@ -273,6 +285,17 @@ const Transactions: React.FC = () => {
               );
             case 'category':
               return value.includes(transaction.category.name);
+            case 'fromPaymentSystem':
+              return (
+                value.includes(transaction.fromPaymentSystemCredit?.name) ||
+                value.includes(transaction.fromPaymentSystemDebit?.name)
+              );
+            case 'fromAsset':
+              return value.includes(transaction.fromAsset?.name);
+            case 'toAsset':
+              return value.includes(transaction.toAsset?.name);
+            case 'toLiability':
+              return value.includes(transaction.toLiability?.name);
             default:
               return true;
           }
@@ -645,9 +668,10 @@ const Transactions: React.FC = () => {
   };
 
   const clearFilters = () => {
+    const filterKeys = Object.keys(FILTER_COLUMNS);
     const resetColumnFilters = columnFilters.filter(
       // @ts-expect-error ignore
-      ({ id }) => !FILTER_COLUMNS.includes(id),
+      ({ id }) => !filterKeys.includes(id),
     );
     update({
       ...settings,
@@ -728,7 +752,7 @@ const Transactions: React.FC = () => {
             </IconButton>
           </span>
         </Tooltip>
-        <Tooltip title={`Clear filters${appliedFiltersString}`}>
+        <Tooltip title={`Clear filters${appliedFilters}`}>
           <span>
             <IconButton
               disabled={appliedFilters.length === 0}
