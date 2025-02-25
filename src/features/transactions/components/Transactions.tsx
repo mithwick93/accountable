@@ -520,7 +520,7 @@ const Transactions: React.FC = () => {
         header: 'Description',
         grow: false,
         minSize: 150,
-        size: 150,
+        size: 200,
         maxSize: 200,
         Cell: ({ cell }) => (
           <Tooltip title={cell.getValue<string>()}>
@@ -545,7 +545,7 @@ const Transactions: React.FC = () => {
         header: 'From Payment System',
         grow: false,
         minSize: 150,
-        size: 150,
+        size: 200,
         maxSize: 200,
         Cell: ({ cell }) => (
           <Tooltip title={cell.getValue<string>()}>
@@ -570,7 +570,7 @@ const Transactions: React.FC = () => {
         header: 'From Asset',
         grow: false,
         minSize: 150,
-        size: 150,
+        size: 200,
         maxSize: 200,
         Cell: ({ cell }) => (
           <Tooltip title={cell.getValue<string>()}>
@@ -595,7 +595,7 @@ const Transactions: React.FC = () => {
         header: 'To Asset',
         grow: false,
         minSize: 150,
-        size: 150,
+        size: 200,
         maxSize: 200,
         Cell: ({ cell }) => (
           <Tooltip title={cell.getValue<string>()}>
@@ -620,7 +620,7 @@ const Transactions: React.FC = () => {
         header: 'To Liability',
         grow: false,
         minSize: 150,
-        size: 150,
+        size: 200,
         maxSize: 200,
         Cell: ({ cell }) => (
           <Tooltip title={cell.getValue<string>()}>
