@@ -302,6 +302,7 @@ const SettleSharedTransactionsDialog = ({
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
+                textTransform: 'capitalize',
               }}
             >
               {cell.getValue<string>()}
