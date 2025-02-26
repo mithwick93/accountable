@@ -99,6 +99,27 @@ const DueAmountsSummary: React.FC<DueAmountsSummaryProps> = ({
   const baseCurrency: string = settings?.currency || 'USD';
   const loading = currencyRatesLoading || settingsLoading;
 
+  const [startDate, endDate] = useMemo(() => {
+    const sortedSharedTransactions = candidates
+      .filter((candidate) =>
+        selectedSharedTransactionIds.includes(candidate.sharedTransactionId),
+      )
+      .sort((candidateA, candidateB) =>
+        candidateA.transactionDate.localeCompare(candidateB.transactionDate),
+      );
+
+    if (sortedSharedTransactions.length === 0) {
+      return ['N/A', 'N/A'];
+    }
+
+    const startDate = sortedSharedTransactions[0].transactionDate;
+    const endDate =
+      sortedSharedTransactions[sortedSharedTransactions.length - 1]
+        .transactionDate;
+
+    return [startDate, endDate];
+  }, [selectedSharedTransactionIds, candidates]);
+
   const dueAmountsSummary = useMemo(() => {
     const summaryMap: Record<string, Record<string, number>> = {};
     selectedSharedTransactionIds.forEach((sharedTransactionId) => {
@@ -158,7 +179,7 @@ const DueAmountsSummary: React.FC<DueAmountsSummaryProps> = ({
   return (
     <Box sx={{ mt: 2, flexShrink: 0 }}>
       <Typography variant="h6" gutterBottom>
-        {`Due Amounts Summary (${selectedSharedTransactionIds.length} records)`}
+        {`Settlement Summary for [${startDate} - ${endDate}] | ${selectedSharedTransactionIds.length} records`}
       </Typography>
       <Grid container spacing={2}>
         {Object.entries(dueAmountsSummary)
@@ -507,7 +528,7 @@ const SettleSharedTransactionsDialog = ({
             alignItems: 'center',
           }}
         >
-          Settle Shared Transactions
+          Shared Transactions
           <Box
             sx={{
               display: 'flex-end',
