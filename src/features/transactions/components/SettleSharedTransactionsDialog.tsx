@@ -476,8 +476,8 @@ const SettleSharedTransactionsDialog = ({
         height:
           selectedSharedTransactionIds.length > 0
             ? isSmallScreen
-              ? 'calc(100vh - 500px)'
-              : 'calc(100vh - 450px)'
+              ? 'calc(100vh - 600px)'
+              : 'calc(100vh - 550px)'
             : 'calc(100vh - 300px)',
         overflowY: 'auto',
       },
