@@ -14,6 +14,7 @@ import {
   useMediaQuery,
   useTheme,
 } from '@mui/material';
+import Checkbox from '@mui/material/Checkbox';
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import Divider from '@mui/material/Divider';
@@ -58,28 +59,28 @@ type SettleTransactionCandidate = {
   sharedTransactionUserName: string;
   sharedTransactionShare: number;
   sharedTransactionRemaining: number;
+  isSettled: boolean;
 };
 
 const getSettleTransactionCandidates = (transactions: Transaction[]) => {
   const candidates: SettleTransactionCandidate[] = [];
   transactions.forEach((transaction) => {
     if (transaction.sharedTransactions) {
-      transaction.sharedTransactions
-        .filter((sharedTransaction) => !sharedTransaction.isSettled)
-        .forEach((sharedTransaction) => {
-          candidates.push({
-            transactionName: transaction.name,
-            transactionCategory: transaction.category.name,
-            transactionAmount: transaction.amount,
-            transactionCurrency: transaction.currency,
-            transactionDate: transaction.date,
-            sharedTransactionId: sharedTransaction.id,
-            sharedTransactionUserName: `${sharedTransaction.user.firstName} ${sharedTransaction.user.lastName}`,
-            sharedTransactionShare: sharedTransaction.share,
-            sharedTransactionRemaining:
-              sharedTransaction.share - sharedTransaction.paidAmount,
-          });
+      transaction.sharedTransactions.forEach((sharedTransaction) => {
+        candidates.push({
+          transactionName: transaction.name,
+          transactionCategory: transaction.category.name,
+          transactionAmount: transaction.amount,
+          transactionCurrency: transaction.currency,
+          transactionDate: transaction.date,
+          sharedTransactionId: sharedTransaction.id,
+          sharedTransactionUserName: `${sharedTransaction.user.firstName} ${sharedTransaction.user.lastName}`,
+          sharedTransactionShare: sharedTransaction.share,
+          sharedTransactionRemaining:
+            sharedTransaction.share - sharedTransaction.paidAmount,
+          isSettled: sharedTransaction.isSettled,
         });
+      });
     }
   });
   return candidates;
@@ -290,6 +291,16 @@ const SettleSharedTransactionsDialog = ({
         .map(([key]) => +key),
     [rowSelection],
   );
+  const enableSettle = useMemo(
+    () =>
+      selectedSharedTransactionIds.some((id) => {
+        const transaction = candidates.find(
+          (candidate) => candidate.sharedTransactionId === id,
+        );
+        return transaction && !transaction.isSettled;
+      }),
+    [candidates, selectedSharedTransactionIds],
+  );
 
   const handleSettleSharedTransactions = async () => {
     try {
@@ -368,8 +379,8 @@ const SettleSharedTransactionsDialog = ({
       {
         accessorKey: 'transactionCategory',
         header: 'Category',
-        minSize: 150,
-        size: 150,
+        minSize: 125,
+        size: 125,
         maxSize: 150,
         Cell: ({ renderedCellValue }) => (
           <Chip
@@ -409,8 +420,8 @@ const SettleSharedTransactionsDialog = ({
         muiTableBodyCellProps: {
           align: 'right',
         },
-        minSize: 150,
-        size: 150,
+        minSize: 125,
+        size: 125,
         maxSize: 150,
         filterVariant: 'multi-select',
       },
@@ -470,6 +481,19 @@ const SettleSharedTransactionsDialog = ({
           </Box>
         ),
       },
+      {
+        accessorKey: 'isSettled',
+        header: 'Settled',
+        minSize: 150,
+        size: 150,
+        maxSize: 150,
+        Cell: ({ cell }) => (
+          <Box component="span">
+            <Checkbox disabled checked={cell.row.original.isSettled} />
+          </Box>
+        ),
+        filterVariant: 'checkbox',
+      },
     ],
     [],
   );
@@ -490,6 +514,7 @@ const SettleSharedTransactionsDialog = ({
           desc: true,
         },
       ],
+      columnFilters: [{ id: 'isSettled', value: 'false' }],
     },
     state: { rowSelection, isLoading: loading },
     muiTableContainerProps: {
@@ -570,7 +595,7 @@ const SettleSharedTransactionsDialog = ({
         </Button>
         <Box sx={{ width: '1rem' }} />
         <Button
-          disabled={selectedSharedTransactionIds.length === 0}
+          disabled={!enableSettle}
           onClick={async () => {
             if (
               window.confirm(
