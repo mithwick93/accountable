@@ -208,9 +208,7 @@ const Transactions: React.FC = () => {
       transactions.filter(
         (transaction) =>
           transaction.sharedTransactions &&
-          transaction.sharedTransactions.some(
-            (sharedTransaction) => !sharedTransaction.isSettled,
-          ),
+          transaction.sharedTransactions.length > 0,
       ),
     [transactions],
   );
