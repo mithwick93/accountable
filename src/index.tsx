@@ -8,6 +8,7 @@ import App from './App';
 import MainLayout from './layouts/MainLayout';
 import AssetsPage from './pages/AssetsPage';
 import DashboardPage from './pages/DashboardPage';
+import InstallmentPlansPage from './pages/InstallmentPlansPage';
 import LiabilitiesPage from './pages/LiabilitiesPage';
 import LoginPage from './pages/LoginPage';
 import NotFoundPage from './pages/NotFoundPage';
@@ -39,6 +40,10 @@ const router = createBrowserRouter([
           {
             path: '/liabilities',
             Component: LiabilitiesPage,
+          },
+          {
+            path: '/installment-plans',
+            Component: InstallmentPlansPage,
           },
           {
             path: '/payment-systems',
