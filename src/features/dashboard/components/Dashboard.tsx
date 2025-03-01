@@ -402,6 +402,11 @@ const Dashboard: React.FC = () => {
     state: {
       isLoading: loading,
     },
+    muiBottomToolbarProps: {
+      sx: {
+        display: 'none',
+      },
+    },
   });
 
   const liabilitiesTable = useMaterialReactTable({
@@ -432,6 +437,11 @@ const Dashboard: React.FC = () => {
     },
     state: {
       isLoading: loading,
+    },
+    muiBottomToolbarProps: {
+      sx: {
+        display: 'none',
+      },
     },
   });
 

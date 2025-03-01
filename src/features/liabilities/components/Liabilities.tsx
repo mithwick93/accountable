@@ -563,8 +563,13 @@ const Liabilities: React.FC = () => {
     },
     muiTableContainerProps: {
       sx: {
-        height: 'calc(100vh - 265px)',
+        height: 'calc(100vh - 207px)',
         overflowY: 'auto',
+      },
+    },
+    muiBottomToolbarProps: {
+      sx: {
+        display: 'none',
       },
     },
     renderDetailPanel: ({ row }) => (
