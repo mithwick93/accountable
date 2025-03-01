@@ -50,6 +50,7 @@ import {
 import { notifyBackendError } from '../../../utils/notifications';
 
 type SettleTransactionCandidate = {
+  transactionId: number;
   transactionName: string;
   transactionCategory: string;
   transactionAmount: number;
@@ -68,6 +69,7 @@ const getSettleTransactionCandidates = (transactions: Transaction[]) => {
     if (transaction.sharedTransactions) {
       transaction.sharedTransactions.forEach((sharedTransaction) => {
         candidates.push({
+          transactionId: transaction.id,
           transactionName: transaction.name,
           transactionCategory: transaction.category.name,
           transactionAmount: transaction.amount,
@@ -121,8 +123,45 @@ const DueAmountsSummary: React.FC<DueAmountsSummaryProps> = ({
     return [startDate, endDate];
   }, [selectedSharedTransactionIds, candidates]);
 
-  const dueAmountsSummary = useMemo(() => {
-    const summaryMap: Record<string, Record<string, number>> = {};
+  const totalShared = useMemo(() => {
+    const totalCurrencyMap: Record<string, Record<string, number>> = {};
+
+    candidates
+      .filter((candidate) =>
+        selectedSharedTransactionIds.includes(candidate.sharedTransactionId),
+      )
+      .forEach((candidate) => {
+        if (!totalCurrencyMap[candidate.transactionId]) {
+          totalCurrencyMap[candidate.transactionId] = {};
+        }
+        totalCurrencyMap[candidate.transactionId][
+          candidate.transactionCurrency
+        ] = candidate.transactionAmount;
+      });
+
+    const totalMap: Record<string, number> = {};
+    Object.values(totalCurrencyMap).forEach((currencyMap) => {
+      Object.entries(currencyMap).forEach(([currency, amount]) => {
+        if (!totalMap[currency]) {
+          totalMap[currency] = 0;
+        }
+        totalMap[currency] += amount;
+      });
+    });
+
+    let totalString = '';
+    Object.entries(totalMap).forEach(([currency, amount]) => {
+      totalString += `${currency}: ${formatNumber(amount)} | `;
+    });
+    totalString = `${totalString.slice(0, -3)}`;
+
+    return totalString;
+  }, [selectedSharedTransactionIds, candidates]);
+
+  const [shareAmountsSummary, dueAmountsSummary] = useMemo(() => {
+    const shareMap: Record<string, Record<string, number>> = {};
+    const remainingMap: Record<string, Record<string, number>> = {};
+
     selectedSharedTransactionIds.forEach((sharedTransactionId) => {
       const settleTransactionCandidate = candidates.find(
         (candidate) => candidate.sharedTransactionId === sharedTransactionId,
@@ -130,33 +169,51 @@ const DueAmountsSummary: React.FC<DueAmountsSummaryProps> = ({
       const {
         sharedTransactionUserName = '',
         transactionCurrency = '',
+        sharedTransactionShare = 0,
         sharedTransactionRemaining = 0,
       } = settleTransactionCandidate || {};
 
-      if (!summaryMap[sharedTransactionUserName]) {
-        summaryMap[sharedTransactionUserName] = {};
+      if (!shareMap[sharedTransactionUserName]) {
+        shareMap[sharedTransactionUserName] = {};
       }
-      if (!summaryMap[sharedTransactionUserName][transactionCurrency]) {
-        summaryMap[sharedTransactionUserName][transactionCurrency] = 0;
+      if (!remainingMap[sharedTransactionUserName]) {
+        remainingMap[sharedTransactionUserName] = {};
       }
-      summaryMap[sharedTransactionUserName][transactionCurrency] +=
+
+      if (!shareMap[sharedTransactionUserName][transactionCurrency]) {
+        shareMap[sharedTransactionUserName][transactionCurrency] = 0;
+      }
+      if (!remainingMap[sharedTransactionUserName][transactionCurrency]) {
+        remainingMap[sharedTransactionUserName][transactionCurrency] = 0;
+      }
+
+      shareMap[sharedTransactionUserName][transactionCurrency] +=
+        sharedTransactionShare;
+      remainingMap[sharedTransactionUserName][transactionCurrency] +=
         sharedTransactionRemaining;
     });
-    return summaryMap;
+    return [shareMap, remainingMap];
   }, [selectedSharedTransactionIds, candidates]);
 
-  const dueTotals = useMemo(() => {
-    const summaryMap: Record<string, number> = {};
+  const [shareTotals, dueTotals] = useMemo(() => {
+    const shareSummaryMap: Record<string, number> = {};
+    const remainingSummaryMap: Record<string, number> = {};
 
+    Object.entries(shareAmountsSummary).forEach(([userName, currencyMap]) => {
+      shareSummaryMap[userName] = calculateTotalInBaseCurrency(
+        currencyMap,
+        currencyRates,
+      );
+    });
     Object.entries(dueAmountsSummary).forEach(([userName, currencyMap]) => {
-      summaryMap[userName] = calculateTotalInBaseCurrency(
+      remainingSummaryMap[userName] = calculateTotalInBaseCurrency(
         currencyMap,
         currencyRates,
       );
     });
 
-    return summaryMap;
-  }, [dueAmountsSummary, currencyRates]);
+    return [shareSummaryMap, remainingSummaryMap];
+  }, [shareAmountsSummary, dueAmountsSummary, currencyRates]);
 
   const pairPayable = useMemo(() => {
     const payableMap: Record<string, number> = {};
@@ -180,10 +237,23 @@ const DueAmountsSummary: React.FC<DueAmountsSummaryProps> = ({
   return (
     <Box sx={{ mt: 2, flexShrink: 0 }}>
       <Typography variant="h6" gutterBottom>
-        {`Settlement Summary for [${startDate} - ${endDate}] | ${selectedSharedTransactionIds.length} records`}
+        Settlement Summary
       </Typography>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'normal',
+          alignItems: 'center',
+          gap: 2,
+          mb: 1,
+        }}
+      >
+        <Typography variant="body2">{`Date Range: [${startDate} - ${endDate}]`}</Typography>
+        <Typography variant="body2">{`Records   : [${selectedSharedTransactionIds.length}]`}</Typography>
+        <Typography variant="body2">{`Total     : [${totalShared}]`}</Typography>
+      </Box>
       <Grid container spacing={2}>
-        {Object.entries(dueAmountsSummary)
+        {Object.entries(shareAmountsSummary)
           .sort(([userNameA], [userNameB]) =>
             userNameA.localeCompare(userNameB),
           )
@@ -208,7 +278,21 @@ const DueAmountsSummary: React.FC<DueAmountsSummaryProps> = ({
                     }}
                   >
                     <Typography variant="body2">
-                      {`Total (${baseCurrency})`}
+                      {`Share Total (${baseCurrency})`}
+                    </Typography>
+                    <Typography variant="body2" sx={{ textAlign: 'right' }}>
+                      {formatNumber(shareTotals[userName], 2, 2)}
+                    </Typography>
+                  </Box>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <Typography variant="body2">
+                      {`Due Total (${baseCurrency})`}
                     </Typography>
                     <Typography variant="body2" sx={{ textAlign: 'right' }}>
                       {formatNumber(dueTotals[userName], 2, 2)}
@@ -503,8 +587,8 @@ const SettleSharedTransactionsDialog = ({
     data: candidates,
     enableRowNumbers: true,
     enableStickyHeader: true,
-    enableStickyFooter: true,
     enablePagination: false,
+
     initialState: {
       density: 'compact',
       showColumnFilters: true,
@@ -514,7 +598,6 @@ const SettleSharedTransactionsDialog = ({
           desc: true,
         },
       ],
-      columnFilters: [{ id: 'isSettled', value: 'false' }],
     },
     state: { rowSelection, isLoading: loading },
     muiTableContainerProps: {
@@ -523,9 +606,19 @@ const SettleSharedTransactionsDialog = ({
           selectedSharedTransactionIds.length > 0
             ? isSmallScreen
               ? 'calc(100vh - 600px)'
-              : 'calc(100vh - 550px)'
+              : 'calc(100vh - 500px)'
             : 'calc(100vh - 300px)',
         overflowY: 'auto',
+      },
+    },
+    muiTableFooterProps: {
+      sx: {
+        display: 'none',
+      },
+    },
+    muiBottomToolbarProps: {
+      sx: {
+        display: 'none',
       },
     },
     columnFilterDisplayMode: 'popover',
