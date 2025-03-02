@@ -590,7 +590,7 @@ const Liabilities: React.FC = () => {
       >
         <Typography>Id: {row.original.id}</Typography>
         {row.original.description && (
-          <Typography>Description: {row.original.description}%</Typography>
+          <Typography>Description: {row.original.description}</Typography>
         )}
         {row.original.interestRate && (
           <Typography>Interest Rate: {row.original.interestRate}%</Typography>

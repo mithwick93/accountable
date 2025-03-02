@@ -11,7 +11,7 @@ import {
   Typography,
 } from '@mui/material';
 import DialogTitle from '@mui/material/DialogTitle';
-import { format } from 'date-fns';
+import { isAfter, isValid, parseISO } from 'date-fns';
 import {
   DropdownOption,
   LiteralUnion,
@@ -31,6 +31,16 @@ import { InstallmentPlan } from '../../../types/InstallmentPlan';
 import { Liability } from '../../../types/Liability';
 import { formatNumber } from '../../../utils/common';
 import { notifyBackendError } from '../../../utils/notifications';
+
+const statusOptions = [
+  { label: 'Active', value: 'ACTIVE' },
+  { label: 'Canceled', value: 'CANCELED' },
+  { label: 'Defaulted', value: 'DEFAULTED' },
+  { label: 'Deferred', value: 'DEFERRED' },
+  { label: 'Overdue', value: 'OVERDUE' },
+  { label: 'Restructured', value: 'RESTRUCTURED' },
+  { label: 'Settled', value: 'SETTLED' },
+];
 
 const createPayload = (installmentPlan: Record<string, any>) => {
   const payload: any = {
@@ -99,11 +109,6 @@ const InstallmentPlans: React.FC = () => {
       {
         accessorKey: 'name',
         header: 'Name',
-        muiTableBodyCellProps: {
-          sx: {
-            textTransform: 'capitalize',
-          },
-        },
         muiEditTextFieldProps: {
           required: true,
           error: !!validationErrors?.name,
@@ -112,34 +117,6 @@ const InstallmentPlans: React.FC = () => {
             setValidationErrors({
               ...validationErrors,
               name: undefined,
-            }),
-        },
-      },
-      {
-        accessorKey: 'status',
-        header: 'Status',
-        minSize: 100,
-        size: 100,
-        maxSize: 100,
-        editVariant: 'select',
-        editSelectOptions: [
-          { label: 'Active', value: 'ACTIVE' },
-          { label: 'Canceled', value: 'CANCELED' },
-          { label: 'Defaulted', value: 'DEFAULTED' },
-          { label: 'Deferred', value: 'DEFERRED' },
-          { label: 'Overdue', value: 'OVERDUE' },
-          { label: 'Restructured', value: 'RESTRUCTURED' },
-          { label: 'Settled', value: 'SETTLED' },
-        ],
-        muiEditTextFieldProps: {
-          required: true,
-          select: true,
-          error: !!validationErrors?.status,
-          helperText: validationErrors?.status,
-          onFocus: () =>
-            setValidationErrors({
-              ...validationErrors,
-              status: undefined,
             }),
         },
       },
@@ -162,9 +139,6 @@ const InstallmentPlans: React.FC = () => {
         accessorFn: (row) => row.liability?.id,
         accessorKey: 'liabilityId',
         header: 'Liability',
-        minSize: 150,
-        size: 150,
-        maxSize: 150,
         editVariant: 'select',
         editSelectOptions: liabilitiesOptions,
         muiEditTextFieldProps: {
@@ -178,6 +152,25 @@ const InstallmentPlans: React.FC = () => {
               liabilityId: undefined,
             }),
         },
+        visibleInShowHideMenu: false,
+      },
+      {
+        accessorKey: 'status',
+        header: 'Status',
+        editVariant: 'select',
+        editSelectOptions: statusOptions,
+        muiEditTextFieldProps: {
+          required: true,
+          select: true,
+          error: !!validationErrors?.status,
+          helperText: validationErrors?.status,
+          onFocus: () =>
+            setValidationErrors({
+              ...validationErrors,
+              status: undefined,
+            }),
+        },
+        visibleInShowHideMenu: false,
       },
       {
         accessorKey: 'currency',
@@ -201,7 +194,7 @@ const InstallmentPlans: React.FC = () => {
       },
       {
         accessorKey: 'installmentAmount',
-        header: 'Amount',
+        header: 'Total',
         minSize: 125,
         size: 125,
         maxSize: 125,
@@ -213,7 +206,7 @@ const InstallmentPlans: React.FC = () => {
         },
         Cell: ({ cell }) => (
           <Box component="span">
-            {formatNumber(cell.row.original.installmentAmount)}
+            {formatNumber(cell.row.original.installmentAmount, 2, 2)}
           </Box>
         ),
         muiEditTextFieldProps: {
@@ -232,6 +225,56 @@ const InstallmentPlans: React.FC = () => {
               installmentAmount: undefined,
             }),
         },
+      },
+      {
+        accessorKey: 'installment',
+        header: 'Installment',
+        minSize: 125,
+        size: 125,
+        maxSize: 125,
+        muiTableHeadCellProps: {
+          align: 'right',
+        },
+        muiTableBodyCellProps: {
+          align: 'right',
+        },
+        Cell: ({ cell }) => (
+          <Box component="span">
+            {formatNumber(
+              cell.row.original.installmentAmount /
+                cell.row.original.totalInstallments,
+              2,
+              2,
+            )}
+          </Box>
+        ),
+        Edit: () => null,
+      },
+      {
+        accessorKey: 'balance',
+        header: 'Balance',
+        minSize: 125,
+        size: 125,
+        maxSize: 125,
+        muiTableHeadCellProps: {
+          align: 'right',
+        },
+        muiTableBodyCellProps: {
+          align: 'right',
+        },
+        Cell: ({ cell }) => (
+          <Box component="span">
+            {formatNumber(
+              (cell.row.original.installmentAmount /
+                cell.row.original.totalInstallments) *
+                (cell.row.original.totalInstallments -
+                  cell.row.original.installmentsPaid),
+              2,
+              2,
+            )}
+          </Box>
+        ),
+        Edit: () => null,
       },
       {
         accessorKey: 'totalInstallments',
@@ -264,7 +307,7 @@ const InstallmentPlans: React.FC = () => {
       },
       {
         accessorKey: 'installmentsPaid',
-        header: 'Remaining',
+        header: 'Paid Installments',
         minSize: 125,
         size: 125,
         maxSize: 125,
@@ -315,16 +358,6 @@ const InstallmentPlans: React.FC = () => {
       {
         accessorKey: 'startDate',
         header: 'Start',
-        minSize: 125,
-        size: 125,
-        maxSize: 125,
-        muiTableHeadCellProps: {
-          align: 'right',
-        },
-        muiTableBodyCellProps: {
-          align: 'right',
-        },
-        Cell: ({ cell }) => format(cell.getValue<Date>(), 'dd/MM/yyyy'),
         muiEditTextFieldProps: {
           type: 'date',
           required: true,
@@ -336,25 +369,11 @@ const InstallmentPlans: React.FC = () => {
               startDate: undefined,
             }),
         },
+        visibleInShowHideMenu: false,
       },
       {
         accessorKey: 'endDate',
         header: 'End',
-        minSize: 125,
-        size: 125,
-        maxSize: 125,
-        muiTableHeadCellProps: {
-          align: 'right',
-        },
-        muiTableBodyCellProps: {
-          align: 'right',
-        },
-        Cell: ({ cell }) => {
-          if (!cell.row.original.endDate) {
-            return 'N/A';
-          }
-          return format(cell.getValue<Date>(), 'dd/MM/yyyy');
-        },
         muiEditTextFieldProps: {
           type: 'date',
           required: false,
@@ -366,6 +385,7 @@ const InstallmentPlans: React.FC = () => {
               endDate: undefined,
             }),
         },
+        visibleInShowHideMenu: false,
       },
     ],
     [validationErrors, liabilitiesOptions, currencyCodes],
@@ -389,15 +409,44 @@ const InstallmentPlans: React.FC = () => {
     }
     if (!installmentPlan.installmentAmount) {
       errors.installmentAmount = 'Installment amount is required';
+    } else if (parseFloat(installmentPlan.installmentAmount) <= 0) {
+      errors.installmentAmount = 'Installment amount must be greater than 0';
     }
     if (!installmentPlan.totalInstallments) {
       errors.totalInstallments = 'Total installments amount is required';
+    } else if (parseInt(installmentPlan.totalInstallments) <= 0) {
+      errors.totalInstallments = 'Total installments must be greater than 0';
     }
-    if (!installmentPlan.installmentsPaid) {
+    if (
+      !installmentPlan.installmentsPaid &&
+      parseInt(installmentPlan.installmentsPaid) !== 0
+    ) {
       errors.installmentsPaid = 'Installments paid amount is required';
+    } else if (
+      parseInt(installmentPlan.installmentsPaid) < 0 ||
+      parseInt(installmentPlan.installmentsPaid) >
+        parseInt(installmentPlan.totalInstallments)
+    ) {
+      errors.installmentsPaid =
+        'Installments paid must be between 0 and total installments';
     }
     if (!installmentPlan.startDate) {
-      errors.startDate = 'Start date paid amount is required';
+      errors.startDate = 'Start date is required';
+    } else {
+      const startDate = parseISO(installmentPlan.startDate);
+      if (!isValid(startDate)) {
+        errors.startDate = 'Invalid start date';
+      }
+    }
+    if (installmentPlan.endDate) {
+      const startDate = parseISO(installmentPlan.startDate);
+      const endDate = parseISO(installmentPlan.endDate);
+
+      if (!isValid(endDate)) {
+        errors.endDate = 'Invalid end date';
+      } else if (!isValid(startDate) || !isAfter(endDate, startDate)) {
+        errors.endDate = 'End date must be after start date';
+      }
     }
 
     return errors;
@@ -479,7 +528,11 @@ const InstallmentPlans: React.FC = () => {
       columnVisibility: {
         id: false,
         description: false,
+        liabilityId: false,
+        status: false,
         interestRate: false,
+        startDate: false,
+        endDate: false,
       },
       pagination: {
         pageIndex: 0,
@@ -512,10 +565,29 @@ const InstallmentPlans: React.FC = () => {
       >
         <Typography>Id: {row.original.id}</Typography>
         {row.original.description && (
-          <Typography>Description: {row.original.description}%</Typography>
+          <Typography>Description: {row.original.description}</Typography>
+        )}
+        {row.original.liability && (
+          <Typography>Liability: {row.original.liability.name}</Typography>
+        )}
+        {row.original.status && (
+          <Typography>
+            Status:{' '}
+            {
+              statusOptions.find(
+                (option) => option.value === row.original.status,
+              )?.label
+            }
+          </Typography>
         )}
         {row.original.interestRate && (
           <Typography>Interest Rate: {row.original.interestRate}%</Typography>
+        )}
+        {row.original.startDate && (
+          <Typography>Start Date: {row.original.startDate}</Typography>
+        )}
+        {row.original.endDate && (
+          <Typography>End date: {row.original.endDate}</Typography>
         )}
       </Box>
     ),
