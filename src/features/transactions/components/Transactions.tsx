@@ -335,7 +335,8 @@ const Transactions: React.FC = () => {
       ['transactions'],
       getTransactionsFetchOptions(searchParameters, startDate, endDate),
     );
-  }, [refetchData, searchParameters, startDate, endDate]);
+    // eslint-disable-next-line
+  }, [searchParameters, startDate, endDate]);
 
   const columns = useMemo<MRT_ColumnDef<MRT_RowData>[]>(
     () => [
