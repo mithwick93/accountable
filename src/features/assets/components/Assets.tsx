@@ -29,7 +29,7 @@ import apiClient from '../../../services/ApiService';
 import { Asset } from '../../../types/Asset';
 import {
   formatAssetType,
-  formatCurrency,
+  formatNumber,
   getOriginalAssetType,
   stringToColor,
 } from '../../../utils/common';
@@ -169,7 +169,6 @@ const Assets: React.FC = () => {
               currency: undefined,
             }),
         },
-        visibleInShowHideMenu: false,
       },
       {
         accessorFn: (row) => row.balance,
@@ -182,12 +181,7 @@ const Assets: React.FC = () => {
           align: 'right',
         },
         Cell: ({ cell }) => (
-          <Box component="span">
-            {formatCurrency(
-              cell.row.original.balance,
-              cell.row.original.currency,
-            )}
-          </Box>
+          <Box component="span">{formatNumber(cell.row.original.balance)}</Box>
         ),
         muiEditTextFieldProps: {
           type: 'number',
@@ -314,12 +308,12 @@ const Assets: React.FC = () => {
       density: 'compact',
       sorting: [
         {
-          id: 'type',
-          desc: true,
-        },
-        {
           id: 'currency',
           desc: false,
+        },
+        {
+          id: 'type',
+          desc: true,
         },
         {
           id: 'name',
@@ -327,7 +321,7 @@ const Assets: React.FC = () => {
         },
       ],
       columnVisibility: {
-        currency: false,
+        active: false,
         id: false,
         description: false,
       },

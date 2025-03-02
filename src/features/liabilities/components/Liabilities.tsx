@@ -28,9 +28,9 @@ import { useStaticData } from '../../../context/StaticDataContext';
 import apiClient from '../../../services/ApiService';
 import { Liability } from '../../../types/Liability';
 import {
-  formatCurrency,
   formatLiabilityStatus,
   formatLiabilityType,
+  formatNumber,
   getCreditUtilizationColor,
   getDueDateColor,
   getLiabilityStatusOptions,
@@ -125,9 +125,9 @@ const Liabilities: React.FC = () => {
         accessorFn: (row) => formatLiabilityType(row.type),
         accessorKey: 'type',
         header: 'Type',
-        minSize: 150,
-        size: 150,
-        maxSize: 150,
+        minSize: 130,
+        size: 130,
+        maxSize: 130,
         Cell: ({ renderedCellValue }) => (
           <Chip
             label={renderedCellValue}
@@ -187,24 +187,6 @@ const Liabilities: React.FC = () => {
               status: undefined,
             }),
         },
-      },
-      {
-        accessorKey: 'currency',
-        header: 'Currency',
-        editVariant: 'select',
-        editSelectOptions: currencyCodes,
-        muiEditTextFieldProps: {
-          select: true,
-          required: true,
-          error: !!validationErrors?.currency,
-          helperText: validationErrors?.currency,
-          onFocus: () =>
-            setValidationErrors({
-              ...validationErrors,
-              currency: undefined,
-            }),
-        },
-        visibleInShowHideMenu: false,
       },
       {
         accessorKey: 'statementDay',
@@ -317,8 +299,31 @@ const Liabilities: React.FC = () => {
         visibleInShowHideMenu: false,
       },
       {
+        accessorKey: 'currency',
+        header: 'Currency',
+        minSize: 50,
+        size: 50,
+        maxSize: 50,
+        editVariant: 'select',
+        editSelectOptions: currencyCodes,
+        muiEditTextFieldProps: {
+          select: true,
+          required: true,
+          error: !!validationErrors?.currency,
+          helperText: validationErrors?.currency,
+          onFocus: () =>
+            setValidationErrors({
+              ...validationErrors,
+              currency: undefined,
+            }),
+        },
+      },
+      {
         accessorKey: 'balance',
         header: 'Utilized',
+        minSize: 120,
+        size: 120,
+        maxSize: 120,
         muiTableHeadCellProps: {
           align: 'right',
         },
@@ -339,7 +344,7 @@ const Liabilities: React.FC = () => {
                 ),
               })}
             >
-              {formatCurrency(utilized, row.original.currency)}
+              {formatNumber(utilized)}
             </Box>
           );
         },
@@ -362,6 +367,9 @@ const Liabilities: React.FC = () => {
       },
       {
         header: 'Available',
+        minSize: 120,
+        size: 120,
+        maxSize: 120,
         muiTableHeadCellProps: {
           align: 'right',
         },
@@ -370,10 +378,7 @@ const Liabilities: React.FC = () => {
         },
         Cell: ({ cell }) => (
           <Box component="span">
-            {formatCurrency(
-              cell.row.original.amount - cell.row.original.balance,
-              cell.row.original.currency,
-            )}
+            {formatNumber(cell.row.original.amount - cell.row.original.balance)}
           </Box>
         ),
         Edit: () => null,
@@ -381,6 +386,9 @@ const Liabilities: React.FC = () => {
       {
         accessorKey: 'amount',
         header: 'Limit',
+        minSize: 120,
+        size: 120,
+        maxSize: 120,
         muiTableHeadCellProps: {
           align: 'right',
         },
@@ -388,12 +396,7 @@ const Liabilities: React.FC = () => {
           align: 'right',
         },
         Cell: ({ cell }) => (
-          <Box component="span">
-            {formatCurrency(
-              cell.row.original.amount,
-              cell.row.original.currency,
-            )}
-          </Box>
+          <Box component="span">{formatNumber(cell.row.original.amount)}</Box>
         ),
         muiEditTextFieldProps: {
           type: 'number',
@@ -534,20 +537,21 @@ const Liabilities: React.FC = () => {
       density: 'compact',
       sorting: [
         {
-          id: 'type',
-          desc: false,
-        },
-        {
           id: 'currency',
           desc: false,
         },
+        {
+          id: 'type',
+          desc: false,
+        },
+
         {
           id: 'name',
           desc: false,
         },
       ],
       columnVisibility: {
-        currency: false,
+        status: false,
         id: false,
         description: false,
         interestRate: false,
