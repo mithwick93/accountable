@@ -4,7 +4,6 @@ import EditIcon from '@mui/icons-material/Edit';
 import {
   Box,
   Button,
-  Chip,
   DialogActions,
   DialogContent,
   IconButton,
@@ -12,7 +11,9 @@ import {
   Typography,
 } from '@mui/material';
 import DialogTitle from '@mui/material/DialogTitle';
+import { format } from 'date-fns';
 import {
+  DropdownOption,
   LiteralUnion,
   MaterialReactTable,
   type MRT_ColumnDef,
@@ -26,47 +27,43 @@ import { toast } from 'react-toastify';
 import { useData } from '../../../context/DataContext';
 import { useStaticData } from '../../../context/StaticDataContext';
 import apiClient from '../../../services/ApiService';
+import { InstallmentPlan } from '../../../types/InstallmentPlan';
 import { Liability } from '../../../types/Liability';
-import {
-  formatCurrency,
-  formatLiabilityStatus,
-  formatLiabilityType,
-  getCreditUtilizationColor,
-  getDueDateColor,
-  getLiabilityStatusOptions,
-  getLiabilityTypeOptions,
-  getOriginalLiabilityStatus,
-  getOriginalLiabilityType,
-  stringToColor,
-} from '../../../utils/common';
-import { calculateLiabilityDates } from '../../../utils/date';
+import { formatNumber } from '../../../utils/common';
 import { notifyBackendError } from '../../../utils/notifications';
 
-const createPayload = (liability: Liability) => {
+const createPayload = (installmentPlan: Record<string, any>) => {
   const payload: any = {
-    name: liability.name,
-    type: getOriginalLiabilityType(liability.type),
-    currency: liability.currency,
-    amount: +liability.amount,
-    balance: +liability.balance,
-    dueDay: +liability.dueDay,
-    status: getOriginalLiabilityStatus(liability.status),
+    name: installmentPlan.name,
+    liabilityId: installmentPlan.liabilityId,
+    currency: installmentPlan.currency,
+    installmentAmount: installmentPlan.installmentAmount,
+    totalInstallments: installmentPlan.totalInstallments,
+    installmentsPaid: installmentPlan.installmentsPaid,
+    startDate: installmentPlan.startDate,
+    status: installmentPlan.status,
   };
 
-  if (liability.description) {
-    payload.description = liability.description;
+  if (installmentPlan.description) {
+    payload.description = installmentPlan.description;
   }
-  if (liability.interestRate) {
-    payload.interestRate = liability.interestRate;
+  if (installmentPlan.interestRate) {
+    payload.interestRate = installmentPlan.interestRate;
   }
-  if (liability.statementDay) {
-    payload.statementDay = +liability.statementDay;
+  if (installmentPlan.endDate) {
+    payload.endDate = installmentPlan.endDate;
   }
+
   return payload;
 };
 
 const InstallmentPlans: React.FC = () => {
-  const { liabilities, refetchData, loading: dataLoading } = useData();
+  const {
+    liabilities,
+    installmentPlans,
+    refetchData,
+    loading: dataLoading,
+  } = useData();
   const { currencies, loading: staticDataLoading } = useStaticData();
 
   const [validationErrors, setValidationErrors] = useState<
@@ -77,7 +74,19 @@ const InstallmentPlans: React.FC = () => {
   const [deleting, setDeleting] = useState(false);
 
   const loading = dataLoading || staticDataLoading;
-  const currencyCodes = currencies?.map((currency) => currency.code) ?? [];
+  const currencyCodes = useMemo(
+    () => currencies?.map((currency) => currency.code) ?? [],
+    [currencies],
+  );
+
+  const liabilitiesOptions: DropdownOption[] = useMemo(
+    () =>
+      liabilities.map((item: Liability) => ({
+        value: item.id,
+        label: item.name,
+      })),
+    [liabilities],
+  );
   const columns = useMemo<MRT_ColumnDef<MRT_RowData>[]>(
     // eslint-disable-next-line complexity
     () => [
@@ -107,6 +116,34 @@ const InstallmentPlans: React.FC = () => {
         },
       },
       {
+        accessorKey: 'status',
+        header: 'Status',
+        minSize: 100,
+        size: 100,
+        maxSize: 100,
+        editVariant: 'select',
+        editSelectOptions: [
+          { label: 'Active', value: 'ACTIVE' },
+          { label: 'Canceled', value: 'CANCELED' },
+          { label: 'Defaulted', value: 'DEFAULTED' },
+          { label: 'Deferred', value: 'DEFERRED' },
+          { label: 'Overdue', value: 'OVERDUE' },
+          { label: 'Restructured', value: 'RESTRUCTURED' },
+          { label: 'Settled', value: 'SETTLED' },
+        ],
+        muiEditTextFieldProps: {
+          required: true,
+          select: true,
+          error: !!validationErrors?.status,
+          helperText: validationErrors?.status,
+          onFocus: () =>
+            setValidationErrors({
+              ...validationErrors,
+              status: undefined,
+            }),
+        },
+      },
+      {
         accessorKey: 'description',
         header: 'Description',
         muiEditTextFieldProps: {
@@ -122,75 +159,32 @@ const InstallmentPlans: React.FC = () => {
         visibleInShowHideMenu: false,
       },
       {
-        accessorFn: (row) => formatLiabilityType(row.type),
-        accessorKey: 'type',
-        header: 'Type',
+        accessorFn: (row) => row.liability?.id,
+        accessorKey: 'liabilityId',
+        header: 'Liability',
         minSize: 150,
         size: 150,
         maxSize: 150,
-        Cell: ({ renderedCellValue }) => (
-          <Chip
-            label={renderedCellValue}
-            sx={(theme) => ({
-              backgroundColor: stringToColor(
-                renderedCellValue as string,
-                theme.palette.mode === 'dark',
-              ),
-            })}
-          />
-        ),
         editVariant: 'select',
-        editSelectOptions: getLiabilityTypeOptions(),
+        editSelectOptions: liabilitiesOptions,
         muiEditTextFieldProps: {
           select: true,
           required: true,
-          error: !!validationErrors?.type,
-          helperText: validationErrors?.type,
+          error: !!validationErrors?.liabilityId,
+          helperText: validationErrors?.liabilityId,
           onFocus: () =>
             setValidationErrors({
               ...validationErrors,
-              type: undefined,
-            }),
-        },
-      },
-      {
-        accessorFn: (row) => formatLiabilityStatus(row.status),
-        accessorKey: 'status',
-        header: 'Status',
-        minSize: 100,
-        size: 100,
-        maxSize: 100,
-        Cell: ({ cell }) => {
-          const label = cell.getValue() as string;
-          return (
-            <Chip
-              label={label}
-              sx={(theme) => ({
-                backgroundColor: stringToColor(
-                  label,
-                  theme.palette.mode === 'dark',
-                ),
-              })}
-            />
-          );
-        },
-        editVariant: 'select',
-        editSelectOptions: getLiabilityStatusOptions(),
-        muiEditTextFieldProps: {
-          select: true,
-          required: true,
-          error: !!validationErrors?.status,
-          helperText: validationErrors?.status,
-          onFocus: () =>
-            setValidationErrors({
-              ...validationErrors,
-              status: undefined,
+              liabilityId: undefined,
             }),
         },
       },
       {
         accessorKey: 'currency',
         header: 'Currency',
+        minSize: 50,
+        size: 50,
+        maxSize: 50,
         editVariant: 'select',
         editSelectOptions: currencyCodes,
         muiEditTextFieldProps: {
@@ -204,94 +198,96 @@ const InstallmentPlans: React.FC = () => {
               currency: undefined,
             }),
         },
-        visibleInShowHideMenu: false,
       },
       {
-        accessorKey: 'statementDay',
-        header: 'Statement Date',
+        accessorKey: 'installmentAmount',
+        header: 'Amount',
+        minSize: 125,
+        size: 125,
+        maxSize: 125,
         muiTableHeadCellProps: {
           align: 'right',
         },
         muiTableBodyCellProps: {
           align: 'right',
         },
-        minSize: 150,
-        size: 150,
-        maxSize: 150,
         Cell: ({ cell }) => (
           <Box component="span">
-            {
-              calculateLiabilityDates(
-                new Date(),
-                cell.row.original.dueDay,
-                cell.row.original.statementDay,
-              ).statementDate
-            }
+            {formatNumber(cell.row.original.installmentAmount)}
           </Box>
         ),
         muiEditTextFieldProps: {
           type: 'number',
           slotProps: {
             htmlInput: {
-              min: 1,
-              max: 31,
+              min: 0,
             },
           },
-          required: false,
-          error: !!validationErrors?.statementDay,
-          helperText: validationErrors?.statementDay,
+          required: true,
+          error: !!validationErrors?.installmentAmount,
+          helperText: validationErrors?.installmentAmount,
           onFocus: () =>
             setValidationErrors({
               ...validationErrors,
-              statementDay: undefined,
+              installmentAmount: undefined,
             }),
         },
       },
       {
-        accessorKey: 'dueDay',
-        header: 'Due Date',
+        accessorKey: 'totalInstallments',
+        header: 'Total Installments',
+        minSize: 125,
+        size: 125,
+        maxSize: 125,
         muiTableHeadCellProps: {
           align: 'right',
         },
         muiTableBodyCellProps: {
           align: 'right',
         },
-        minSize: 150,
-        size: 150,
-        maxSize: 150,
-        Cell: ({ cell }) => {
-          const { dueDate } = calculateLiabilityDates(
-            new Date(),
-            cell.row.original.dueDay,
-            cell.row.original.statementDay,
-          );
-
-          return (
-            <Box
-              component="span"
-              sx={(theme) => ({
-                color: getDueDateColor(dueDate, theme.palette.mode),
-              })}
-            >
-              {dueDate}
-            </Box>
-          );
-        },
         muiEditTextFieldProps: {
           type: 'number',
           slotProps: {
             htmlInput: {
               min: 1,
-              max: 31,
             },
           },
           required: true,
-          error: !!validationErrors?.dueDay,
-          helperText: validationErrors?.dueDay,
+          error: !!validationErrors?.totalInstallments,
+          helperText: validationErrors?.totalInstallments,
           onFocus: () =>
             setValidationErrors({
               ...validationErrors,
-              dueDay: undefined,
+              totalInstallments: undefined,
+            }),
+        },
+      },
+      {
+        accessorKey: 'installmentsPaid',
+        header: 'Remaining',
+        minSize: 125,
+        size: 125,
+        maxSize: 125,
+        muiTableHeadCellProps: {
+          align: 'right',
+        },
+        muiTableBodyCellProps: {
+          align: 'right',
+        },
+        muiEditTextFieldProps: {
+          type: 'number',
+          slotProps: {
+            htmlInput: {
+              min: 0,
+            },
+          },
+          required: true,
+          error: !!validationErrors?.installmentsPaid,
+          helperText: validationErrors?.installmentsPaid,
+          onFocus: () =>
+            setValidationErrors({
+              ...validationErrors,
+              installmentsPaid: undefined,
             }),
         },
       },
@@ -317,207 +313,145 @@ const InstallmentPlans: React.FC = () => {
         visibleInShowHideMenu: false,
       },
       {
-        accessorKey: 'balance',
-        header: 'Utilized',
+        accessorKey: 'startDate',
+        header: 'Start',
+        minSize: 125,
+        size: 125,
+        maxSize: 125,
         muiTableHeadCellProps: {
           align: 'right',
         },
         muiTableBodyCellProps: {
           align: 'right',
         },
-        Cell: ({ row }) => {
-          const utilized = row.original.balance;
-          const limit = row.original.amount;
-          return (
-            <Box
-              component="span"
-              sx={(theme) => ({
-                color: getCreditUtilizationColor(
-                  utilized,
-                  limit,
-                  theme.palette.mode,
-                ),
-              })}
-            >
-              {formatCurrency(utilized, row.original.currency)}
-            </Box>
-          );
-        },
+        Cell: ({ cell }) => format(cell.getValue<Date>(), 'dd/MM/yyyy'),
         muiEditTextFieldProps: {
-          type: 'number',
-          slotProps: {
-            htmlInput: {
-              min: 0,
-            },
-          },
+          type: 'date',
           required: true,
-          error: !!validationErrors?.balance,
-          helperText: validationErrors?.balance,
+          error: !!validationErrors?.startDate,
+          helperText: validationErrors?.startDate,
           onFocus: () =>
             setValidationErrors({
               ...validationErrors,
-              balance: undefined,
+              startDate: undefined,
             }),
         },
       },
       {
-        header: 'Available',
+        accessorKey: 'endDate',
+        header: 'End',
+        minSize: 125,
+        size: 125,
+        maxSize: 125,
         muiTableHeadCellProps: {
           align: 'right',
         },
         muiTableBodyCellProps: {
           align: 'right',
         },
-        Cell: ({ cell }) => (
-          <Box component="span">
-            {formatCurrency(
-              cell.row.original.amount - cell.row.original.balance,
-              cell.row.original.currency,
-            )}
-          </Box>
-        ),
-        Edit: () => null,
-      },
-      {
-        accessorKey: 'amount',
-        header: 'Limit',
-        muiTableHeadCellProps: {
-          align: 'right',
+        Cell: ({ cell }) => {
+          if (!cell.row.original.endDate) {
+            return 'N/A';
+          }
+          return format(cell.getValue<Date>(), 'dd/MM/yyyy');
         },
-        muiTableBodyCellProps: {
-          align: 'right',
-        },
-        Cell: ({ cell }) => (
-          <Box component="span">
-            {formatCurrency(
-              cell.row.original.amount,
-              cell.row.original.currency,
-            )}
-          </Box>
-        ),
         muiEditTextFieldProps: {
-          type: 'number',
-          slotProps: {
-            htmlInput: {
-              min: 0,
-            },
-          },
-          required: true,
-          error: !!validationErrors?.amount,
-          helperText: validationErrors?.amount,
+          type: 'date',
+          required: false,
+          error: !!validationErrors?.endDate,
+          helperText: validationErrors?.endDate,
           onFocus: () =>
             setValidationErrors({
               ...validationErrors,
-              amount: undefined,
+              endDate: undefined,
             }),
         },
       },
     ],
-    [validationErrors],
+    [validationErrors, liabilitiesOptions, currencyCodes],
   );
 
-  // eslint-disable-next-line complexity
-  const validateLiability = (liability: Record<LiteralUnion<string>, any>) => {
+  const validateInstallmentPlan = (
+    installmentPlan: Record<LiteralUnion<string>, any>,
+  ) => {
     const errors: Record<string, string | undefined> = {};
-    if (!liability.name) {
+    if (!installmentPlan.name) {
       errors.name = 'Name is required';
     }
-    if (!liability.type) {
-      errors.type = 'Type is required';
-    }
-    if (!liability.currency) {
-      errors.currency = 'Currency is required';
-    }
-    if (liability.statementDay) {
-      if (+liability.statementDay < 1 || +liability.statementDay > 31) {
-        errors.statementDay = 'Statement Day must be between 1 and 31';
-      }
-    }
-    if (!liability.dueDay) {
-      errors.dueDay = 'Due Day is required';
-    } else if (+liability.dueDay < 1 || +liability.dueDay > 31) {
-      errors.dueDay = 'Due Day must be between 1 and 31';
-    }
-    if (liability.interestRate) {
-      if (+liability.interestRate <= 0) {
-        errors.interestRate = 'Interest Rate should be positive';
-      }
-    }
-    if (
-      liability.balance === undefined ||
-      liability.balance === null ||
-      liability.balance === ''
-    ) {
-      errors.balance = 'Utilized is required';
-    } else if (+liability.balance < 0) {
-      errors.balance = 'Utilized should be non negative';
-    }
-    if (
-      liability.amount === undefined ||
-      liability.amount === null ||
-      liability.amount === '' ||
-      liability.amount === '0'
-    ) {
-      errors.amount = 'Limit is required';
-    } else if (+liability.amount <= 0) {
-      errors.amount = 'Limit should be positive';
-    }
-    if (liability.balance && liability.amount) {
-      if (+liability.balance >= +liability.amount) {
-        errors.balance = 'Utilized cannot be greater than Limit';
-      }
-    }
-    if (!liability.status) {
+    if (!installmentPlan.status) {
       errors.status = 'Status is required';
     }
+    if (!installmentPlan.liabilityId) {
+      errors.liabilityId = 'Liability is required';
+    }
+    if (!installmentPlan.currency) {
+      errors.currency = 'Currency is required';
+    }
+    if (!installmentPlan.installmentAmount) {
+      errors.installmentAmount = 'Installment amount is required';
+    }
+    if (!installmentPlan.totalInstallments) {
+      errors.totalInstallments = 'Total installments amount is required';
+    }
+    if (!installmentPlan.installmentsPaid) {
+      errors.installmentsPaid = 'Installments paid amount is required';
+    }
+    if (!installmentPlan.startDate) {
+      errors.startDate = 'Start date paid amount is required';
+    }
+
     return errors;
   };
 
-  const createLiability = async (liability: Liability) => {
+  const createInstallmentPlan = async (installmentPlan: InstallmentPlan) => {
     setSaving(true);
     try {
-      const payload = createPayload(liability);
-      const response = await apiClient.post('/liabilities', payload);
-      await refetchData(['liabilities', 'paymentSystems']);
+      const payload = createPayload(installmentPlan);
+      const response = await apiClient.post('/installment-plans', payload);
+      await refetchData(['installmentPlans']);
 
-      const newLiability = response.data;
-      toast.success(`Created Liability: '${newLiability.name}' successfully`);
+      const newInstallmentPlan = response.data;
+      toast.success(
+        `Created Installment plan: '${newInstallmentPlan.name}' successfully`,
+      );
     } catch (error) {
-      notifyBackendError('Error creating liability', error);
+      notifyBackendError('Error creating installment plan', error);
     } finally {
       setSaving(false);
     }
   };
 
-  const updateLiability = async (liability: Liability) => {
+  const updateInstallmentPlan = async (installmentPlan: InstallmentPlan) => {
     setUpdating(true);
     try {
-      const { id } = liability;
-      const payload = createPayload(liability);
-      const response = await apiClient.put(`/liabilities/${id}`, payload);
-      await refetchData(['liabilities', 'paymentSystems']);
+      const { id } = installmentPlan;
+      const payload = createPayload(installmentPlan);
+      const response = await apiClient.put(`/installment-plans/${id}`, payload);
+      await refetchData(['installmentPlans']);
 
-      const updatedLiability = response.data;
+      const updatedInstallmentPlan = response.data;
       toast.success(
-        `Updated Liability: '${updatedLiability.name}' successfully`,
+        `Updated Installment plan: '${updatedInstallmentPlan.name}' successfully`,
       );
     } catch (error) {
-      notifyBackendError('Error updating liability', error);
+      notifyBackendError('Error updating installment plan', error);
     } finally {
       setUpdating(false);
     }
   };
 
-  const deleteLiability = async (row: MRT_Row<MRT_RowData>) => {
+  const deleteInstallmentPlan = async (row: MRT_Row<MRT_RowData>) => {
     setDeleting(true);
     try {
       const { id } = row.original;
-      await apiClient.delete(`/liabilities/${id}`);
-      await refetchData(['liabilities', 'paymentSystems']);
+      await apiClient.delete(`/installment-plans/${id}`);
+      await refetchData(['installmentPlans']);
 
-      toast.success(`Deleted Liability: '${row.original.name}' successfully`);
+      toast.success(
+        `Deleted Installment plan: '${row.original.name}' successfully`,
+      );
     } catch (error) {
-      notifyBackendError('Error deleting liability', error);
+      notifyBackendError('Error deleting installment plan', error);
     } finally {
       setDeleting(false);
     }
@@ -525,7 +459,7 @@ const InstallmentPlans: React.FC = () => {
 
   const table = useMaterialReactTable({
     columns,
-    data: liabilities,
+    data: installmentPlans,
     enableStickyHeader: true,
     enableStickyFooter: true,
     enableEditing: true,
@@ -533,10 +467,6 @@ const InstallmentPlans: React.FC = () => {
     initialState: {
       density: 'compact',
       sorting: [
-        {
-          id: 'type',
-          desc: false,
-        },
         {
           id: 'currency',
           desc: false,
@@ -547,7 +477,6 @@ const InstallmentPlans: React.FC = () => {
         },
       ],
       columnVisibility: {
-        currency: false,
         id: false,
         description: false,
         interestRate: false,
@@ -592,7 +521,7 @@ const InstallmentPlans: React.FC = () => {
     ),
     onCreatingRowSave: async ({ table, values }) => {
       //validate data
-      const newValidationErrors = validateLiability(values);
+      const newValidationErrors = validateInstallmentPlan(values);
       if (Object.values(newValidationErrors).some((error) => error)) {
         setValidationErrors(newValidationErrors);
         return;
@@ -600,7 +529,7 @@ const InstallmentPlans: React.FC = () => {
 
       //save data to api
       setValidationErrors({});
-      await createLiability(values as Liability);
+      await createInstallmentPlan(values as InstallmentPlan);
       table.setCreatingRow(null); //exit creating mode
     },
     onCreatingRowCancel: () => setValidationErrors({}),
@@ -617,7 +546,7 @@ const InstallmentPlans: React.FC = () => {
     ),
     renderCreateRowDialogContent: ({ table, row, internalEditComponents }) => (
       <>
-        <DialogTitle>Create New Liability</DialogTitle>
+        <DialogTitle>Create Installment Plan</DialogTitle>
         <DialogContent
           sx={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}
         >
@@ -630,7 +559,7 @@ const InstallmentPlans: React.FC = () => {
     ),
     onEditingRowSave: async ({ table, values }) => {
       //validate data
-      const newValidationErrors = validateLiability(values);
+      const newValidationErrors = validateInstallmentPlan(values);
       if (Object.values(newValidationErrors).some((error) => error)) {
         setValidationErrors(newValidationErrors);
         return;
@@ -638,13 +567,13 @@ const InstallmentPlans: React.FC = () => {
 
       //save data to api
       setValidationErrors({});
-      await updateLiability(values as Liability);
+      await updateInstallmentPlan(values as InstallmentPlan);
       table.setEditingRow(null); //exit editing mode
     },
     onEditingRowCancel: () => setValidationErrors({}),
     renderEditRowDialogContent: ({ table, row, internalEditComponents }) => (
       <>
-        <DialogTitle>Edit Liability</DialogTitle>
+        <DialogTitle>Edit Installment Plan</DialogTitle>
         <DialogContent
           sx={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}
         >
@@ -668,10 +597,10 @@ const InstallmentPlans: React.FC = () => {
             onClick={async () => {
               if (
                 window.confirm(
-                  `Are you sure you want to delete '${row.original.name}' Asset?`,
+                  `Are you sure you want to delete '${row.original.name}' Installment Plan?`,
                 )
               ) {
-                await deleteLiability(row);
+                await deleteInstallmentPlan(row);
               }
             }}
           >
