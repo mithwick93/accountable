@@ -7,6 +7,7 @@ import React, {
 } from 'react';
 import apiClient from '../services/ApiService';
 import { Asset } from '../types/Asset';
+import { InstallmentPlan } from '../types/InstallmentPlan';
 import { Liability } from '../types/Liability';
 import { PaymentSystemCredit } from '../types/PaymentSystemCredit';
 import { PaymentSystemDebit } from '../types/PaymentSystemDebit';
@@ -19,6 +20,7 @@ import { useSettings } from './SettingsContext';
 type DATA_TYPES =
   | 'assets'
   | 'liabilities'
+  | 'installmentPlans'
   | 'paymentSystems'
   | 'categories'
   | 'templates'
@@ -40,6 +42,7 @@ type TransactionResponse = {
 
 type DataContextType = {
   assets: Asset[];
+  installmentPlans: InstallmentPlan[];
   liabilities: Liability[];
   paymentSystems: (PaymentSystemCredit | PaymentSystemDebit)[];
   categories: TransactionCategory[];
@@ -76,6 +79,9 @@ const prepareTransactionSearchRequestPayload = (
 
 export const DataProvider = ({ children }: { children: ReactNode }) => {
   const [assets, setAssets] = useState<Asset[]>([]);
+  const [installmentPlans, setInstallmentPlans] = useState<InstallmentPlan[]>(
+    [],
+  );
   const [liabilities, setLiabilities] = useState<Liability[]>([]);
   const [paymentSystems, setPaymentSystems] = useState<
     (PaymentSystemCredit | PaymentSystemDebit)[]
@@ -92,6 +98,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
   const fetchData = async (
     dataTypes: DATA_TYPES[] = [
       'assets',
+      'installmentPlans',
       'liabilities',
       'paymentSystems',
       'categories',
@@ -105,6 +112,9 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
 
       if (dataTypes.includes('assets')) {
         promises.push(apiClient.get('/assets'));
+      }
+      if (dataTypes.includes('installmentPlans')) {
+        promises.push(apiClient.get('/installment-plans'));
       }
       if (dataTypes.includes('liabilities')) {
         promises.push(apiClient.get('/liabilities'));
@@ -160,6 +170,14 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
           .shift()
           ?.data.sort((a: Asset, b: Asset) => a.name.localeCompare(b.name));
         setAssets(assets);
+      }
+      if (dataTypes.includes('installmentPlans') && responses[0]) {
+        const installmentPlans = responses
+          .shift()
+          ?.data.sort((a: InstallmentPlan, b: InstallmentPlan) =>
+            a.name.localeCompare(b.name),
+          );
+        setInstallmentPlans(installmentPlans);
       }
       if (dataTypes.includes('liabilities') && responses[0]) {
         const liabilities = responses
@@ -229,6 +247,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     <DataContext.Provider
       value={{
         assets,
+        installmentPlans,
         liabilities,
         paymentSystems,
         categories,
