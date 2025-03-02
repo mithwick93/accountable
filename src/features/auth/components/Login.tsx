@@ -23,7 +23,7 @@ const Login = () => {
     if (accessToken) {
       navigate(from, { replace: true });
     }
-  }, [navigate]);
+  }, [navigate, from]);
 
   const handleLogin = async () => {
     try {

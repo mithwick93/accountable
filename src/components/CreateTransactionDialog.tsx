@@ -133,9 +133,12 @@ const CreateTransactionDialog = ({ onClose, open }: DialogProps) => {
     setSharedTransactionCommonValidationErrors,
   ] = useState<string[]>([]);
 
-  const userOptions = users ?? [];
-  const categoryOptions =
-    categories.filter((category) => category.type === formValues.type) ?? [];
+  const userOptions = useMemo(() => users ?? [], [users]);
+  const categoryOptions = useMemo(
+    () =>
+      categories.filter((category) => category.type === formValues.type) ?? [],
+    [categories, formValues.type],
+  );
   const currencyCodes = currencies?.map((currency) => currency.code) ?? [];
   const smallScreen = useMediaQuery(theme.breakpoints.down('md'));
 

@@ -104,11 +104,8 @@ const TransactionsSummery: React.FC<TransactionsSummeryProps> = ({
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('lg'));
   const dialogs = useDialogs();
-  const { settings, loading } = useSettings();
+  const { settings } = useSettings();
 
-  if (loading) {
-    return null;
-  }
   const currency: string = settings?.currency || 'USD';
 
   const transactionsForCurrency = useMemo(
@@ -213,8 +210,10 @@ const Transactions: React.FC = () => {
     [transactions],
   );
 
-  const searchParameters: Record<string, any> =
-    settings?.transactions?.search?.parameters || {};
+  const searchParameters: Record<string, any> = useMemo(
+    () => settings?.transactions?.search?.parameters || {},
+    [settings],
+  );
   const pageIndex = searchParameters.pageIndex || 0;
   const pageSize = searchParameters.pageSize || 100;
   const { startDate, endDate } = getStartEndDate(settings);
@@ -336,7 +335,7 @@ const Transactions: React.FC = () => {
       ['transactions'],
       getTransactionsFetchOptions(searchParameters, startDate, endDate),
     );
-  }, [searchParameters, startDate, endDate]);
+  }, [refetchData, searchParameters, startDate, endDate]);
 
   const columns = useMemo<MRT_ColumnDef<MRT_RowData>[]>(
     () => [
@@ -639,7 +638,7 @@ const Transactions: React.FC = () => {
         filterVariant: 'multi-select',
       },
     ],
-    [filteredTransactions],
+    [totalAmountByCurrency, transactionCurrencies, theme.palette.mode],
   );
 
   const deleteTransaction = async (row: MRT_Row<MRT_RowData>) => {

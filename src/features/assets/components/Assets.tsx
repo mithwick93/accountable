@@ -47,7 +47,10 @@ const Assets: React.FC = () => {
   const [deleting, setDeleting] = useState(false);
 
   const loading = dataLoading || staticDataLoading;
-  const currencyCodes = currencies?.map((currency) => currency.code) ?? [];
+  const currencyCodes = useMemo(
+    () => currencies?.map((currency) => currency.code) ?? [],
+    [currencies],
+  );
   const columns = useMemo<MRT_ColumnDef<MRT_RowData>[]>(
     () => [
       {
@@ -201,7 +204,7 @@ const Assets: React.FC = () => {
         },
       },
     ],
-    [validationErrors],
+    [validationErrors, currencyCodes],
   );
 
   const validateAsset = (asset: Record<LiteralUnion<string>, any>) => {

@@ -85,7 +85,10 @@ const PaymentSystems: React.FC = () => {
   const [deleting, setDeleting] = useState(false);
 
   const loading = dataLoading || staticDataLoading;
-  const currencyCodes = currencies?.map((currency) => currency.code) ?? [];
+  const currencyCodes = useMemo(
+    () => currencies?.map((currency) => currency.code) ?? [],
+    [currencies],
+  );
 
   const columns = useMemo<MRT_ColumnDef<MRT_RowData>[]>(
     // eslint-disable-next-line complexity
@@ -312,7 +315,7 @@ const PaymentSystems: React.FC = () => {
         visibleInShowHideMenu: false,
       },
     ],
-    [validationErrors],
+    [validationErrors, assetsOptions, liabilitiesOptions, currencyCodes],
   );
 
   useEffect(() => {

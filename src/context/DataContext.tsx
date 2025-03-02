@@ -1,6 +1,7 @@
 import React, {
   createContext,
   ReactNode,
+  useCallback,
   useContext,
   useEffect,
   useState,
@@ -94,145 +95,151 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState<boolean>(true);
   const { settings } = useSettings();
 
-  // eslint-disable-next-line complexity
-  const fetchData = async (
-    dataTypes: DATA_TYPES[] = [
-      'assets',
-      'installmentPlans',
-      'liabilities',
-      'paymentSystems',
-      'categories',
-      'templates',
-    ],
-    options: Record<string, any> = {},
-  ) => {
-    setLoading(true);
-    try {
-      const promises = [];
+  const fetchData = useCallback(
+    // eslint-disable-next-line complexity
+    async (
+      dataTypes: DATA_TYPES[] = [
+        'assets',
+        'installmentPlans',
+        'liabilities',
+        'paymentSystems',
+        'categories',
+        'templates',
+      ],
+      options: Record<string, any> = {},
+    ) => {
+      setLoading(true);
+      try {
+        const promises = [];
 
-      if (dataTypes.includes('assets')) {
-        promises.push(apiClient.get('/assets'));
-      }
-      if (dataTypes.includes('installmentPlans')) {
-        promises.push(apiClient.get('/installment-plans'));
-      }
-      if (dataTypes.includes('liabilities')) {
-        promises.push(apiClient.get('/liabilities'));
-      }
-      if (dataTypes.includes('paymentSystems')) {
-        promises.push(apiClient.get('/payment-systems/credits'));
-        promises.push(apiClient.get('/payment-systems/debits'));
-      }
-      if (dataTypes.includes('categories')) {
-        promises.push(apiClient.get('/transactions/categories'));
-      }
+        if (dataTypes.includes('assets')) {
+          promises.push(apiClient.get('/assets'));
+        }
+        if (dataTypes.includes('installmentPlans')) {
+          promises.push(apiClient.get('/installment-plans'));
+        }
+        if (dataTypes.includes('liabilities')) {
+          promises.push(apiClient.get('/liabilities'));
+        }
+        if (dataTypes.includes('paymentSystems')) {
+          promises.push(apiClient.get('/payment-systems/credits'));
+          promises.push(apiClient.get('/payment-systems/debits'));
+        }
+        if (dataTypes.includes('categories')) {
+          promises.push(apiClient.get('/transactions/categories'));
+        }
 
-      if (dataTypes.includes('templates')) {
-        promises.push(apiClient.get('/transactions/templates'));
-      }
+        if (dataTypes.includes('templates')) {
+          promises.push(apiClient.get('/transactions/templates'));
+        }
 
-      if (dataTypes.includes('transactions')) {
-        const searchParameters: Record<string, any> =
-          options?.transactions?.search?.parameters ||
-          settings?.transactions?.search?.parameters ||
-          {};
-        const {
-          pageIndex = 0,
-          pageSize = 50,
-          sorting,
-          ...requestPayload
-        } = searchParameters;
-        const sortParams = sorting
-          ? sorting
-              .map((s: string) => {
-                if (s.startsWith('date,')) {
-                  const [, direction] = s.split(',');
-                  return `sort=${s}&sort=modified,${direction}`;
-                }
-                return `sort=${s}`;
-              })
-              .join('&')
-          : '';
-        promises.push(
-          apiClient.post(
-            `/transactions/search?page=${pageIndex}&size=${pageSize}${
-              sortParams ? '&' : ''
-            }${sortParams}`,
-            prepareTransactionSearchRequestPayload(requestPayload),
-          ),
-        );
-      }
+        if (dataTypes.includes('transactions')) {
+          const searchParameters: Record<string, any> =
+            options?.transactions?.search?.parameters ||
+            settings?.transactions?.search?.parameters ||
+            {};
+          const {
+            pageIndex = 0,
+            pageSize = 50,
+            sorting,
+            ...requestPayload
+          } = searchParameters;
+          const sortParams = sorting
+            ? sorting
+                .map((s: string) => {
+                  if (s.startsWith('date,')) {
+                    const [, direction] = s.split(',');
+                    return `sort=${s}&sort=modified,${direction}`;
+                  }
+                  return `sort=${s}`;
+                })
+                .join('&')
+            : '';
+          promises.push(
+            apiClient.post(
+              `/transactions/search?page=${pageIndex}&size=${pageSize}${
+                sortParams ? '&' : ''
+              }${sortParams}`,
+              prepareTransactionSearchRequestPayload(requestPayload),
+            ),
+          );
+        }
 
-      const responses = await Promise.all(promises);
+        const responses = await Promise.all(promises);
 
-      if (dataTypes.includes('assets') && responses[0]) {
-        const assets = responses
-          .shift()
-          ?.data.sort((a: Asset, b: Asset) => a.name.localeCompare(b.name));
-        setAssets(assets);
+        if (dataTypes.includes('assets') && responses[0]) {
+          const assets = responses
+            .shift()
+            ?.data.sort((a: Asset, b: Asset) => a.name.localeCompare(b.name));
+          setAssets(assets);
+        }
+        if (dataTypes.includes('installmentPlans') && responses[0]) {
+          const installmentPlans = responses
+            .shift()
+            ?.data.sort((a: InstallmentPlan, b: InstallmentPlan) =>
+              a.name.localeCompare(b.name),
+            );
+          setInstallmentPlans(installmentPlans);
+        }
+        if (dataTypes.includes('liabilities') && responses[0]) {
+          const liabilities = responses
+            .shift()
+            ?.data.sort((a: Liability, b: Liability) =>
+              a.name.localeCompare(b.name),
+            );
+          setLiabilities(liabilities);
+        }
+        if (dataTypes.includes('paymentSystems') && responses[0]) {
+          const credits = responses
+            .shift()
+            ?.data.map((item: PaymentSystemCredit) => ({
+              ...item,
+              type: 'Credit',
+            }))
+            .sort((a: PaymentSystemCredit, b: PaymentSystemCredit) =>
+              a.name.localeCompare(b.name),
+            );
+          const debits = responses
+            .shift()
+            ?.data.map((item: PaymentSystemDebit) => ({
+              ...item,
+              type: 'Debit',
+            }))
+            .sort((a: PaymentSystemDebit, b: PaymentSystemDebit) =>
+              a.name.localeCompare(b.name),
+            );
+          setPaymentSystems([...credits, ...debits]);
+        }
+        if (dataTypes.includes('categories') && responses[0]) {
+          const categories = responses
+            .shift()
+            ?.data.sort(
+              (a: TransactionCategory, b: TransactionCategory) =>
+                a.type.localeCompare(b.type) || a.name.localeCompare(b.name),
+            );
+          setCategories(categories);
+        }
+        if (dataTypes.includes('templates') && responses[0]) {
+          const templates = responses
+            .shift()
+            ?.data.sort(
+              (a: TransactionTemplate, b: TransactionTemplate) =>
+                a.type.localeCompare(b.type) || a.name.localeCompare(b.name),
+            );
+          setTemplates(templates);
+        }
+        if (dataTypes.includes('transactions') && responses[0]) {
+          const transactions = responses.shift()?.data;
+          setTransactions(transactions);
+        }
+      } catch (error) {
+        log.error('Error fetching data:', error);
+      } finally {
+        setLoading(false);
       }
-      if (dataTypes.includes('installmentPlans') && responses[0]) {
-        const installmentPlans = responses
-          .shift()
-          ?.data.sort((a: InstallmentPlan, b: InstallmentPlan) =>
-            a.name.localeCompare(b.name),
-          );
-        setInstallmentPlans(installmentPlans);
-      }
-      if (dataTypes.includes('liabilities') && responses[0]) {
-        const liabilities = responses
-          .shift()
-          ?.data.sort((a: Liability, b: Liability) =>
-            a.name.localeCompare(b.name),
-          );
-        setLiabilities(liabilities);
-      }
-      if (dataTypes.includes('paymentSystems') && responses[0]) {
-        const credits = responses
-          .shift()
-          ?.data.map((item: PaymentSystemCredit) => ({
-            ...item,
-            type: 'Credit',
-          }))
-          .sort((a: PaymentSystemCredit, b: PaymentSystemCredit) =>
-            a.name.localeCompare(b.name),
-          );
-        const debits = responses
-          .shift()
-          ?.data.map((item: PaymentSystemDebit) => ({ ...item, type: 'Debit' }))
-          .sort((a: PaymentSystemDebit, b: PaymentSystemDebit) =>
-            a.name.localeCompare(b.name),
-          );
-        setPaymentSystems([...credits, ...debits]);
-      }
-      if (dataTypes.includes('categories') && responses[0]) {
-        const categories = responses
-          .shift()
-          ?.data.sort(
-            (a: TransactionCategory, b: TransactionCategory) =>
-              a.type.localeCompare(b.type) || a.name.localeCompare(b.name),
-          );
-        setCategories(categories);
-      }
-      if (dataTypes.includes('templates') && responses[0]) {
-        const templates = responses
-          .shift()
-          ?.data.sort(
-            (a: TransactionTemplate, b: TransactionTemplate) =>
-              a.type.localeCompare(b.type) || a.name.localeCompare(b.name),
-          );
-        setTemplates(templates);
-      }
-      if (dataTypes.includes('transactions') && responses[0]) {
-        const transactions = responses.shift()?.data;
-        setTransactions(transactions);
-      }
-    } catch (error) {
-      log.error('Error fetching data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+    [settings?.transactions?.search?.parameters],
+  );
 
   const refetchData = (
     dataTypes?: DATA_TYPES[],
@@ -241,7 +248,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [fetchData]);
 
   return (
     <DataContext.Provider

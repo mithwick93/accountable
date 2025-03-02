@@ -102,7 +102,7 @@ const DateRangeSelector = () => {
     }
 
     return predefinedRanges[1].value;
-  }, [startDate, endDate]);
+  }, [predefinedRanges, startDate, endDate]);
 
   const [selectedRange, setSelectedRange] = useState<string>(
     getInitialSelectedRange,

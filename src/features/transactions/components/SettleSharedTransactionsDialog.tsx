@@ -579,7 +579,7 @@ const SettleSharedTransactionsDialog = ({
         filterVariant: 'checkbox',
       },
     ],
-    [],
+    [theme.palette.mode],
   );
 
   const table = useMaterialReactTable({

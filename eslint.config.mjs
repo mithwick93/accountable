@@ -7,6 +7,7 @@ import jest from 'eslint-plugin-jest';
 import jsxA11Y from 'eslint-plugin-jsx-a11y';
 import prettier from 'eslint-plugin-prettier';
 import react from 'eslint-plugin-react';
+import reactHooks from 'eslint-plugin-react-hooks';
 import globals from 'globals';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -32,6 +33,7 @@ export default [
       'plugin:jsx-a11y/recommended',
       'plugin:prettier/recommended',
       'plugin:jest/recommended',
+      'plugin:react-hooks/recommended',
     ),
   ),
   {
@@ -53,6 +55,7 @@ export default [
     plugins: {
       '@typescript-eslint': fixupPluginRules(typescriptEslint),
       'jsx-a11y': fixupPluginRules(jsxA11Y),
+      'react-hooks': fixupPluginRules(reactHooks),
       prettier: fixupPluginRules(prettier),
       react: fixupPluginRules(react),
       jest: fixupPluginRules(jest),
@@ -97,6 +100,8 @@ export default [
       'require-await': 'error',
       '@typescript-eslint/no-explicit-any': 'off',
       'react/prop-types': 'off',
+      'react-hooks/rules-of-hooks': 'error',
+      'react-hooks/exhaustive-deps': 'error',
     },
     settings: {
       react: {
