@@ -195,9 +195,9 @@ const InstallmentPlans: React.FC = () => {
       {
         accessorKey: 'installmentAmount',
         header: 'Total',
-        minSize: 125,
-        size: 125,
-        maxSize: 125,
+        minSize: 100,
+        size: 100,
+        maxSize: 100,
         muiTableHeadCellProps: {
           align: 'right',
         },
@@ -251,11 +251,36 @@ const InstallmentPlans: React.FC = () => {
         Edit: () => null,
       },
       {
+        accessorKey: 'paid',
+        header: 'Paid',
+        minSize: 100,
+        size: 100,
+        maxSize: 100,
+        muiTableHeadCellProps: {
+          align: 'right',
+        },
+        muiTableBodyCellProps: {
+          align: 'right',
+        },
+        Cell: ({ cell }) => (
+          <Box component="span">
+            {formatNumber(
+              (cell.row.original.installmentAmount /
+                cell.row.original.totalInstallments) *
+                cell.row.original.installmentsPaid,
+              2,
+              2,
+            )}
+          </Box>
+        ),
+        Edit: () => null,
+      },
+      {
         accessorKey: 'balance',
         header: 'Balance',
-        minSize: 125,
-        size: 125,
-        maxSize: 125,
+        minSize: 100,
+        size: 100,
+        maxSize: 100,
         muiTableHeadCellProps: {
           align: 'right',
         },
