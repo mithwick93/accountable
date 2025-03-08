@@ -651,12 +651,10 @@ const Transactions: React.FC = () => {
       await apiClient.delete(
         `/transactions/${id}?updateAccounts=${updateAccounts}`,
       );
-      await refetchData([
-        'transactions',
-        'assets',
-        'liabilities',
-        'paymentSystems',
-      ]);
+      await refetchData(
+        ['transactions', 'assets', 'liabilities', 'paymentSystems'],
+        getTransactionsFetchOptions(searchParameters, startDate, endDate),
+      );
 
       toast.success(`Deleted transaction: '${row.original.name}' successfully`);
     } catch (error) {
