@@ -6,15 +6,11 @@ import React, {
   useState,
 } from 'react';
 import apiClient from '../services/ApiService';
-import { AssetType } from '../types/AssetType';
 import { Currency } from '../types/Currency';
-import { LiabilityType } from '../types/LiabilityType';
 import log from '../utils/logger';
 
 type StaticDataContextType = {
   currencies: Currency[] | null;
-  liabilityTypes: LiabilityType[] | null;
-  assetTypes: AssetType[] | null;
   loading: boolean;
 };
 
@@ -31,8 +27,6 @@ export const StaticDataProvider: React.FC<StaticDataProviderProps> = ({
 }) => {
   const [staticData, setStaticData] = useState<StaticDataContextType>({
     currencies: null,
-    liabilityTypes: null,
-    assetTypes: null,
     loading: true,
   });
   const [loading, setLoading] = useState<boolean>(true);
@@ -41,22 +35,11 @@ export const StaticDataProvider: React.FC<StaticDataProviderProps> = ({
     const fetchStaticData = async () => {
       setLoading(true);
       try {
-        const [currencies, liabilityTypes, assetTypes] = await Promise.all([
-          apiClient.get('/currencies'),
-          apiClient.get('/liabilities/types'),
-          apiClient.get('/assets/types'),
-        ]);
+        const currencies = await apiClient.get('/currencies');
 
         setStaticData({
           currencies: currencies.data.sort((a: Currency, b: Currency) =>
             a.code.localeCompare(b.code),
-          ),
-          liabilityTypes: liabilityTypes.data.sort(
-            (a: LiabilityType, b: LiabilityType) =>
-              a.name.localeCompare(b.name),
-          ),
-          assetTypes: assetTypes.data.sort((a: AssetType, b: AssetType) =>
-            a.name.localeCompare(b.name),
           ),
           loading: false,
         });
