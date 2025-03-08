@@ -35,14 +35,6 @@ const DateRangeSelector = () => {
         end: endOfMonth(now),
       },
       {
-        label: format(addMonths(now, 1), 'MMMM yyyy'),
-        value: `${startOfMonth(addMonths(now, 1)).toISOString()}|${endOfMonth(
-          addMonths(now, 1),
-        ).toISOString()}`,
-        start: startOfMonth(addMonths(now, 1)),
-        end: endOfMonth(addMonths(now, 1)),
-      },
-      {
         label: format(addMonths(now, -1), 'MMMM yyyy'),
         value: `${startOfMonth(addMonths(now, -1)).toISOString()}|${endOfMonth(
           addMonths(now, -1),
@@ -57,6 +49,30 @@ const DateRangeSelector = () => {
         ).toISOString()}`,
         start: startOfMonth(addMonths(now, -2)),
         end: endOfMonth(addMonths(now, -2)),
+      },
+      {
+        label: format(addMonths(now, -3), 'MMMM yyyy'),
+        value: `${startOfMonth(addMonths(now, -3)).toISOString()}|${endOfMonth(
+          addMonths(now, -3),
+        ).toISOString()}`,
+        start: startOfMonth(addMonths(now, -3)),
+        end: endOfMonth(addMonths(now, -3)),
+      },
+      {
+        label: format(addMonths(now, -4), 'MMMM yyyy'),
+        value: `${startOfMonth(addMonths(now, -4)).toISOString()}|${endOfMonth(
+          addMonths(now, -4),
+        ).toISOString()}`,
+        start: startOfMonth(addMonths(now, -4)),
+        end: endOfMonth(addMonths(now, -4)),
+      },
+      {
+        label: format(addMonths(now, -5), 'MMMM yyyy'),
+        value: `${startOfMonth(addMonths(now, -5)).toISOString()}|${endOfMonth(
+          addMonths(now, -5),
+        ).toISOString()}`,
+        start: startOfMonth(addMonths(now, -5)),
+        end: endOfMonth(addMonths(now, -5)),
       },
       {
         label: format(now, 'yyyy'),
