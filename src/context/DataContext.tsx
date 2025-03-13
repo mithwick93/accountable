@@ -16,7 +16,6 @@ import { Transaction } from '../types/Transaction';
 import { TransactionCategory } from '../types/TransactionCategory';
 import { TransactionTemplate } from '../types/TransactionTemplate';
 import log from '../utils/logger';
-import { useSettings } from './SettingsContext';
 
 type DATA_TYPES =
   | 'assets'
@@ -93,7 +92,6 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     null,
   );
   const [loading, setLoading] = useState<boolean>(true);
-  const { settings } = useSettings();
 
   const fetchData = useCallback(
     // eslint-disable-next-line complexity
@@ -135,9 +133,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
 
         if (dataTypes.includes('transactions')) {
           const searchParameters: Record<string, any> =
-            options?.transactions?.search?.parameters ||
-            settings?.transactions?.search?.parameters ||
-            {};
+            options?.transactions?.search?.parameters || {};
           const {
             pageIndex = 0,
             pageSize = 50,
@@ -238,7 +234,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         setLoading(false);
       }
     },
-    [settings?.transactions?.search?.parameters],
+    [],
   );
 
   const refetchData = (
