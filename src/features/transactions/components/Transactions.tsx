@@ -1,23 +1,16 @@
-import CompareArrowsIcon from '@mui/icons-material/CompareArrows';
 import DeleteIcon from '@mui/icons-material/Delete';
 import FormatClearIcon from '@mui/icons-material/FormatClear';
-import InputIcon from '@mui/icons-material/Input';
 import MoneyIcon from '@mui/icons-material/Money';
-import MoveDownIcon from '@mui/icons-material/MoveDown';
-import OpenInFullIcon from '@mui/icons-material/OpenInFull';
-import OutputIcon from '@mui/icons-material/Output';
 import {
   Avatar,
   Box,
   Chip,
   IconButton,
   Tooltip,
-  useMediaQuery,
   useTheme,
 } from '@mui/material';
 
 import Checkbox from '@mui/material/Checkbox';
-import Grid from '@mui/material/Grid2';
 import Paper from '@mui/material/Paper';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
@@ -39,16 +32,14 @@ import {
   MRT_RowData,
   useMaterialReactTable,
 } from 'material-react-table';
-import React, { ElementType, useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import DateRangeSelector from '../../../components/DateRangeSelector';
 import { useData } from '../../../context/DataContext';
 import { useSettings } from '../../../context/SettingsContext';
 import apiClient from '../../../services/ApiService';
 import { SharedTransaction } from '../../../types/SharedTransaction';
-import { Transaction } from '../../../types/Transaction';
 import {
-  calculateGroupedExpenses,
   formatCurrency,
   formatNumber,
   formatTransactionType,
@@ -59,7 +50,7 @@ import {
 } from '../../../utils/common';
 import { notifyBackendError } from '../../../utils/notifications';
 import SettleSharedTransactionsDialog from './SettleSharedTransactionsDialog';
-import TransactionSummeryDialog from './TransactionSummeryDialog';
+import TransactionsSummery from './TransactionsSummery';
 
 const FILTER_COLUMNS: Record<string, string> = {
   name: 'Name',
@@ -71,117 +62,6 @@ const FILTER_COLUMNS: Record<string, string> = {
   fromAsset: 'From Asset',
   toAsset: 'To Asset',
   toLiability: 'To Liability',
-};
-
-type GridItemWithIconProps = {
-  title: string;
-  value: string;
-  Icon: ElementType;
-};
-const GridItemWithIcon: React.FC<GridItemWithIconProps> = ({
-  title,
-  value,
-  Icon,
-}) => (
-  <Grid size={{ lg: 3 }}>
-    <Tooltip title={title}>
-      <Box display="flex" alignItems="center">
-        <Icon />
-        <Typography variant="body1" component="div" ml={1}>
-          {value}
-        </Typography>
-      </Box>
-    </Tooltip>
-  </Grid>
-);
-
-type TransactionsSummeryProps = {
-  transactions: Transaction[];
-};
-const TransactionsSummery: React.FC<TransactionsSummeryProps> = ({
-  transactions,
-}) => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('lg'));
-  const dialogs = useDialogs();
-  const { settings } = useSettings();
-
-  const currency: string = settings?.currency || 'USD';
-
-  const transactionsForCurrency = useMemo(
-    () =>
-      transactions.filter((transaction) => transaction.currency === currency),
-    [transactions, currency],
-  );
-
-  const groupedExpenses = useMemo(
-    () => calculateGroupedExpenses(transactionsForCurrency),
-    [transactionsForCurrency],
-  );
-
-  const expenses = groupedExpenses.Expense || 0;
-  const income = groupedExpenses.Income || 0;
-  const incomeExpenseDifference = income - expenses;
-  const transfers = groupedExpenses.Transfer || 0;
-
-  const expenseTotal = useMemo(
-    () => formatCurrency(expenses, currency),
-    [expenses, currency],
-  );
-  const incomeTotal = useMemo(
-    () => formatCurrency(income, currency),
-    [income, currency],
-  );
-  const cashFlow = useMemo(
-    () => formatCurrency(incomeExpenseDifference, currency),
-    [incomeExpenseDifference, currency],
-  );
-  const transferTotal = useMemo(
-    () => formatCurrency(transfers, currency),
-    [transfers, currency],
-  );
-
-  const renderShowSummeryButton = () => (
-    <Tooltip title="Show Transactions Summery">
-      <IconButton
-        onClick={async () => {
-          await dialogs.open(TransactionSummeryDialog, transactionsForCurrency);
-        }}
-        color="primary"
-        size="small"
-      >
-        <OpenInFullIcon />
-      </IconButton>
-    </Tooltip>
-  );
-
-  if (isMobile) {
-    return renderShowSummeryButton();
-  }
-
-  return (
-    <Box display="flex" alignItems="center" sx={{ width: '100%' }}>
-      <Grid container sx={{ width: '100%' }}>
-        <GridItemWithIcon title="Income" value={incomeTotal} Icon={InputIcon} />
-        <GridItemWithIcon
-          title="Expenses"
-          value={expenseTotal}
-          Icon={OutputIcon}
-        />
-        <GridItemWithIcon
-          title="Cash Flow"
-          value={cashFlow}
-          Icon={CompareArrowsIcon}
-        />
-        <GridItemWithIcon
-          title="Transfers"
-          value={transferTotal}
-          Icon={MoveDownIcon}
-        />
-      </Grid>
-      {renderShowSummeryButton()}
-    </Box>
-  );
 };
 
 const Transactions: React.FC = () => {
