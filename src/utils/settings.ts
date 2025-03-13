@@ -5,8 +5,13 @@ export const defaultUserSettings = {
     search: {
       parameters: {
         userIds: null,
+        name: null,
+        description: null,
         dateFrom: null,
         dateTo: null,
+        currencies: null,
+        amountFrom: null,
+        amountTo: null,
         types: null,
         categoryIds: null,
         fromAssetIds: null,
