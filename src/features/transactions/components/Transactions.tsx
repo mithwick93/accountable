@@ -37,6 +37,8 @@ import { toast } from 'react-toastify';
 import DateRangeSelector from '../../../components/DateRangeSelector';
 import { useData } from '../../../context/DataContext';
 import { useSettings } from '../../../context/SettingsContext';
+import { useStaticData } from '../../../context/StaticDataContext';
+import { useUser } from '../../../context/UserContext';
 import apiClient from '../../../services/ApiService';
 import { SharedTransaction } from '../../../types/SharedTransaction';
 import {
@@ -56,6 +58,7 @@ const FILTER_COLUMNS: Record<string, string> = {
   name: 'Name',
   description: 'Description',
   currency: 'Currency',
+  amount: 'Amount',
   type: 'Type',
   category: 'Category',
   fromPaymentSystem: 'From Payment System',
@@ -64,8 +67,134 @@ const FILTER_COLUMNS: Record<string, string> = {
   toLiability: 'To Liability',
 };
 
+const computeSearchParameters = (
+  searchParameters: Record<string, any>,
+  newColumnFilters: ColumnFilter[],
+) => {
+  const newSearchParameters = { ...searchParameters };
+  const presenceFlags: Record<string, boolean> = {};
+
+  // eslint-disable-next-line no-unused-vars
+  const filterMapping: Record<string, (value: any) => void> = {
+    user: (value) => {
+      if (Array.isArray(value)) {
+        newSearchParameters.userIds = value;
+      }
+      presenceFlags.user = true;
+    },
+    name: (value) => {
+      newSearchParameters.name = value;
+      presenceFlags.name = true;
+    },
+    description: (value) => {
+      newSearchParameters.description = value;
+      presenceFlags.description = true;
+    },
+    currency: (value) => {
+      if (Array.isArray(value)) {
+        newSearchParameters.currencies = value;
+      }
+      presenceFlags.currency = true;
+    },
+    amount: (value) => {
+      if (Array.isArray(value) && value.length === 2) {
+        const [amountFrom, amountTo] = value;
+        newSearchParameters.amountFrom = amountFrom;
+        newSearchParameters.amountTo = amountTo;
+      }
+      presenceFlags.amount = true;
+    },
+    type: (value) => {
+      if (Array.isArray(value)) {
+        newSearchParameters.types = value;
+      }
+      presenceFlags.type = true;
+    },
+    category: (value) => {
+      if (Array.isArray(value)) {
+        newSearchParameters.categoryIds = value;
+      }
+      presenceFlags.category = true;
+    },
+    fromPaymentSystem: (value) => {
+      if (Array.isArray(value)) {
+        newSearchParameters.fromPaymentSystemIds = value;
+      }
+      presenceFlags.fromPaymentSystem = true;
+    },
+    fromAsset: (value) => {
+      if (Array.isArray(value)) {
+        newSearchParameters.fromAssetIds = value;
+      }
+      presenceFlags.fromAsset = true;
+    },
+    toAsset: (value) => {
+      if (Array.isArray(value)) {
+        newSearchParameters.toAssetIds = value;
+      }
+      presenceFlags.toAsset = true;
+    },
+    toLiability: (value) => {
+      if (Array.isArray(value)) {
+        newSearchParameters.toLiabilityIds = value;
+      }
+      presenceFlags.toLiability = true;
+    },
+  };
+
+  newColumnFilters.forEach(({ id, value }) => {
+    const handler = filterMapping[id];
+    if (handler) {
+      handler(value);
+    }
+  });
+
+  if (!presenceFlags.user) {
+    newSearchParameters.userIds = null;
+  }
+  if (!presenceFlags.name) {
+    newSearchParameters.name = null;
+  }
+  if (!presenceFlags.description) {
+    newSearchParameters.description = null;
+  }
+  if (!presenceFlags.currency) {
+    newSearchParameters.currencies = null;
+  }
+  if (!presenceFlags.amount) {
+    newSearchParameters.amountFrom = null;
+    newSearchParameters.amountTo = null;
+  }
+  if (!presenceFlags.type) {
+    newSearchParameters.types = null;
+  }
+  if (!presenceFlags.category) {
+    newSearchParameters.categoryIds = null;
+  }
+  if (!presenceFlags.fromPaymentSystem) {
+    newSearchParameters.fromPaymentSystemIds = null;
+  }
+  if (!presenceFlags.fromAsset) {
+    newSearchParameters.fromAssetIds = null;
+  }
+  if (!presenceFlags.toAsset) {
+    newSearchParameters.toAssetIds = null;
+  }
+  if (!presenceFlags.toLiability) {
+    newSearchParameters.toLiabilityIds = null;
+  }
+
+  return newSearchParameters;
+};
+
 const Transactions: React.FC = () => {
+  const { users, loading: userLoading } = useUser();
+  const { currencies, loading: staticDataLoading } = useStaticData();
   const {
+    assets,
+    liabilities,
+    paymentSystems,
+    categories,
     transactions: transactionsResponse,
     loading: dataLoading,
     refetchData,
@@ -75,7 +204,56 @@ const Transactions: React.FC = () => {
   const dialogs = useDialogs();
   const [deleting, setDeleting] = useState(false);
 
-  const loading = dataLoading || settingsLoading;
+  const loading =
+    userLoading || staticDataLoading || dataLoading || settingsLoading;
+
+  const userFilterOptions = useMemo(() => {
+    if (!users) {
+      return [];
+    }
+
+    return users.map((user) => ({
+      label: `${user.firstName} ${user?.lastName}`,
+      value: user.id,
+    }));
+  }, [users]);
+  const currencyOptions = useMemo(
+    () => currencies?.map((currency) => currency.code) ?? [],
+    [currencies],
+  );
+  const categoriesOptions = useMemo(
+    () =>
+      categories.map((category) => ({
+        label: category.name,
+        value: category.id,
+      })),
+    [categories],
+  );
+  const assetsOptions = useMemo(
+    () =>
+      assets.map((asset) => ({
+        label: asset.name,
+        value: asset.id,
+      })),
+    [assets],
+  );
+  const liabilitiesOptions = useMemo(
+    () =>
+      liabilities.map((liability) => ({
+        label: liability.name,
+        value: liability.id,
+      })),
+    [liabilities],
+  );
+  const paymentSystemsOptions = useMemo(
+    () =>
+      paymentSystems.map((paymentSystem) => ({
+        label: paymentSystem.name,
+        value: paymentSystem.id,
+      })),
+    [paymentSystems],
+  );
+
   const transactions = useMemo(
     () => transactionsResponse?.content || [],
     [transactionsResponse],
@@ -133,66 +311,16 @@ const Transactions: React.FC = () => {
     return ` (${presentFilters.join(', ')})`;
   }, [columnFilters]);
 
-  const filteredTransactions = useMemo(
-    () =>
-      transactions.filter((transaction) =>
-        // @ts-expect-error ignore
-        columnFilters.every(({ id, value }) => {
-          switch (id) {
-            case 'user':
-              return value.includes(
-                `${transaction.user?.firstName} ${transaction.user?.lastName}`,
-              );
-            case 'name':
-              return transaction.name
-                .toLowerCase()
-                .includes(value.toLowerCase());
-            case 'description':
-              return transaction.description
-                ? transaction.description
-                    .toLowerCase()
-                    .includes(value.toLowerCase())
-                : false;
-            case 'currency':
-              return value.includes(transaction.currency);
-            case 'type':
-              return value.includes(
-                transaction.type.charAt(0) +
-                  transaction.type.slice(1).toLowerCase(),
-              );
-            case 'category':
-              return value.includes(transaction.category.name);
-            case 'fromPaymentSystem':
-              return (
-                value.includes(transaction.fromPaymentSystemCredit?.name) ||
-                value.includes(transaction.fromPaymentSystemDebit?.name)
-              );
-            case 'fromAsset':
-              return value.includes(transaction.fromAsset?.name);
-            case 'toAsset':
-              return value.includes(transaction.toAsset?.name);
-            case 'toLiability':
-              return value.includes(transaction.toLiability?.name);
-            default:
-              return true;
-          }
-        }),
-      ),
-    [transactions, columnFilters],
-  );
-
   const transactionCurrencies = useMemo(
     () =>
       Array.from(
-        new Set(
-          filteredTransactions.map((transaction) => transaction.currency),
-        ),
+        new Set(transactions.map((transaction) => transaction.currency)),
       ).sort((a, b) => a.localeCompare(b)),
-    [filteredTransactions],
+    [transactions],
   );
 
   const totalAmountByCurrency = useMemo(() => {
-    const totals = filteredTransactions.reduce(
+    const totals = transactions.reduce(
       (acc, transaction) => {
         const { currency, amount } = transaction;
         if (!acc[currency]) {
@@ -208,7 +336,7 @@ const Transactions: React.FC = () => {
         currencyA.localeCompare(currencyB),
       ),
     );
-  }, [filteredTransactions]);
+  }, [transactions]);
 
   useEffect(() => {
     refetchData(
@@ -228,6 +356,9 @@ const Transactions: React.FC = () => {
         minSize: 125,
         size: 125,
         maxSize: 150,
+        filterVariant: 'multi-select',
+        filterSelectOptions: userFilterOptions,
+        filterFn: () => true,
         Cell: ({ cell }) => (
           <Tooltip title={cell.getValue<string>()}>
             <Avatar
@@ -239,7 +370,6 @@ const Transactions: React.FC = () => {
             />
           </Tooltip>
         ),
-        filterVariant: 'multi-select',
       },
       {
         accessorKey: 'name',
@@ -247,6 +377,7 @@ const Transactions: React.FC = () => {
         minSize: 150,
         size: 200,
         maxSize: 250,
+        filterFn: () => true,
         Cell: ({ cell }) => (
           <Tooltip title={cell.getValue<string>()}>
             <Box
@@ -277,8 +408,9 @@ const Transactions: React.FC = () => {
         minSize: 100,
         size: 125,
         maxSize: 150,
-        Cell: ({ cell }) => format(cell.getValue<Date>(), 'dd/MM/yyyy'),
         filterVariant: 'date-range',
+        filterFn: () => true,
+        Cell: ({ cell }) => format(cell.getValue<Date>(), 'dd/MM/yyyy'),
       },
       {
         accessorFn: (row) => row.currency,
@@ -294,6 +426,8 @@ const Transactions: React.FC = () => {
         size: 150,
         maxSize: 150,
         filterVariant: 'multi-select',
+        filterFn: () => true,
+        filterSelectOptions: currencyOptions,
         Footer: () => (
           <Box
             sx={{
@@ -328,11 +462,11 @@ const Transactions: React.FC = () => {
         minSize: 125,
         size: 140,
         maxSize: 200,
+        filterVariant: 'range-slider',
+        filterFn: () => true,
         Cell: ({ cell }) => (
           <Box component="span">{formatNumber(cell.row.original.amount)}</Box>
         ),
-        filterVariant: 'range-slider',
-        filterFn: 'betweenInclusive',
         Footer: () => (
           <Box
             sx={{
@@ -361,6 +495,16 @@ const Transactions: React.FC = () => {
         minSize: 125,
         size: 125,
         maxSize: 150,
+        filterVariant: 'multi-select',
+        filterFn: () => true,
+        filterSelectOptions: [
+          { label: 'Expense', value: 'EXPENSE' },
+          {
+            label: 'Income',
+            value: 'INCOME',
+          },
+          { label: 'Transfer', value: 'TRANSFER' },
+        ],
         Cell: ({ renderedCellValue }) => (
           <Chip
             label={renderedCellValue}
@@ -372,7 +516,6 @@ const Transactions: React.FC = () => {
             })}
           />
         ),
-        filterVariant: 'multi-select',
       },
       {
         accessorFn: (row) => row.category?.name,
@@ -381,6 +524,9 @@ const Transactions: React.FC = () => {
         minSize: 125,
         size: 150,
         maxSize: 200,
+        filterVariant: 'multi-select',
+        filterFn: () => true,
+        filterSelectOptions: categoriesOptions,
         Cell: ({ renderedCellValue }) => (
           <Chip
             label={renderedCellValue}
@@ -392,7 +538,6 @@ const Transactions: React.FC = () => {
             })}
           />
         ),
-        filterVariant: 'multi-select',
       },
       {
         accessorKey: 'description',
@@ -401,6 +546,7 @@ const Transactions: React.FC = () => {
         minSize: 150,
         size: 200,
         maxSize: 200,
+        filterFn: () => true,
         Cell: ({ cell }) => (
           <Tooltip title={cell.getValue<string>()}>
             <Box
@@ -426,6 +572,9 @@ const Transactions: React.FC = () => {
         minSize: 150,
         size: 200,
         maxSize: 200,
+        filterVariant: 'multi-select',
+        filterFn: () => true,
+        filterSelectOptions: paymentSystemsOptions,
         Cell: ({ cell }) => (
           <Tooltip title={cell.getValue<string>()}>
             <Box
@@ -441,7 +590,6 @@ const Transactions: React.FC = () => {
             </Box>
           </Tooltip>
         ),
-        filterVariant: 'multi-select',
       },
       {
         accessorFn: (row) => row.fromAsset?.name,
@@ -451,6 +599,9 @@ const Transactions: React.FC = () => {
         minSize: 150,
         size: 200,
         maxSize: 200,
+        filterVariant: 'multi-select',
+        filterFn: () => true,
+        filterSelectOptions: assetsOptions,
         Cell: ({ cell }) => (
           <Tooltip title={cell.getValue<string>()}>
             <Box
@@ -466,7 +617,6 @@ const Transactions: React.FC = () => {
             </Box>
           </Tooltip>
         ),
-        filterVariant: 'multi-select',
       },
       {
         accessorFn: (row) => row.toAsset?.name,
@@ -476,6 +626,9 @@ const Transactions: React.FC = () => {
         minSize: 150,
         size: 200,
         maxSize: 200,
+        filterVariant: 'multi-select',
+        filterFn: () => true,
+        filterSelectOptions: assetsOptions,
         Cell: ({ cell }) => (
           <Tooltip title={cell.getValue<string>()}>
             <Box
@@ -491,7 +644,6 @@ const Transactions: React.FC = () => {
             </Box>
           </Tooltip>
         ),
-        filterVariant: 'multi-select',
       },
       {
         accessorFn: (row) => row.toLiability?.name,
@@ -501,6 +653,9 @@ const Transactions: React.FC = () => {
         minSize: 150,
         size: 200,
         maxSize: 200,
+        filterVariant: 'multi-select',
+        filterFn: () => true,
+        filterSelectOptions: liabilitiesOptions,
         Cell: ({ cell }) => (
           <Tooltip title={cell.getValue<string>()}>
             <Box
@@ -516,10 +671,19 @@ const Transactions: React.FC = () => {
             </Box>
           </Tooltip>
         ),
-        filterVariant: 'multi-select',
       },
     ],
-    [totalAmountByCurrency, transactionCurrencies, theme.palette.mode],
+    [
+      userFilterOptions,
+      currencyOptions,
+      categoriesOptions,
+      paymentSystemsOptions,
+      assetsOptions,
+      liabilitiesOptions,
+      theme.palette.mode,
+      transactionCurrencies,
+      totalAmountByCurrency,
+    ],
   );
 
   const deleteTransaction = async (row: MRT_Row<MRT_RowData>) => {
@@ -550,6 +714,11 @@ const Transactions: React.FC = () => {
       // @ts-expect-error ignore
       ({ id }) => !filterKeys.includes(id),
     );
+    const resetSearchParameters = computeSearchParameters(
+      searchParameters,
+      resetColumnFilters,
+    );
+
     update({
       ...settings,
       transactions: {
@@ -557,6 +726,7 @@ const Transactions: React.FC = () => {
         search: {
           ...(settings?.transactions?.search || {}),
           columnFilters: resetColumnFilters,
+          parameters: resetSearchParameters,
         },
       },
     });
@@ -710,6 +880,11 @@ const Transactions: React.FC = () => {
           ? updaterOrValue(columnFilters)
           : updaterOrValue;
 
+      const newSearchParameters = computeSearchParameters(
+        searchParameters,
+        newColumnFilters,
+      );
+
       update({
         ...settings,
         transactions: {
@@ -717,6 +892,7 @@ const Transactions: React.FC = () => {
           search: {
             ...(settings?.transactions?.search || {}),
             columnFilters: newColumnFilters,
+            parameters: newSearchParameters,
           },
         },
       });
@@ -777,7 +953,7 @@ const Transactions: React.FC = () => {
           <DateRangeSelector />
         </Box>
         <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'flex-end' }}>
-          <TransactionsSummery transactions={filteredTransactions} />
+          <TransactionsSummery transactions={transactions} />
         </Box>
       </Box>
       <MaterialReactTable table={table} />
