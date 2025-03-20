@@ -16,13 +16,6 @@ import AccordionDetails from '@mui/material/AccordionDetails';
 import AccordionSummary from '@mui/material/AccordionSummary';
 import DialogTitle from '@mui/material/DialogTitle';
 import Grid from '@mui/material/Grid2';
-import Paper from '@mui/material/Paper';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
 import Typography from '@mui/material/Typography';
 import { BarChart } from '@mui/x-charts';
 import { axisClasses } from '@mui/x-charts/ChartsAxis';
@@ -35,7 +28,6 @@ import {
   calculateGroupedExpenses,
   formatCurrency,
   getAggregatedDataForType,
-  getUserTransactionSummary,
 } from '../../../utils/common';
 
 const TransactionSummeryDialog = ({
@@ -51,11 +43,6 @@ const TransactionSummeryDialog = ({
 
   const groupedExpenses = useMemo(
     () => calculateGroupedExpenses(transactions),
-    [transactions],
-  );
-
-  const sharedTransactionsSummary = useMemo(
-    () => getUserTransactionSummary(transactions),
     [transactions],
   );
 
@@ -260,7 +247,7 @@ const TransactionSummeryDialog = ({
               </Grid>
             </AccordionDetails>
           </Accordion>
-          <Accordion>
+          <Accordion expanded>
             <AccordionSummary
               expandIcon={<ExpandMoreIcon />}
               aria-controls="panel2-content"
@@ -284,73 +271,6 @@ const TransactionSummeryDialog = ({
                   currency,
                 )}
               </Grid>
-            </AccordionDetails>
-          </Accordion>
-          <Accordion>
-            <AccordionSummary
-              expandIcon={<ExpandMoreIcon />}
-              aria-controls="panel3-content"
-              id="panel3-header"
-            >
-              <Typography component="span" variant="h6">
-                Shared Transactions
-              </Typography>
-            </AccordionSummary>
-            <AccordionDetails>
-              {sharedTransactionsSummary.length > 0 ? (
-                <TableContainer component={Paper}>
-                  <Table size="medium" stickyHeader>
-                    <TableHead>
-                      <TableRow>
-                        <TableCell sx={{ fontWeight: 'bold' }}>Name</TableCell>
-                        <TableCell align="right" sx={{ fontWeight: 'bold' }}>
-                          Paid
-                        </TableCell>
-                        <TableCell align="right" sx={{ fontWeight: 'bold' }}>
-                          Owed
-                        </TableCell>
-                        <TableCell align="right" sx={{ fontWeight: 'bold' }}>
-                          Total
-                        </TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {sharedTransactionsSummary.map((row) => (
-                        <TableRow
-                          key={row.user.id}
-                          sx={{
-                            '&:last-child td, &:last-child th': { border: 0 },
-                          }}
-                        >
-                          <TableCell component="th" scope="row">
-                            {`${row.user.firstName} ${row.user.lastName}`}
-                          </TableCell>
-                          <TableCell align="right">
-                            {formatCurrency(row.totalPaid, currency)}
-                          </TableCell>
-                          <TableCell align="right">
-                            {formatCurrency(row.totalOwed, currency)}
-                          </TableCell>
-                          <TableCell align="right">
-                            {formatCurrency(row.totalShare, currency)}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              ) : (
-                <Typography
-                  component="span"
-                  sx={{
-                    display: 'flex',
-                    justifyContent: 'center',
-                    width: '100%',
-                  }}
-                >
-                  No data to display
-                </Typography>
-              )}
             </AccordionDetails>
           </Accordion>
         </Box>
