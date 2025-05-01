@@ -27,6 +27,7 @@ import apiClient from '../../../services/ApiService';
 import { TransactionCategory } from '../../../types/TransactionCategory';
 import { TransactionTemplate } from '../../../types/TransactionTemplate';
 import {
+  formatCurrency,
   formatNumber,
   formatTransactionType,
   getOriginalTransactionType,
@@ -288,6 +289,15 @@ const TransactionTemplates: React.FC = () => {
               amount: undefined,
             }),
         },
+        aggregationFn: 'sum',
+        AggregatedCell: ({ cell }) => (
+          <span>
+            {formatCurrency(
+              cell.getValue<number>(),
+              cell.row.original.currency,
+            )}
+          </span>
+        ),
       },
       {
         accessorKey: 'frequency',
@@ -484,8 +494,11 @@ const TransactionTemplates: React.FC = () => {
     enableStickyFooter: true,
     enableEditing: true,
     enablePagination: false,
+    enableGrouping: true,
+    enableColumnDragging: false,
     initialState: {
       density: 'compact',
+      grouping: ['currency', 'type', 'frequency', 'category'],
       sorting: [
         {
           id: 'dayOfMonth',
