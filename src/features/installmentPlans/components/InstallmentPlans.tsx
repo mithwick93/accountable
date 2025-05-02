@@ -97,6 +97,80 @@ const InstallmentPlans: React.FC = () => {
       })),
     [liabilities],
   );
+
+  const installmentCurrencies = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          installmentPlans.map((installmentPlan) => installmentPlan.currency),
+        ),
+      ).sort((a, b) => a.localeCompare(b)),
+    [installmentPlans],
+  );
+
+  const {
+    totalByCurrency,
+    installmentByCurrency,
+    paidByCurrency,
+    balanceByCurrency,
+  } = useMemo(() => {
+    const totals = installmentPlans.reduce(
+      (acc, installmentPlan) => {
+        const {
+          currency,
+          installmentAmount,
+          totalInstallments,
+          installmentsPaid,
+        } = installmentPlan;
+
+        if (!acc[currency]) {
+          acc[currency] = {
+            total: 0,
+            installment: 0,
+            paid: 0,
+            balance: 0,
+          };
+        }
+
+        acc[currency].total += installmentAmount;
+        acc[currency].installment += installmentAmount / totalInstallments;
+        acc[currency].paid +=
+          (installmentAmount / totalInstallments) * installmentsPaid;
+        acc[currency].balance +=
+          (installmentAmount / totalInstallments) *
+          (totalInstallments - installmentsPaid);
+
+        return acc;
+      },
+      {} as Record<
+        string,
+        { total: number; installment: number; paid: number; balance: number }
+      >,
+    );
+
+    const sortedEntries = Object.entries(totals).sort(
+      ([currencyA], [currencyB]) => currencyA.localeCompare(currencyB),
+    );
+
+    return {
+      totalByCurrency: Object.fromEntries(
+        sortedEntries.map(([currency, values]) => [currency, values.total]),
+      ),
+      installmentByCurrency: Object.fromEntries(
+        sortedEntries.map(([currency, values]) => [
+          currency,
+          values.installment,
+        ]),
+      ),
+      paidByCurrency: Object.fromEntries(
+        sortedEntries.map(([currency, values]) => [currency, values.paid]),
+      ),
+      balanceByCurrency: Object.fromEntries(
+        sortedEntries.map(([currency, values]) => [currency, values.balance]),
+      ),
+    };
+  }, [installmentPlans]);
+
   const columns = useMemo<MRT_ColumnDef<MRT_RowData>[]>(
     // eslint-disable-next-line complexity
     () => [
@@ -191,6 +265,26 @@ const InstallmentPlans: React.FC = () => {
               currency: undefined,
             }),
         },
+        Footer: () => (
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'flex-end',
+              width: '100%',
+            }}
+          >
+            {installmentCurrencies.map((currency) => (
+              <Typography
+                key={currency}
+                variant="caption"
+                sx={{ fontWeight: 'bold' }}
+              >
+                {currency}
+              </Typography>
+            ))}
+          </Box>
+        ),
       },
       {
         accessorKey: 'installmentAmount',
@@ -225,6 +319,26 @@ const InstallmentPlans: React.FC = () => {
               installmentAmount: undefined,
             }),
         },
+        Footer: () => (
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'flex-end',
+              width: '100%',
+            }}
+          >
+            {Object.entries(totalByCurrency).map(([currency, total]) => (
+              <Typography
+                key={currency}
+                variant="caption"
+                sx={{ fontWeight: 'bold' }}
+              >
+                {formatNumber(total)}
+              </Typography>
+            ))}
+          </Box>
+        ),
       },
       {
         accessorKey: 'installment',
@@ -249,6 +363,26 @@ const InstallmentPlans: React.FC = () => {
           </Box>
         ),
         Edit: () => null,
+        Footer: () => (
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'flex-end',
+              width: '100%',
+            }}
+          >
+            {Object.entries(installmentByCurrency).map(([currency, total]) => (
+              <Typography
+                key={currency}
+                variant="caption"
+                sx={{ fontWeight: 'bold' }}
+              >
+                {formatNumber(total)}
+              </Typography>
+            ))}
+          </Box>
+        ),
       },
       {
         accessorKey: 'paid',
@@ -274,6 +408,26 @@ const InstallmentPlans: React.FC = () => {
           </Box>
         ),
         Edit: () => null,
+        Footer: () => (
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'flex-end',
+              width: '100%',
+            }}
+          >
+            {Object.entries(paidByCurrency).map(([currency, total]) => (
+              <Typography
+                key={currency}
+                variant="caption"
+                sx={{ fontWeight: 'bold' }}
+              >
+                {formatNumber(total)}
+              </Typography>
+            ))}
+          </Box>
+        ),
       },
       {
         accessorKey: 'balance',
@@ -300,6 +454,26 @@ const InstallmentPlans: React.FC = () => {
           </Box>
         ),
         Edit: () => null,
+        Footer: () => (
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'flex-end',
+              width: '100%',
+            }}
+          >
+            {Object.entries(balanceByCurrency).map(([currency, total]) => (
+              <Typography
+                key={currency}
+                variant="caption"
+                sx={{ fontWeight: 'bold' }}
+              >
+                {formatNumber(total)}
+              </Typography>
+            ))}
+          </Box>
+        ),
       },
       {
         accessorKey: 'totalInstallments',
@@ -413,7 +587,16 @@ const InstallmentPlans: React.FC = () => {
         visibleInShowHideMenu: false,
       },
     ],
-    [validationErrors, liabilitiesOptions, currencyCodes],
+    [
+      validationErrors,
+      liabilitiesOptions,
+      currencyCodes,
+      installmentCurrencies,
+      totalByCurrency,
+      installmentByCurrency,
+      paidByCurrency,
+      balanceByCurrency,
+    ],
   );
 
   const validateInstallmentPlan = (
