@@ -81,6 +81,72 @@ const Liabilities: React.FC = () => {
     () => currencies?.map((currency) => currency.code) ?? [],
     [currencies],
   );
+
+  const liabilityCurrencies = useMemo(
+    () =>
+      Array.from(new Set(liabilities.map((asset) => asset.currency))).sort(
+        (a, b) => a.localeCompare(b),
+      ),
+    [liabilities],
+  );
+
+  const totalUtilizedByCurrency = useMemo(() => {
+    const totals = liabilities.reduce(
+      (acc, liability) => {
+        const { currency, balance } = liability;
+        if (!acc[currency]) {
+          acc[currency] = 0;
+        }
+        acc[currency] += balance;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
+    return Object.fromEntries(
+      Object.entries(totals).sort(([currencyA], [currencyB]) =>
+        currencyA.localeCompare(currencyB),
+      ),
+    );
+  }, [liabilities]);
+
+  const totalAvailableByCurrency = useMemo(() => {
+    const totals = liabilities.reduce(
+      (acc, liability) => {
+        const { currency, amount, balance } = liability;
+        if (!acc[currency]) {
+          acc[currency] = 0;
+        }
+        acc[currency] += amount - balance;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
+    return Object.fromEntries(
+      Object.entries(totals).sort(([currencyA], [currencyB]) =>
+        currencyA.localeCompare(currencyB),
+      ),
+    );
+  }, [liabilities]);
+
+  const totalLimitByCurrency = useMemo(() => {
+    const totals = liabilities.reduce(
+      (acc, liability) => {
+        const { currency, amount } = liability;
+        if (!acc[currency]) {
+          acc[currency] = 0;
+        }
+        acc[currency] += amount;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
+    return Object.fromEntries(
+      Object.entries(totals).sort(([currencyA], [currencyB]) =>
+        currencyA.localeCompare(currencyB),
+      ),
+    );
+  }, [liabilities]);
+
   const columns = useMemo<MRT_ColumnDef<MRT_RowData>[]>(
     // eslint-disable-next-line complexity
     () => [
@@ -320,6 +386,26 @@ const Liabilities: React.FC = () => {
               currency: undefined,
             }),
         },
+        Footer: () => (
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'flex-end',
+              width: '100%',
+            }}
+          >
+            {liabilityCurrencies.map((currency) => (
+              <Typography
+                key={currency}
+                variant="caption"
+                sx={{ fontWeight: 'bold' }}
+              >
+                {currency}
+              </Typography>
+            ))}
+          </Box>
+        ),
       },
       {
         accessorKey: 'balance',
@@ -367,6 +453,28 @@ const Liabilities: React.FC = () => {
               balance: undefined,
             }),
         },
+        Footer: () => (
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'flex-end',
+              width: '100%',
+            }}
+          >
+            {Object.entries(totalUtilizedByCurrency).map(
+              ([currency, total]) => (
+                <Typography
+                  key={currency}
+                  variant="caption"
+                  sx={{ fontWeight: 'bold' }}
+                >
+                  {formatNumber(total)}
+                </Typography>
+              ),
+            )}
+          </Box>
+        ),
       },
       {
         header: 'Available',
@@ -385,6 +493,28 @@ const Liabilities: React.FC = () => {
           </Box>
         ),
         Edit: () => null,
+        Footer: () => (
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'flex-end',
+              width: '100%',
+            }}
+          >
+            {Object.entries(totalAvailableByCurrency).map(
+              ([currency, total]) => (
+                <Typography
+                  key={currency}
+                  variant="caption"
+                  sx={{ fontWeight: 'bold' }}
+                >
+                  {formatNumber(total)}
+                </Typography>
+              ),
+            )}
+          </Box>
+        ),
       },
       {
         accessorKey: 'amount',
@@ -417,9 +547,36 @@ const Liabilities: React.FC = () => {
               amount: undefined,
             }),
         },
+        Footer: () => (
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'flex-end',
+              width: '100%',
+            }}
+          >
+            {Object.entries(totalLimitByCurrency).map(([currency, total]) => (
+              <Typography
+                key={currency}
+                variant="caption"
+                sx={{ fontWeight: 'bold' }}
+              >
+                {formatNumber(total)}
+              </Typography>
+            ))}
+          </Box>
+        ),
       },
     ],
-    [validationErrors, currencyCodes],
+    [
+      validationErrors,
+      currencyCodes,
+      liabilityCurrencies,
+      totalUtilizedByCurrency,
+      totalAvailableByCurrency,
+      totalLimitByCurrency,
+    ],
   );
 
   // eslint-disable-next-line complexity
