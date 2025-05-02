@@ -51,6 +51,34 @@ const Assets: React.FC = () => {
     () => currencies?.map((currency) => currency.code) ?? [],
     [currencies],
   );
+
+  const assetCurrencies = useMemo(
+    () =>
+      Array.from(new Set(assets.map((asset) => asset.currency))).sort((a, b) =>
+        a.localeCompare(b),
+      ),
+    [assets],
+  );
+
+  const totalAmountByCurrency = useMemo(() => {
+    const totals = assets.reduce(
+      (acc, asset) => {
+        const { currency, balance } = asset;
+        if (!acc[currency]) {
+          acc[currency] = 0;
+        }
+        acc[currency] += balance;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
+    return Object.fromEntries(
+      Object.entries(totals).sort(([currencyA], [currencyB]) =>
+        currencyA.localeCompare(currencyB),
+      ),
+    );
+  }, [assets]);
+
   const columns = useMemo<MRT_ColumnDef<MRT_RowData>[]>(
     () => [
       {
@@ -172,6 +200,26 @@ const Assets: React.FC = () => {
               currency: undefined,
             }),
         },
+        Footer: () => (
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'flex-end',
+              width: '100%',
+            }}
+          >
+            {assetCurrencies.map((currency) => (
+              <Typography
+                key={currency}
+                variant="caption"
+                sx={{ fontWeight: 'bold' }}
+              >
+                {currency}
+              </Typography>
+            ))}
+          </Box>
+        ),
       },
       {
         accessorFn: (row) => row.balance,
@@ -202,9 +250,29 @@ const Assets: React.FC = () => {
               balance: undefined,
             }),
         },
+        Footer: () => (
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'flex-end',
+              width: '100%',
+            }}
+          >
+            {Object.entries(totalAmountByCurrency).map(([currency, total]) => (
+              <Typography
+                key={currency}
+                variant="caption"
+                sx={{ fontWeight: 'bold' }}
+              >
+                {formatNumber(total)}
+              </Typography>
+            ))}
+          </Box>
+        ),
       },
     ],
-    [validationErrors, currencyCodes],
+    [validationErrors, currencyCodes, assetCurrencies, totalAmountByCurrency],
   );
 
   const validateAsset = (asset: Record<LiteralUnion<string>, any>) => {
