@@ -90,61 +90,46 @@ const Liabilities: React.FC = () => {
     [liabilities],
   );
 
-  const totalUtilizedByCurrency = useMemo(() => {
+  const {
+    totalUtilizedByCurrency,
+    totalAvailableByCurrency,
+    totalLimitByCurrency,
+  } = useMemo(() => {
     const totals = liabilities.reduce(
       (acc, liability) => {
-        const { currency, balance } = liability;
-        if (!acc[currency]) {
-          acc[currency] = 0;
-        }
-        acc[currency] += balance;
-        return acc;
-      },
-      {} as Record<string, number>,
-    );
-    return Object.fromEntries(
-      Object.entries(totals).sort(([currencyA], [currencyB]) =>
-        currencyA.localeCompare(currencyB),
-      ),
-    );
-  }, [liabilities]);
+        const { currency, balance, amount } = liability;
 
-  const totalAvailableByCurrency = useMemo(() => {
-    const totals = liabilities.reduce(
-      (acc, liability) => {
-        const { currency, amount, balance } = liability;
         if (!acc[currency]) {
-          acc[currency] = 0;
+          acc[currency] = { utilized: 0, available: 0, limit: 0 };
         }
-        acc[currency] += amount - balance;
-        return acc;
-      },
-      {} as Record<string, number>,
-    );
-    return Object.fromEntries(
-      Object.entries(totals).sort(([currencyA], [currencyB]) =>
-        currencyA.localeCompare(currencyB),
-      ),
-    );
-  }, [liabilities]);
 
-  const totalLimitByCurrency = useMemo(() => {
-    const totals = liabilities.reduce(
-      (acc, liability) => {
-        const { currency, amount } = liability;
-        if (!acc[currency]) {
-          acc[currency] = 0;
-        }
-        acc[currency] += amount;
+        acc[currency].utilized += balance;
+        acc[currency].available += amount - balance;
+        acc[currency].limit += amount;
+
         return acc;
       },
-      {} as Record<string, number>,
+      {} as Record<
+        string,
+        { utilized: number; available: number; limit: number }
+      >,
     );
-    return Object.fromEntries(
-      Object.entries(totals).sort(([currencyA], [currencyB]) =>
-        currencyA.localeCompare(currencyB),
+
+    const sortedEntries = Object.entries(totals).sort(
+      ([currencyA], [currencyB]) => currencyA.localeCompare(currencyB),
+    );
+
+    return {
+      totalUtilizedByCurrency: Object.fromEntries(
+        sortedEntries.map(([currency, values]) => [currency, values.utilized]),
       ),
-    );
+      totalAvailableByCurrency: Object.fromEntries(
+        sortedEntries.map(([currency, values]) => [currency, values.available]),
+      ),
+      totalLimitByCurrency: Object.fromEntries(
+        sortedEntries.map(([currency, values]) => [currency, values.limit]),
+      ),
+    };
   }, [liabilities]);
 
   const columns = useMemo<MRT_ColumnDef<MRT_RowData>[]>(
