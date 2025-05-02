@@ -467,6 +467,15 @@ const Transactions: React.FC = () => {
         Cell: ({ cell }) => (
           <Box component="span">{formatNumber(cell.row.original.amount)}</Box>
         ),
+        aggregationFn: 'sum',
+        AggregatedCell: ({ cell }) => (
+          <span>
+            {formatCurrency(
+              cell.getValue<number>(),
+              cell.row.original.currency,
+            )}
+          </span>
+        ),
         Footer: () => (
           <Box
             sx={{
@@ -741,6 +750,8 @@ const Transactions: React.FC = () => {
     enableEditing: true,
     enableRowVirtualization: true,
     manualPagination: true,
+    enableGrouping: true,
+    enableColumnDragging: false,
     muiPaginationProps: {
       rowsPerPageOptions: [10, 25, 50, 100, 250, 500, 1000],
     },
