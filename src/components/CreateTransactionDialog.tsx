@@ -1,6 +1,7 @@
 import { Add as AddIcon, Remove as RemoveIcon } from '@mui/icons-material';
 import CalculateIcon from '@mui/icons-material/Calculate';
 import CloseIcon from '@mui/icons-material/Close';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import KeyboardDoubleArrowDownIcon from '@mui/icons-material/KeyboardDoubleArrowDown';
 import KeyboardDoubleArrowRightIcon from '@mui/icons-material/KeyboardDoubleArrowRight';
 import {
@@ -148,6 +149,13 @@ const CreateTransactionDialog = ({ onClose, open }: DialogProps) => {
     formValues.amount &&
     formValues.amount > 0;
 
+  const enableDivideAutomatically =
+    formValues.type === 'EXPENSE' &&
+    userOptions.length === 2 &&
+    sharedTransactions.length === 0 &&
+    formValues.amount &&
+    formValues.amount > 0;
+
   const handleSetFromTemplate = (template: TransactionTemplate | null) => {
     if (!template) {
       setFormValues(initialFormValues);
@@ -256,6 +264,33 @@ const CreateTransactionDialog = ({ onClose, open }: DialogProps) => {
     }));
 
     setSharedTransactions(updatedTransactions);
+  };
+
+  const handleDivideAutomatically = () => {
+    const totalAmount = parseFloat(
+      String((formValues.amount || 0) + (formValues.charges || 0)),
+    );
+    const share = totalAmount / 2;
+
+    setSharedTransactions([
+      ...sharedTransactions,
+      {
+        userId:
+          userOptions.find((user) => `${user.id}` === `${loggedInUser?.sub}`)
+            ?.id || '',
+        share: share,
+        paidAmount: share,
+        isSettled: true,
+      },
+      {
+        userId:
+          userOptions.find((user) => `${user.id}` !== `${loggedInUser?.sub}`)
+            ?.id || '',
+        share: share,
+        paidAmount: 0,
+        isSettled: false,
+      },
+    ]);
   };
 
   const handleSave = async () => {
@@ -729,6 +764,16 @@ const CreateTransactionDialog = ({ onClose, open }: DialogProps) => {
                         alignItems: 'center',
                       }}
                     >
+                      <Tooltip title="Divide automatically">
+                        <span>
+                          <IconButton
+                            onClick={handleDivideAutomatically}
+                            disabled={!enableDivideAutomatically}
+                          >
+                            <AutoAwesomeIcon />
+                          </IconButton>
+                        </span>
+                      </Tooltip>
                       <Tooltip title="Divide evenly">
                         <span>
                           <IconButton
@@ -771,6 +816,9 @@ const CreateTransactionDialog = ({ onClose, open }: DialogProps) => {
                               !sharedTransactions.some(
                                 (t) => t.userId === user.id,
                               ),
+                          )}
+                          value={userOptions.find(
+                            (user) => `${user.id}` === `${transaction.userId}`,
                           )}
                           autoComplete
                           getOptionLabel={(option) =>
