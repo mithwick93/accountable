@@ -15,12 +15,12 @@ import { theme } from './theme/theme';
 
 const NAVIGATION: Navigation = [
   {
-    kind: 'header',
-    title: 'Main items',
-  },
-  {
     title: 'Dashboard',
     icon: <DashboardIcon />,
+  },
+  {
+    kind: 'header',
+    title: 'Accounts',
   },
   {
     segment: 'assets',
@@ -41,6 +41,10 @@ const NAVIGATION: Navigation = [
     segment: 'payment-systems',
     title: 'Payment Systems',
     icon: <PaymentsIcon />,
+  },
+  {
+    kind: 'header',
+    title: 'Transactions',
   },
   {
     segment: 'transaction-categories',
