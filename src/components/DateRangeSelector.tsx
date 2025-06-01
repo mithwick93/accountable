@@ -75,6 +75,14 @@ const DateRangeSelector = () => {
         end: endOfMonth(addMonths(now, -5)),
       },
       {
+        label: format(addMonths(now, 1), 'MMMM yyyy'),
+        value: `${startOfMonth(addMonths(now, 1)).toISOString()}|${endOfMonth(
+          addMonths(now, 1),
+        ).toISOString()}`,
+        start: startOfMonth(addMonths(now, 1)),
+        end: endOfMonth(addMonths(now, 1)),
+      },
+      {
         label: format(now, 'yyyy'),
         value: `${startOfYear(now).toISOString()}|${endOfYear(
           now,
