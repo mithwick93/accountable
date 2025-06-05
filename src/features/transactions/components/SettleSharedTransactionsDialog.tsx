@@ -431,7 +431,9 @@ const SettleSharedTransactionsDialog = ({
   };
 
   const handleExportRows = (rows: MRT_Row<SettleTransactionCandidate>[]) => {
-    const doc = new jsPDF();
+    const doc = new jsPDF({
+      orientation: 'l',
+    });
     const tableData = rows.map((row) => {
       const data = row.original;
       return [
@@ -465,7 +467,7 @@ const SettleSharedTransactionsDialog = ({
       ],
       body: tableData,
       styles: {
-        fontSize: 8,
+        fontSize: 10,
       },
     });
 
