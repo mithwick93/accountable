@@ -1,4 +1,5 @@
 import CloseIcon from '@mui/icons-material/Close';
+import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import {
   Avatar,
   Box,
@@ -24,9 +25,14 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DialogProps } from '@toolpad/core/useDialogs';
 import { format } from 'date-fns';
 import { enGB } from 'date-fns/locale';
+// @ts-expect-error ignore
+import { download, generateCsv, mkConfig } from 'export-to-csv';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import {
   MaterialReactTable,
   MRT_ColumnDef,
+  MRT_Row,
   MRT_RowData,
   MRT_RowSelectionState,
   useMaterialReactTable,
@@ -48,6 +54,13 @@ import {
   stringToColor,
 } from '../../../utils/common';
 import { notifyBackendError } from '../../../utils/notifications';
+
+const csvConfig = mkConfig({
+  fieldSeparator: ',',
+  decimalSeparator: '.',
+  useKeysAsHeaders: true,
+  filename: 'shared-transactions',
+});
 
 type SettleTransactionCandidate = {
   transactionId: number;
@@ -412,6 +425,53 @@ const SettleSharedTransactionsDialog = ({
     }
   };
 
+  const handleExportCSV = () => {
+    const csv = generateCsv(csvConfig)(candidates);
+    download(csvConfig)(csv);
+  };
+
+  const handleExportRows = (rows: MRT_Row<SettleTransactionCandidate>[]) => {
+    const doc = new jsPDF();
+    const tableData = rows.map((row) => {
+      const data = row.original;
+      return [
+        data.transactionId,
+        data.sharedTransactionUserName,
+        data.transactionName,
+        data.transactionCategory,
+        format(new Date(data.transactionDate), 'dd/MM/yyyy'),
+        data.transactionCurrency,
+        formatNumber(data.transactionAmount),
+        formatNumber(data.sharedTransactionShare),
+        formatNumber(data.sharedTransactionRemaining),
+        data.isSettled ? 'Yes' : 'No',
+      ];
+    });
+
+    autoTable(doc, {
+      head: [
+        [
+          '#',
+          'User',
+          'Name',
+          'Category',
+          'Date',
+          'Currency',
+          'Amount',
+          'Share',
+          'Remaining',
+          'Settled',
+        ],
+      ],
+      body: tableData,
+      styles: {
+        fontSize: 8,
+      },
+    });
+
+    doc.save('shared-transactions.pdf');
+  };
+
   const handleClose = () => {
     setRowSelection({});
     onClose();
@@ -588,7 +648,7 @@ const SettleSharedTransactionsDialog = ({
     enableRowNumbers: true,
     enableStickyHeader: true,
     enablePagination: false,
-
+    enableRowVirtualization: true,
     initialState: {
       density: 'compact',
       showColumnFilters: true,
@@ -627,6 +687,33 @@ const SettleSharedTransactionsDialog = ({
     enableRowSelection: true,
     getRowId: (row) => row.sharedTransactionId,
     onRowSelectionChange: setRowSelection,
+    renderTopToolbarCustomActions: ({ table }) => (
+      <Box
+        sx={{
+          display: 'flex',
+          gap: '5px',
+          flexWrap: 'wrap',
+        }}
+      >
+        <Button
+          disabled={table.getPrePaginationRowModel().rows.length === 0}
+          onClick={handleExportCSV}
+          startIcon={<FileDownloadIcon />}
+        >
+          CSV
+        </Button>
+        <Button
+          disabled={table.getPrePaginationRowModel().rows.length === 0}
+          onClick={() =>
+            // @ts-expect-error ignore
+            handleExportRows(table.getPrePaginationRowModel().rows)
+          }
+          startIcon={<FileDownloadIcon />}
+        >
+          PDF
+        </Button>
+      </Box>
+    ),
   });
 
   return (
