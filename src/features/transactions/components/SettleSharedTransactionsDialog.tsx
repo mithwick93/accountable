@@ -104,17 +104,16 @@ const getSettleTransactionCandidates = (transactions: Transaction[]) => {
 type DueAmountsSummaryProps = {
   selectedSharedTransactionIds: number[];
   candidates: SettleTransactionCandidate[];
+  currencyRates: { [currency: string]: number };
+  baseCurrency: string;
 };
 
 const DueAmountsSummary: React.FC<DueAmountsSummaryProps> = ({
   selectedSharedTransactionIds,
   candidates,
+  currencyRates,
+  baseCurrency,
 }) => {
-  const { currencyRates, loading: currencyRatesLoading } = useCurrencyRates();
-  const { settings, loading: settingsLoading } = useSettings();
-  const baseCurrency: string = settings?.currency || 'USD';
-  const loading = currencyRatesLoading || settingsLoading;
-
   const [startDate, endDate] = useMemo(() => {
     const sortedSharedTransactions = candidates
       .filter((candidate) =>
@@ -164,7 +163,7 @@ const DueAmountsSummary: React.FC<DueAmountsSummaryProps> = ({
 
     let totalString = '';
     Object.entries(totalMap).forEach(([currency, amount]) => {
-      totalString += `${currency}: ${formatNumber(amount)} | `;
+      totalString += `${currency}: ${formatNumber(amount, 2, 2)} | `;
     });
     totalString = `${totalString.slice(0, -3)}`;
 
@@ -243,7 +242,7 @@ const DueAmountsSummary: React.FC<DueAmountsSummaryProps> = ({
     return payableMap;
   }, [dueTotals]);
 
-  if (!selectedSharedTransactionIds.length || loading) {
+  if (!selectedSharedTransactionIds.length) {
     return null;
   }
 
@@ -321,10 +320,21 @@ const DueAmountsSummary: React.FC<DueAmountsSummaryProps> = ({
                           alignItems: 'center',
                         }}
                       >
-                        <Typography variant="body2">
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            color: 'rgb(220, 53, 69)',
+                          }}
+                        >
                           {`Payable (${baseCurrency})`}
                         </Typography>
-                        <Typography variant="body2" sx={{ textAlign: 'right' }}>
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            textAlign: 'right',
+                            color: 'rgb(220, 53, 69)',
+                          }}
+                        >
                           {formatNumber(pairPayable[userName], 2, 2)}
                         </Typography>
                       </Box>
@@ -365,18 +375,274 @@ const DueAmountsSummary: React.FC<DueAmountsSummaryProps> = ({
   );
 };
 
+const calculateSummary = (
+  rows: MRT_Row<SettleTransactionCandidate>[],
+  currencyRates: Record<string, number>,
+) => {
+  const selectedCandidates = rows.map((row) => row.original);
+
+  const uniqueTransactionIds = new Set(
+    selectedCandidates.map((c) => c.transactionId),
+  );
+  const uniqueTransactionCount = uniqueTransactionIds.size;
+
+  // Date range
+  const sortedByDate = [...selectedCandidates].sort((a, b) =>
+    a.transactionDate.localeCompare(b.transactionDate),
+  );
+  const dateRange = sortedByDate.length
+    ? [
+        sortedByDate[0].transactionDate,
+        sortedByDate[sortedByDate.length - 1].transactionDate,
+      ]
+    : ['N/A', 'N/A'];
+
+  // Total per currency
+  const totalCurrencyMap: Record<string, Record<string, number>> = {};
+  selectedCandidates.forEach((candidate) => {
+    if (!totalCurrencyMap[candidate.transactionId]) {
+      totalCurrencyMap[candidate.transactionId] = {};
+    }
+    totalCurrencyMap[candidate.transactionId][candidate.transactionCurrency] =
+      candidate.transactionAmount;
+  });
+
+  // Aggregate total per currency
+  const totalMap: Record<string, number> = {};
+  Object.values(totalCurrencyMap).forEach((currencyMap) => {
+    Object.entries(currencyMap).forEach(([currency, amount]) => {
+      if (!totalMap[currency]) {
+        totalMap[currency] = 0;
+      }
+      totalMap[currency] += amount;
+    });
+  });
+  let totalShared = '';
+  Object.entries(totalMap).forEach(([currency, amount]) => {
+    totalShared += `${currency}: ${formatNumber(amount, 2, 2)} | `;
+  });
+  totalShared = `${totalShared.slice(0, -3)}`;
+
+  // Summary of shares and dues
+  const shareAmountsSummary: Record<string, Record<string, number>> = {};
+  const dueAmountsSummary: Record<string, Record<string, number>> = {};
+  selectedCandidates.forEach((settleTransactionCandidate) => {
+    const {
+      sharedTransactionUserName = '',
+      transactionCurrency = '',
+      sharedTransactionShare = 0,
+      sharedTransactionRemaining = 0,
+    } = settleTransactionCandidate || {};
+
+    if (!shareAmountsSummary[sharedTransactionUserName]) {
+      shareAmountsSummary[sharedTransactionUserName] = {};
+    }
+    if (!dueAmountsSummary[sharedTransactionUserName]) {
+      dueAmountsSummary[sharedTransactionUserName] = {};
+    }
+
+    if (!shareAmountsSummary[sharedTransactionUserName][transactionCurrency]) {
+      shareAmountsSummary[sharedTransactionUserName][transactionCurrency] = 0;
+    }
+    if (!dueAmountsSummary[sharedTransactionUserName][transactionCurrency]) {
+      dueAmountsSummary[sharedTransactionUserName][transactionCurrency] = 0;
+    }
+
+    shareAmountsSummary[sharedTransactionUserName][transactionCurrency] +=
+      sharedTransactionShare;
+    dueAmountsSummary[sharedTransactionUserName][transactionCurrency] +=
+      sharedTransactionRemaining;
+  });
+
+  // Calculate totals in base currency
+  const shareTotals: Record<string, number> = {};
+  const dueTotals: Record<string, number> = {};
+  Object.entries(shareAmountsSummary).forEach(([userName, currencyMap]) => {
+    shareTotals[userName] = calculateTotalInBaseCurrency(
+      currencyMap,
+      currencyRates,
+    );
+  });
+  Object.entries(dueAmountsSummary).forEach(([userName, currencyMap]) => {
+    dueTotals[userName] = calculateTotalInBaseCurrency(
+      currencyMap,
+      currencyRates,
+    );
+  });
+
+  // Calculate pair payable amounts
+  const pairPayable: Record<string, number> = {};
+  const users = Object.keys(dueTotals).sort((a, b) => a.localeCompare(b));
+  const userCount = users.length;
+  if (userCount === 2) {
+    const [firstUser, secondUser] = users;
+    pairPayable[firstUser] = dueTotals[firstUser] - dueTotals[secondUser];
+    pairPayable[secondUser] = dueTotals[secondUser] - dueTotals[firstUser];
+  }
+
+  return {
+    selectedCandidates,
+    uniqueTransactionCount,
+    dateRange,
+    totalShared,
+    shareTotals,
+    dueTotals,
+    shareAmountsSummary,
+    pairPayable,
+  };
+};
+
+const handleExportPDF = (
+  rows: MRT_Row<SettleTransactionCandidate>[],
+  currencyRates: Record<string, number>,
+  baseCurrency: string,
+) => {
+  const doc = new jsPDF({
+    orientation: 'l',
+  });
+  const defaultFontSize = doc.getFontSize();
+
+  const {
+    selectedCandidates,
+    uniqueTransactionCount,
+    dateRange,
+    totalShared,
+    shareTotals,
+    dueTotals,
+    shareAmountsSummary,
+    pairPayable,
+  } = calculateSummary(rows, currencyRates);
+
+  let y = 14;
+  doc.setFontSize(16);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Shared transactions', 14, y);
+  doc.setFont('helvetica', 'normal');
+  y += 7;
+  doc.setFontSize(12);
+  doc.text(`\t• Range: ${dateRange[0]} - ${dateRange[1]}`, 14, y);
+  y += 7;
+  doc.text(`\t• # Records: ${selectedCandidates.length}`, 14, y);
+  y += 7;
+  doc.text(`\t• Unique Transactions: ${uniqueTransactionCount}`, 14, y);
+  y += 7;
+  doc.text(`\t• Total: ${totalShared}`, 14, y);
+  y += 7;
+  doc.text('\t• User shares:', 14, y);
+  y += 5;
+  Object.entries(shareAmountsSummary)
+    .sort(([userNameA], [userNameB]) => userNameA.localeCompare(userNameB))
+    .forEach(([userName, currencyMap]) => {
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.text(`\t\t• ${userName}:`, 14, y);
+      doc.setFont('helvetica', 'normal');
+      y += 6;
+      doc.setFontSize(10);
+      doc.text(
+        `\t\t\tShare Total (${baseCurrency})  ${formatNumber(
+          shareTotals[userName],
+          2,
+          2,
+        )}`,
+        14,
+        y,
+      );
+      y += 6;
+      doc.text(
+        `\t\t\tDue Total (${baseCurrency})  ${formatNumber(
+          dueTotals[userName],
+          2,
+          2,
+        )}`,
+        14,
+        y,
+      );
+      y += 6;
+      if (Object.keys(pairPayable).length === 2) {
+        doc.setTextColor(220, 53, 69);
+        doc.text(
+          `\t\t\tPayable (${baseCurrency})  ${formatNumber(
+            pairPayable[userName],
+            2,
+            2,
+          )}`,
+          14,
+          y,
+        );
+        doc.setTextColor(0, 0, 0);
+        y += 6;
+      }
+      doc.text('\t\t\tBreakdown', 14, y);
+      y += 6;
+      Object.entries(currencyMap)
+        .sort(([currencyA], [currencyB]) => currencyA.localeCompare(currencyB))
+        .forEach(([currency, amount]) => {
+          doc.setFontSize(8);
+          doc.text(`\t\t\t\t${currency}: ${formatNumber(amount, 2, 2)}`, 14, y);
+          y += 4;
+        });
+      y += 8;
+    });
+
+  doc.setTextColor(0, 0, 0);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(defaultFontSize);
+  doc.addPage();
+
+  const tableData = rows.map((row) => {
+    const data = row.original;
+    return [
+      row.index + 1,
+      data.sharedTransactionUserName,
+      data.transactionName,
+      data.transactionCategory,
+      format(new Date(data.transactionDate), 'dd/MM/yyyy'),
+      data.transactionCurrency,
+      formatNumber(data.transactionAmount, 2, 2),
+      formatNumber(data.sharedTransactionShare, 2, 2),
+      formatNumber(data.sharedTransactionRemaining, 2, 2),
+      data.isSettled ? 'Yes' : 'No',
+    ];
+  });
+
+  autoTable(doc, {
+    head: [
+      [
+        '#',
+        'User',
+        'Name',
+        'Category',
+        'Date',
+        'Currency',
+        'Amount',
+        'Share',
+        'Remaining',
+        'Settled',
+      ],
+    ],
+    body: tableData,
+    styles: {
+      fontSize: 10,
+    },
+  });
+  window.open(doc.output('bloburl'), '_blank');
+};
+
 const SettleSharedTransactionsDialog = ({
   onClose,
   open,
   payload: transactions,
 }: DialogProps<Transaction[]>) => {
   const { settings, loading: settingsLoading } = useSettings();
+  const { currencyRates, loading: currencyRatesLoading } = useCurrencyRates();
   const { refetchData, loading: dataLoading } = useData();
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
   const [rowSelection, setRowSelection] = useState<MRT_RowSelectionState>({});
+  const baseCurrency: string = settings?.currency || 'USD';
 
-  const loading = settingsLoading || dataLoading;
+  const loading = settingsLoading || dataLoading || currencyRatesLoading;
   const candidates = useMemo(
     () => getSettleTransactionCandidates(transactions),
     [transactions],
@@ -428,50 +694,6 @@ const SettleSharedTransactionsDialog = ({
   const handleExportCSV = () => {
     const csv = generateCsv(csvConfig)(candidates);
     download(csvConfig)(csv);
-  };
-
-  const handleExportRows = (rows: MRT_Row<SettleTransactionCandidate>[]) => {
-    const doc = new jsPDF({
-      orientation: 'l',
-    });
-    const tableData = rows.map((row) => {
-      const data = row.original;
-      return [
-        data.transactionId,
-        data.sharedTransactionUserName,
-        data.transactionName,
-        data.transactionCategory,
-        format(new Date(data.transactionDate), 'dd/MM/yyyy'),
-        data.transactionCurrency,
-        formatNumber(data.transactionAmount),
-        formatNumber(data.sharedTransactionShare),
-        formatNumber(data.sharedTransactionRemaining),
-        data.isSettled ? 'Yes' : 'No',
-      ];
-    });
-
-    autoTable(doc, {
-      head: [
-        [
-          '#',
-          'User',
-          'Name',
-          'Category',
-          'Date',
-          'Currency',
-          'Amount',
-          'Share',
-          'Remaining',
-          'Settled',
-        ],
-      ],
-      body: tableData,
-      styles: {
-        fontSize: 10,
-      },
-    });
-
-    doc.save('shared-transactions.pdf');
   };
 
   const handleClose = () => {
@@ -585,7 +807,7 @@ const SettleSharedTransactionsDialog = ({
         maxSize: 150,
         Cell: ({ cell }) => (
           <Box component="span">
-            {formatNumber(cell.row.original.transactionAmount)}
+            {formatNumber(cell.row.original.transactionAmount, 2, 2)}
           </Box>
         ),
         filterVariant: 'range-slider',
@@ -605,7 +827,7 @@ const SettleSharedTransactionsDialog = ({
         maxSize: 150,
         Cell: ({ cell }) => (
           <Box component="span">
-            {formatNumber(cell.row.original.sharedTransactionShare)}
+            {formatNumber(cell.row.original.sharedTransactionShare, 2, 2)}
           </Box>
         ),
       },
@@ -623,7 +845,7 @@ const SettleSharedTransactionsDialog = ({
         maxSize: 150,
         Cell: ({ cell }) => (
           <Box component="span">
-            {formatNumber(cell.row.original.sharedTransactionRemaining)}
+            {formatNumber(cell.row.original.sharedTransactionRemaining, 2, 2)}
           </Box>
         ),
       },
@@ -707,8 +929,12 @@ const SettleSharedTransactionsDialog = ({
         <Button
           disabled={table.getPrePaginationRowModel().rows.length === 0}
           onClick={() =>
-            // @ts-expect-error ignore
-            handleExportRows(table.getPrePaginationRowModel().rows)
+            handleExportPDF(
+              // @ts-expect-error ignore
+              table.getPrePaginationRowModel().rows,
+              currencyRates,
+              baseCurrency,
+            )
           }
           startIcon={<FileDownloadIcon />}
         >
@@ -768,6 +994,8 @@ const SettleSharedTransactionsDialog = ({
           <DueAmountsSummary
             selectedSharedTransactionIds={selectedSharedTransactionIds}
             candidates={candidates}
+            currencyRates={currencyRates}
+            baseCurrency={baseCurrency}
           />
         </LocalizationProvider>
       </DialogContent>
