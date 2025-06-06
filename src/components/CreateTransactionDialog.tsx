@@ -1,7 +1,7 @@
 import { Add as AddIcon, Remove as RemoveIcon } from '@mui/icons-material';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import CalculateIcon from '@mui/icons-material/Calculate';
 import CloseIcon from '@mui/icons-material/Close';
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import KeyboardDoubleArrowDownIcon from '@mui/icons-material/KeyboardDoubleArrowDown';
 import KeyboardDoubleArrowRightIcon from '@mui/icons-material/KeyboardDoubleArrowRight';
 import {
@@ -145,7 +145,7 @@ const CreateTransactionDialog = ({ onClose, open }: DialogProps) => {
 
   const enableDivideEvenly =
     formValues.type === 'EXPENSE' &&
-    sharedTransactions.length > 1 &&
+    sharedTransactions.length > 0 &&
     formValues.amount &&
     formValues.amount > 0;
 
