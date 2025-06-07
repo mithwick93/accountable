@@ -14,6 +14,7 @@ import LoginPage from './pages/LoginPage';
 import NotFoundPage from './pages/NotFoundPage';
 import PaymentSystemsPage from './pages/PaymentSystemsPage';
 import RegisterPage from './pages/RegisterPage';
+import SharedTransactionsPage from './pages/SharedTransactionsPage';
 import TransactionCategoriesPage from './pages/TransactionCategoriesPage';
 import TransactionsPage from './pages/TransactionsPage';
 import TransactionTemplatesPage from './pages/TransactionTemplatesPage';
@@ -60,6 +61,10 @@ const router = createBrowserRouter([
           {
             path: '/transactions',
             Component: TransactionsPage,
+          },
+          {
+            path: '/shared-transactions',
+            Component: SharedTransactionsPage,
           },
         ],
       },

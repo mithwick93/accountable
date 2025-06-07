@@ -6,6 +6,7 @@ import DashboardIcon from '@mui/icons-material/Dashboard';
 import PaymentsIcon from '@mui/icons-material/Payments';
 import ReceiptIcon from '@mui/icons-material/Receipt';
 import ScheduleIcon from '@mui/icons-material/Schedule';
+import ShareIcon from '@mui/icons-material/Share';
 import type { Navigation } from '@toolpad/core';
 import { AppProvider } from '@toolpad/core/react-router-dom';
 import React from 'react';
@@ -60,6 +61,11 @@ const NAVIGATION: Navigation = [
     segment: 'transactions',
     title: 'Transactions',
     icon: <ReceiptIcon />,
+  },
+  {
+    segment: 'shared-transactions',
+    title: 'Shared Transactions',
+    icon: <ShareIcon />,
   },
 ];
 
