@@ -5,6 +5,11 @@ const theme = createTheme({
     colorSchemeSelector: 'data-toolpad-color-scheme',
   },
   colorSchemes: { light: true, dark: true },
+  typography: {
+    h4: {
+      fontSize: '1.8rem',
+    },
+  },
   breakpoints: {
     values: {
       xs: 0,
