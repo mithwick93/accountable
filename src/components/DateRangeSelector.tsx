@@ -17,7 +17,14 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useSettings } from '../context/SettingsContext';
 import { getStartEndDate } from '../utils/common';
 
-const DateRangeSelector = () => {
+export type DateRangeSelectorProps = {
+  // eslint-disable-next-line no-unused-vars
+  onRangeChange?: (range: string) => void;
+};
+
+const DateRangeSelector: React.FC<DateRangeSelectorProps> = ({
+  onRangeChange,
+}) => {
   const { settings, update, loading } = useSettings();
   const { startDate, endDate } = getStartEndDate(settings);
 
@@ -162,6 +169,10 @@ const DateRangeSelector = () => {
         },
       },
     });
+
+    if (onRangeChange) {
+      onRangeChange(value);
+    }
   };
 
   if (loading) {
