@@ -1,6 +1,5 @@
 import DeleteIcon from '@mui/icons-material/Delete';
 import FormatClearIcon from '@mui/icons-material/FormatClear';
-import MoneyIcon from '@mui/icons-material/Money';
 import {
   Avatar,
   Box,
@@ -22,7 +21,6 @@ import Typography from '@mui/material/Typography';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFnsV3';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { ColumnFilter } from '@tanstack/table-core/src/features/ColumnFiltering';
-import { useDialogs } from '@toolpad/core/useDialogs';
 import { format } from 'date-fns';
 import { enGB } from 'date-fns/locale';
 import {
@@ -51,7 +49,6 @@ import {
   stringToColor,
 } from '../../../utils/common';
 import { notifyBackendError } from '../../../utils/notifications';
-import SettleSharedTransactionsDialog from './SettleSharedTransactionsDialog';
 import TransactionsSummery from './TransactionsSummery';
 
 const FILTER_COLUMNS: Record<string, string> = {
@@ -201,7 +198,6 @@ const Transactions: React.FC = () => {
   } = useData();
   const { settings, update, loading: settingsLoading } = useSettings();
   const theme = useTheme();
-  const dialogs = useDialogs();
   const [deleting, setDeleting] = useState(false);
 
   const loading =
@@ -257,15 +253,6 @@ const Transactions: React.FC = () => {
   const transactions = useMemo(
     () => transactionsResponse?.content || [],
     [transactionsResponse],
-  );
-  const transactionsWithShares = useMemo(
-    () =>
-      transactions.filter(
-        (transaction) =>
-          transaction.sharedTransactions &&
-          transaction.sharedTransactions.length > 0,
-      ),
-    [transactions],
   );
 
   const searchParameters: Record<string, any> = useMemo(
@@ -795,21 +782,6 @@ const Transactions: React.FC = () => {
           gap: 1,
         }}
       >
-        <Tooltip title="Settle Shared Transactions">
-          <span>
-            <IconButton
-              disabled={transactionsWithShares.length === 0}
-              onClick={async () => {
-                await dialogs.open(
-                  SettleSharedTransactionsDialog,
-                  transactionsWithShares,
-                );
-              }}
-            >
-              <MoneyIcon />
-            </IconButton>
-          </span>
-        </Tooltip>
         <Tooltip title={`Clear filters${appliedFilters}`}>
           <span>
             <IconButton
