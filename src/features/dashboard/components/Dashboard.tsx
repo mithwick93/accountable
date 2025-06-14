@@ -34,7 +34,7 @@ import {
 import { calculateLiabilityDates } from '../../../utils/date';
 import log from '../../../utils/logger';
 
-type NetSummeryProps = {
+type NetSummaryProps = {
   title: string;
   totals: { [currency: string]: number };
   currencyRates: { [currency: string]: number };
@@ -42,7 +42,7 @@ type NetSummeryProps = {
   isLoading: boolean;
 };
 
-const NetSummary: React.FC<NetSummeryProps> = ({
+const NetSummary: React.FC<NetSummaryProps> = ({
   title,
   totals,
   currencyRates,
@@ -467,7 +467,7 @@ const Dashboard: React.FC = () => {
       </Grid>
       <Grid size={{ xs: 12, sm: 12, lg: 6 }}>
         <Card>
-          <CardHeader title="Assets Summery" />
+          <CardHeader title="Assets Summary" />
           <CardContent>
             <MaterialReactTable table={assetsTable} />
           </CardContent>
@@ -475,7 +475,7 @@ const Dashboard: React.FC = () => {
       </Grid>
       <Grid size={{ xs: 12, sm: 12, lg: 6 }}>
         <Card>
-          <CardHeader title="Liabilities Summery" />
+          <CardHeader title="Liabilities Summary" />
           <CardContent>
             <MaterialReactTable table={liabilitiesTable} />
           </CardContent>
