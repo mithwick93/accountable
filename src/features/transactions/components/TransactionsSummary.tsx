@@ -2,7 +2,7 @@ import CompareArrowsIcon from '@mui/icons-material/CompareArrows';
 import InputIcon from '@mui/icons-material/Input';
 import MoveDownIcon from '@mui/icons-material/MoveDown';
 import OutputIcon from '@mui/icons-material/Output';
-import { Box, Tooltip } from '@mui/material';
+import { Box, Tooltip, useMediaQuery, useTheme } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import Typography from '@mui/material/Typography';
 import React, { ElementType, useMemo } from 'react';
@@ -42,8 +42,10 @@ type TransactionsSummaryProps = {
 const TransactionsSummary: React.FC<TransactionsSummaryProps> = ({
   transactions,
 }) => {
+  const theme = useTheme();
   const { settings } = useSettings();
 
+  const isMobile = useMediaQuery(theme.breakpoints.down('lg'));
   const currency: string = settings?.currency || 'USD';
 
   const transactionsForCurrency = useMemo(
@@ -78,6 +80,10 @@ const TransactionsSummary: React.FC<TransactionsSummaryProps> = ({
     () => formatCurrency(transfers, currency),
     [transfers, currency],
   );
+
+  if (isMobile) {
+    return null;
+  }
 
   return (
     <Box display="flex" alignItems="center" sx={{ width: '100%' }}>
