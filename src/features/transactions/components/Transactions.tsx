@@ -49,7 +49,7 @@ import {
   stringToColor,
 } from '../../../utils/common';
 import { notifyBackendError } from '../../../utils/notifications';
-import TransactionsSummery from './TransactionsSummery';
+import TransactionsSummary from './TransactionsSummary';
 
 const FILTER_COLUMNS: Record<string, string> = {
   name: 'Name',
@@ -936,7 +936,7 @@ const Transactions: React.FC = () => {
           <DateRangeSelector />
         </Box>
         <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'flex-end' }}>
-          <TransactionsSummery transactions={transactions} />
+          <TransactionsSummary transactions={transactions} />
         </Box>
       </Box>
       <MaterialReactTable table={table} />

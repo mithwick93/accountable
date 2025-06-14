@@ -30,7 +30,7 @@ import {
   getAggregatedDataForType,
 } from '../../../utils/common';
 
-const TransactionSummeryDialog = ({
+const TransactionSummaryDialog = ({
   onClose,
   open,
   payload: transactions,
@@ -154,7 +154,7 @@ const TransactionSummeryDialog = ({
             alignItems: 'center',
           }}
         >
-          Transactions summery
+          Transactions summary
           <Box
             sx={{
               display: 'flex-end',
@@ -279,4 +279,4 @@ const TransactionSummeryDialog = ({
   );
 };
 
-export default TransactionSummeryDialog;
+export default TransactionSummaryDialog;

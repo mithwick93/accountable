@@ -20,7 +20,7 @@ import {
   calculateGroupedExpenses,
   formatCurrency,
 } from '../../../utils/common';
-import TransactionSummeryDialog from './TransactionSummeryDialog';
+import TransactionSummaryDialog from './TransactionSummaryDialog';
 
 type GridItemWithIconProps = {
   title: string;
@@ -44,10 +44,10 @@ const GridItemWithIcon: React.FC<GridItemWithIconProps> = ({
   </Grid>
 );
 
-type TransactionsSummeryProps = {
+type TransactionsSummaryProps = {
   transactions: Transaction[];
 };
-const TransactionsSummery: React.FC<TransactionsSummeryProps> = ({
+const TransactionsSummary: React.FC<TransactionsSummaryProps> = ({
   transactions,
 }) => {
   const theme = useTheme();
@@ -90,11 +90,11 @@ const TransactionsSummery: React.FC<TransactionsSummeryProps> = ({
     [transfers, currency],
   );
 
-  const renderShowSummeryButton = () => (
-    <Tooltip title="Show Transactions Summery">
+  const renderShowSummaryButton = () => (
+    <Tooltip title="Show Transactions Summary">
       <IconButton
         onClick={async () => {
-          await dialogs.open(TransactionSummeryDialog, transactionsForCurrency);
+          await dialogs.open(TransactionSummaryDialog, transactionsForCurrency);
         }}
         color="primary"
         size="small"
@@ -105,7 +105,7 @@ const TransactionsSummery: React.FC<TransactionsSummeryProps> = ({
   );
 
   if (isMobile) {
-    return renderShowSummeryButton();
+    return renderShowSummaryButton();
   }
 
   return (
@@ -128,9 +128,9 @@ const TransactionsSummery: React.FC<TransactionsSummeryProps> = ({
           Icon={MoveDownIcon}
         />
       </Grid>
-      {renderShowSummeryButton()}
+      {renderShowSummaryButton()}
     </Box>
   );
 };
 
-export default TransactionsSummery;
+export default TransactionsSummary;
