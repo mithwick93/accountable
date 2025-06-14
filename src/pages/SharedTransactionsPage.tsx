@@ -3,7 +3,7 @@ import ErrorBoundary from '../components/ErrorBoundary';
 import SharedTransactions from '../features/sharedTransactions/components/SharedTransactions';
 
 const SharedTransactionsPage = () => (
-  <ErrorBoundary resetKey="transactions">
+  <ErrorBoundary resetKey="sharedTransactions">
     <SharedTransactions />
   </ErrorBoundary>
 );

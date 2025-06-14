@@ -1,4 +1,5 @@
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
+import AnalyticsIcon from '@mui/icons-material/Analytics';
 import BlurLinearIcon from '@mui/icons-material/BlurLinear';
 import CardTravelIcon from '@mui/icons-material/CardTravel';
 import CategoryIcon from '@mui/icons-material/Category';
@@ -64,8 +65,13 @@ const NAVIGATION: Navigation = [
   },
   {
     segment: 'shared-transactions',
-    title: 'Shared Transactions',
+    title: 'Shared',
     icon: <ShareIcon />,
+  },
+  {
+    segment: 'transaction-analytics',
+    title: 'Analytics',
+    icon: <AnalyticsIcon />,
   },
 ];
 
