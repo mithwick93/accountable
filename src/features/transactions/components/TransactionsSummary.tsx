@@ -1,18 +1,10 @@
 import CompareArrowsIcon from '@mui/icons-material/CompareArrows';
 import InputIcon from '@mui/icons-material/Input';
 import MoveDownIcon from '@mui/icons-material/MoveDown';
-import OpenInFullIcon from '@mui/icons-material/OpenInFull';
 import OutputIcon from '@mui/icons-material/Output';
-import {
-  Box,
-  IconButton,
-  Tooltip,
-  useMediaQuery,
-  useTheme,
-} from '@mui/material';
+import { Box, Tooltip } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import Typography from '@mui/material/Typography';
-import { useDialogs } from '@toolpad/core/useDialogs';
 import React, { ElementType, useMemo } from 'react';
 import { useSettings } from '../../../context/SettingsContext';
 import { Transaction } from '../../../types/Transaction';
@@ -20,13 +12,13 @@ import {
   calculateGroupedExpenses,
   formatCurrency,
 } from '../../../utils/common';
-import TransactionSummaryDialog from './TransactionSummaryDialog';
 
 type GridItemWithIconProps = {
   title: string;
   value: string;
   Icon: ElementType;
 };
+
 const GridItemWithIcon: React.FC<GridItemWithIconProps> = ({
   title,
   value,
@@ -50,9 +42,6 @@ type TransactionsSummaryProps = {
 const TransactionsSummary: React.FC<TransactionsSummaryProps> = ({
   transactions,
 }) => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('lg'));
-  const dialogs = useDialogs();
   const { settings } = useSettings();
 
   const currency: string = settings?.currency || 'USD';
@@ -90,24 +79,6 @@ const TransactionsSummary: React.FC<TransactionsSummaryProps> = ({
     [transfers, currency],
   );
 
-  const renderShowSummaryButton = () => (
-    <Tooltip title="Show Transactions Summary">
-      <IconButton
-        onClick={async () => {
-          await dialogs.open(TransactionSummaryDialog, transactionsForCurrency);
-        }}
-        color="primary"
-        size="small"
-      >
-        <OpenInFullIcon />
-      </IconButton>
-    </Tooltip>
-  );
-
-  if (isMobile) {
-    return renderShowSummaryButton();
-  }
-
   return (
     <Box display="flex" alignItems="center" sx={{ width: '100%' }}>
       <Grid container sx={{ width: '100%' }}>
@@ -128,7 +99,6 @@ const TransactionsSummary: React.FC<TransactionsSummaryProps> = ({
           Icon={MoveDownIcon}
         />
       </Grid>
-      {renderShowSummaryButton()}
     </Box>
   );
 };
