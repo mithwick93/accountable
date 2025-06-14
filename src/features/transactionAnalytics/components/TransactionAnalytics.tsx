@@ -42,13 +42,24 @@ const TransactionAnalytics: React.FC = () => {
 
   return (
     <Box sx={{ width: '100%' }}>
-      <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+      <Box
+        sx={{
+          position: 'sticky',
+          top: 0,
+          zIndex: 1,
+          backgroundColor: 'background.paper',
+          borderBottom: 1,
+          borderColor: 'divider',
+        }}
+      >
         <Tabs
           value={value}
           onChange={handleChange}
+          textColor="secondary"
+          indicatorColor="secondary"
           aria-label="transactions summary"
         >
-          <Tab label="summary" {...a11yProps(0)} />\
+          <Tab label="summary" {...a11yProps(0)} />
         </Tabs>
       </Box>
       <CustomTabPanel value={value} index={0}>

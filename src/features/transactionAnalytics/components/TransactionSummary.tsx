@@ -151,106 +151,118 @@ const TransactionSummary: React.FC = () => {
     // eslint-disable-next-line
   }, [searchParameters, startDate, endDate]);
 
-  if (loading) {
-    return <LoadingSkeleton />;
-  }
-
   return (
     <>
-      <Box display="flex" alignItems="center" gap={2} flexGrow={1}>
+      <Box
+        display="flex"
+        alignItems="center"
+        gap={2}
+        flexGrow={1}
+        sx={{
+          position: 'sticky',
+          top: 49,
+          zIndex: 1,
+          backgroundColor: 'background.paper',
+          pb: 1,
+        }}
+      >
         <Typography variant="h6">Billing Period:</Typography>
         <DateRangeSelector />
       </Box>
-      <Box component="div" mb={2}>
-        <Box>
-          <Typography variant="h6" gutterBottom>
-            Overview
-          </Typography>
-          <Grid container spacing={2} mb={2}>
-            <Grid size={{ xs: 12, sm: 12, lg: 3 }}>
-              <Card>
-                <CardHeader title="Income" />
-                <CardContent>
-                  <Typography
-                    variant="h5"
-                    component="div"
-                    style={{ fontWeight: 'bold' }}
-                  >
-                    {incomeTotal}
-                  </Typography>
-                </CardContent>
-              </Card>
+      {loading ? (
+        <LoadingSkeleton />
+      ) : (
+        <Box component="div" mb={2}>
+          <Box>
+            <Typography variant="h6" gutterBottom>
+              Overview
+            </Typography>
+            <Grid container spacing={2} mb={2}>
+              <Grid size={{ xs: 12, sm: 12, lg: 3 }}>
+                <Card>
+                  <CardHeader title="Income" />
+                  <CardContent>
+                    <Typography
+                      variant="h5"
+                      component="div"
+                      style={{ fontWeight: 'bold' }}
+                    >
+                      {incomeTotal}
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+              <Grid size={{ xs: 12, sm: 12, lg: 3 }}>
+                <Card>
+                  <CardHeader title="Expenses" />
+                  <CardContent>
+                    <Typography
+                      variant="h5"
+                      component="div"
+                      style={{ fontWeight: 'bold' }}
+                    >
+                      {expenseTotal}
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+              <Grid size={{ xs: 12, sm: 12, lg: 3 }}>
+                <Card>
+                  <CardHeader title="Cash Flow" />
+                  <CardContent>
+                    <Typography
+                      variant="h5"
+                      component="div"
+                      style={{ fontWeight: 'bold' }}
+                    >
+                      {cashFlow}
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+              <Grid size={{ xs: 12, sm: 12, lg: 3 }}>
+                <Card>
+                  <CardHeader title="Transfers" />
+                  <CardContent>
+                    <Typography
+                      variant="h5"
+                      component="div"
+                      style={{ fontWeight: 'bold' }}
+                    >
+                      {transferTotal}
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
             </Grid>
-            <Grid size={{ xs: 12, sm: 12, lg: 3 }}>
-              <Card>
-                <CardHeader title="Expenses" />
-                <CardContent>
-                  <Typography
-                    variant="h5"
-                    component="div"
-                    style={{ fontWeight: 'bold' }}
-                  >
-                    {expenseTotal}
-                  </Typography>
-                </CardContent>
-              </Card>
+          </Box>
+          <Box>
+            <Typography variant="h6" gutterBottom>
+              Breakdown
+            </Typography>
+            <Grid container spacing={2}>
+              {renderChart(
+                `Income : ${incomeTotal}`,
+                incomeData,
+                currency,
+                isMobile,
+              )}
+              {renderChart(
+                `Expenses : ${expenseTotal}`,
+                expenseData,
+                currency,
+                isMobile,
+              )}
+              {renderChart(
+                `Transfer : ${transferTotal}`,
+                transferData,
+                currency,
+                isMobile,
+              )}
             </Grid>
-            <Grid size={{ xs: 12, sm: 12, lg: 3 }}>
-              <Card>
-                <CardHeader title="Cash Flow" />
-                <CardContent>
-                  <Typography
-                    variant="h5"
-                    component="div"
-                    style={{ fontWeight: 'bold' }}
-                  >
-                    {cashFlow}
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-            <Grid size={{ xs: 12, sm: 12, lg: 3 }}>
-              <Card>
-                <CardHeader title="Transfers" />
-                <CardContent>
-                  <Typography
-                    variant="h5"
-                    component="div"
-                    style={{ fontWeight: 'bold' }}
-                  >
-                    {transferTotal}
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-          </Grid>
+          </Box>
         </Box>
-        <Box>
-          <Typography variant="h6" gutterBottom>
-            Breakdown
-          </Typography>
-          <Grid container spacing={2}>
-            {renderChart(
-              `Income : ${incomeTotal}`,
-              incomeData,
-              currency,
-              isMobile,
-            )}
-            {renderChart(
-              `Expenses : ${expenseTotal}`,
-              expenseData,
-              currency,
-              isMobile,
-            )}
-            {renderChart(
-              `Transfer : ${transferTotal}`,
-              transferData,
-              currency,
-              isMobile,
-            )}
-          </Grid>
-        </Box>
-      </Box>
+      )}
     </>
   );
 };
