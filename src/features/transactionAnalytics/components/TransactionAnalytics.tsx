@@ -1,9 +1,8 @@
 import Box from '@mui/material/Box';
 import Tab from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';
-import Typography from '@mui/material/Typography';
 import * as React from 'react';
-import DateRangeSelector from '../../../components/DateRangeSelector';
+import TransactionSummary from './TransactionSummary';
 
 type TabPanelProps = {
   children?: React.ReactNode;
@@ -53,10 +52,7 @@ const TransactionAnalytics: React.FC = () => {
         </Tabs>
       </Box>
       <CustomTabPanel value={value} index={0}>
-        <Box display="flex" alignItems="center" gap={2} flexGrow={1}>
-          <Typography variant="h6">Billing Period:</Typography>
-          <DateRangeSelector />
-        </Box>
+        <TransactionSummary />
       </CustomTabPanel>
     </Box>
   );
