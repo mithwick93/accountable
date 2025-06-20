@@ -19,6 +19,7 @@ import TransactionAnalyticsPage from './pages/TransactionAnalyticsPage';
 import TransactionCategoriesPage from './pages/TransactionCategoriesPage';
 import TransactionsPage from './pages/TransactionsPage';
 import TransactionTemplatesPage from './pages/TransactionTemplatesPage';
+import VerifyEmailPage from './pages/VerifyEmailPage';
 import reportWebVitals from './reportWebVitals';
 import './index.css';
 import * as serviceWorkerRegistration from './serviceWorkerRegistration';
@@ -80,6 +81,10 @@ const router = createBrowserRouter([
       {
         path: '/register',
         Component: RegisterPage,
+      },
+      {
+        path: '/verify-email',
+        Component: VerifyEmailPage,
       },
       {
         path: '*',

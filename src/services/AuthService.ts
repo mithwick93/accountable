@@ -25,6 +25,10 @@ export class AuthService {
     await axios.post(`${API_BASE_URL}/auth/register`, data);
   }
 
+  static async verifyEmail(token: string): Promise<void> {
+    await axios.post(`${API_BASE_URL}/auth/verify-email`, { token });
+  }
+
   static async refreshToken(): Promise<string | null> {
     const refreshToken = TokenStorage.getRefreshToken();
 

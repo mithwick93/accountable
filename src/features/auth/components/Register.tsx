@@ -97,7 +97,9 @@ const Register: React.FC = () => {
 
     try {
       await AuthService.register(formData);
-      toast.success('Registration successful!');
+      toast.success(
+        'Registration initiated. Please check your email to verify your account.',
+      );
       navigate('/login', { replace: true });
     } catch (e) {
       setGlobalError('Registration failed');
