@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { StatusCodes } from 'http-status-codes';
+import { toast } from 'react-toastify';
 import { TokenStorage } from '../utils/TokenStorage';
 import { AuthService } from './AuthService';
 
@@ -28,6 +29,11 @@ apiClient.interceptors.response.use(
       } catch {
         await AuthService.logout();
       }
+    }
+    if (error.response?.status === StatusCodes.TOO_MANY_REQUESTS) {
+      toast.error(
+        'You are sending requests too quickly. Please wait and try again.',
+      );
     }
     return Promise.reject(error);
   },
