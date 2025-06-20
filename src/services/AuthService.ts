@@ -29,6 +29,21 @@ export class AuthService {
     await axios.post(`${API_BASE_URL}/auth/verify-email`, { token });
   }
 
+  static async changePassword(
+    oldPassword: string,
+    newPassword: string,
+  ): Promise<void> {
+    const accessToken = TokenStorage.getAccessToken();
+    await axios.post(
+      `${API_BASE_URL}/auth/change-password`,
+      { oldPassword, newPassword },
+      {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      },
+    );
+    await AuthService.logout();
+  }
+
   static async refreshToken(): Promise<string | null> {
     const refreshToken = TokenStorage.getRefreshToken();
 

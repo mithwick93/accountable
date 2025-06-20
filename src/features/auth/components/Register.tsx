@@ -4,11 +4,9 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import logoLight from '../../../assets/logo-light.svg';
 import { AuthService } from '../../../services/AuthService';
+import { PASSWORD_PATTERN } from '../../../utils/common';
 import log from '../../../utils/logger';
 import './Register.css';
-
-const PASSWORD_PATTERN =
-  /^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=]).{8,}$/;
 
 type RegisterFormData = {
   username: string;
@@ -60,7 +58,7 @@ const Register: React.FC = () => {
       errors.password = 'Password is required';
     } else if (!PASSWORD_PATTERN.test(formData.password)) {
       errors.password =
-        'Password must be at least 8 characters, include an uppercase letter, a lowercase letter, a number, and a special character.';
+        'Password must be at least 8 characters and include upper, lower, number, and special character.';
     }
 
     if (!formData.firstName) {

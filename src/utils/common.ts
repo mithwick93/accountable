@@ -9,6 +9,9 @@ import { Transaction } from '../types/Transaction';
 import { User } from '../types/User';
 import { isCardExpired } from './cardUtils';
 
+export const PASSWORD_PATTERN =
+  /^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=]).{8,}$/;
+
 export const alertColors = {
   green: { dark: '#81C784', light: '#388E3C' },
   orange: { dark: '#FFB74D', light: '#F57C00' },

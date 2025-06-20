@@ -1,5 +1,6 @@
 import {
   Avatar,
+  Divider,
   Menu,
   MenuItem,
   Select,
@@ -12,6 +13,7 @@ import {
 } from '@mui/material';
 import Stack from '@mui/material/Stack';
 import { ThemeSwitcher } from '@toolpad/core/DashboardLayout';
+import { useDialogs } from '@toolpad/core/useDialogs';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useSettings } from '../context/SettingsContext';
@@ -19,6 +21,7 @@ import { useStaticData } from '../context/StaticDataContext';
 import { useUser } from '../context/UserContext';
 import { AuthService } from '../services/AuthService';
 import { generateAvatarProps } from '../utils/common';
+import ChangePasswordDialog from './ChangePasswordDialog';
 
 const clockUpdateInterval = 60000;
 
@@ -32,6 +35,7 @@ const formatDate = () =>
   });
 
 const ToolbarActions = () => {
+  const dialogs = useDialogs();
   const { loggedInUser, loading: userLoading } = useUser();
   const { currencies, loading: staticDataLoading } = useStaticData();
   const { settings, update, loading: settingsLoading } = useSettings();
@@ -101,6 +105,15 @@ const ToolbarActions = () => {
         open={Boolean(anchorEl)}
         onClose={handleMenuClose}
       >
+        <MenuItem
+          onClick={async () => {
+            handleMenuClose();
+            await dialogs.open(ChangePasswordDialog);
+          }}
+        >
+          Change Password
+        </MenuItem>
+        <Divider />
         <MenuItem onClick={handleLogout}>Logout</MenuItem>
       </Menu>
     </Stack>
