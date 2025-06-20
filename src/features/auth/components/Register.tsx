@@ -12,6 +12,7 @@ const PASSWORD_PATTERN =
 
 type RegisterFormData = {
   username: string;
+  email: string;
   password: string;
   firstName: string;
   lastName: string;
@@ -19,6 +20,7 @@ type RegisterFormData = {
 
 type FormErrors = {
   username?: string;
+  email?: string;
   password?: string;
   firstName?: string;
   lastName?: string;
@@ -27,6 +29,7 @@ type FormErrors = {
 const Register: React.FC = () => {
   const [formData, setFormData] = useState<RegisterFormData>({
     username: '',
+    email: '',
     password: '',
     firstName: '',
     lastName: '',
@@ -43,6 +46,14 @@ const Register: React.FC = () => {
       errors.username = 'Username is required';
     } else if (formData.username.length < 4 || formData.username.length > 20) {
       errors.username = 'Username must be between 4 and 20 characters';
+    }
+
+    if (!formData.email) {
+      errors.email = 'Email is required';
+    } else if (
+      !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(formData.email)
+    ) {
+      errors.email = 'Invalid email address';
     }
 
     if (!formData.password) {
@@ -121,6 +132,15 @@ const Register: React.FC = () => {
         onChange={handleChange('username')}
         error={!!formErrors.username}
         helperText={formErrors.username}
+      />
+      <TextField
+        label="Email"
+        variant="outlined"
+        margin="normal"
+        value={formData.email}
+        onChange={handleChange('email')}
+        error={!!formErrors.email}
+        helperText={formErrors.email}
       />
       <TextField
         label="Password"
