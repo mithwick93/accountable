@@ -1,4 +1,10 @@
-import { Alert, Box, CircularProgress, Typography } from '@mui/material';
+import {
+  Alert,
+  Box,
+  Button,
+  CircularProgress,
+  Typography,
+} from '@mui/material';
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import logoLight from '../../../assets/logo-light.svg';
@@ -32,7 +38,7 @@ const VerifyEmail: React.FC = () => {
       .catch((err) => {
         setStatus('error');
         setMessage(
-          err.response?.data?.message || err.message || 'Verification failed.',
+          err.response?.data?.detail || err.message || 'Verification failed.',
         );
       });
   }, [location.search, navigate]);
@@ -60,9 +66,19 @@ const VerifyEmail: React.FC = () => {
         </Alert>
       )}
       {status === 'error' && (
-        <Alert severity="error" sx={{ mt: 4 }}>
-          {message}
-        </Alert>
+        <>
+          <Alert severity="error" sx={{ mt: 4 }}>
+            {message}
+          </Alert>
+          <Button
+            variant="contained"
+            color="primary"
+            sx={{ mt: 2 }}
+            onClick={() => navigate('/login', { replace: true })}
+          >
+            Back to Login
+          </Button>
+        </>
       )}
     </Box>
   );
