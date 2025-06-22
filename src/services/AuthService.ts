@@ -29,6 +29,17 @@ export class AuthService {
     await axios.post(`${API_BASE_URL}/auth/verify-email`, { token });
   }
 
+  static async forgotPassword(email: string): Promise<void> {
+    await axios.post(`${API_BASE_URL}/auth/forgot-password`, { email });
+  }
+
+  static async resetPassword(data: {
+    token: string;
+    newPassword: string;
+  }): Promise<void> {
+    await axios.post(`${API_BASE_URL}/auth/reset-password`, data);
+  }
+
   static async changePassword(
     oldPassword: string,
     newPassword: string,
