@@ -8,12 +8,14 @@ import App from './App';
 import MainLayout from './layouts/MainLayout';
 import AssetsPage from './pages/AssetsPage';
 import DashboardPage from './pages/DashboardPage';
+import ForgotPasswordPage from './pages/FogotPasswordPage';
 import InstallmentPlansPage from './pages/InstallmentPlansPage';
 import LiabilitiesPage from './pages/LiabilitiesPage';
 import LoginPage from './pages/LoginPage';
 import NotFoundPage from './pages/NotFoundPage';
 import PaymentSystemsPage from './pages/PaymentSystemsPage';
 import RegisterPage from './pages/RegisterPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 import SharedTransactionsPage from './pages/SharedTransactionsPage';
 import TransactionAnalyticsPage from './pages/TransactionAnalyticsPage';
 import TransactionCategoriesPage from './pages/TransactionCategoriesPage';
@@ -85,6 +87,14 @@ const router = createBrowserRouter([
       {
         path: '/verify-email',
         Component: VerifyEmailPage,
+      },
+      {
+        path: '/forgot-password',
+        Component: ForgotPasswordPage,
+      },
+      {
+        path: '/reset-password',
+        Component: ResetPasswordPage,
       },
       {
         path: '*',
