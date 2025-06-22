@@ -423,3 +423,7 @@ export const getActiveLiabilities = (liabilities: Liability[]) =>
     (liability) =>
       liability.status === 'ACTIVE' || liability.status === 'DEFAULTED',
   );
+
+const emailPattern = /^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/;
+export const isValidEmail = (email: string): boolean =>
+  emailPattern.test(email);
