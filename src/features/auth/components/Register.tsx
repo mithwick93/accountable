@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import logoLight from '../../../assets/logo-light.svg';
 import { AuthService } from '../../../services/AuthService';
-import { PASSWORD_PATTERN } from '../../../utils/common';
+import { isValidEmail, PASSWORD_PATTERN } from '../../../utils/common';
 import log from '../../../utils/logger';
 import './Register.css';
 
@@ -48,9 +48,7 @@ const Register: React.FC = () => {
 
     if (!formData.email) {
       errors.email = 'Email is required';
-    } else if (
-      !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(formData.email)
-    ) {
+    } else if (!isValidEmail(formData.email)) {
       errors.email = 'Invalid email address';
     }
 
@@ -113,71 +111,101 @@ const Register: React.FC = () => {
       justifyContent="center"
       minHeight="100vh"
       bgcolor="background.default"
-      px={3}
+      px={2}
     >
-      <img src={logoLight} className="App-logo" alt="logo" />
-      <Typography variant="h2" gutterBottom>
-        Register
-      </Typography>
-      {globalError && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {globalError}
-        </Alert>
-      )}
-      <TextField
-        label="Username"
-        variant="outlined"
-        margin="normal"
-        value={formData.username}
-        onChange={handleChange('username')}
-        error={!!formErrors.username}
-        helperText={formErrors.username}
-      />
-      <TextField
-        label="Email"
-        variant="outlined"
-        margin="normal"
-        value={formData.email}
-        onChange={handleChange('email')}
-        error={!!formErrors.email}
-        helperText={formErrors.email}
-      />
-      <TextField
-        label="Password"
-        type="password"
-        variant="outlined"
-        margin="normal"
-        value={formData.password}
-        onChange={handleChange('password')}
-        error={!!formErrors.password}
-        helperText={formErrors.password}
-      />
-      <TextField
-        label="First Name"
-        variant="outlined"
-        margin="normal"
-        value={formData.firstName}
-        onChange={handleChange('firstName')}
-        error={!!formErrors.firstName}
-        helperText={formErrors.firstName}
-      />
-      <TextField
-        label="Last Name"
-        variant="outlined"
-        margin="normal"
-        value={formData.lastName}
-        onChange={handleChange('lastName')}
-        error={!!formErrors.lastName}
-        helperText={formErrors.lastName}
-      />
-      <Button
-        variant="contained"
-        color="primary"
-        sx={{ mt: 2 }}
-        onClick={handleRegister}
+      <Box
+        width="100%"
+        maxWidth={400}
+        display="flex"
+        flexDirection="column"
+        alignItems="center"
       >
-        Register
-      </Button>
+        <img
+          src={logoLight}
+          className="App-logo"
+          alt="logo"
+          style={{ display: 'block', margin: '0 auto' }}
+        />
+        <Typography variant="h4" gutterBottom align="center">
+          Register
+        </Typography>
+        {globalError && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {globalError}
+          </Alert>
+        )}
+        <TextField
+          label="Username"
+          variant="outlined"
+          margin="normal"
+          value={formData.username}
+          onChange={handleChange('username')}
+          error={!!formErrors.username}
+          helperText={formErrors.username}
+          fullWidth
+          autoComplete="off"
+        />
+        <TextField
+          label="Email"
+          variant="outlined"
+          margin="normal"
+          value={formData.email}
+          onChange={handleChange('email')}
+          error={!!formErrors.email}
+          helperText={formErrors.email}
+          fullWidth
+        />
+        <TextField
+          label="Password"
+          type="password"
+          variant="outlined"
+          margin="normal"
+          value={formData.password}
+          onChange={handleChange('password')}
+          error={!!formErrors.password}
+          helperText={formErrors.password}
+          fullWidth
+          autoComplete="off"
+        />
+        <TextField
+          label="First Name"
+          variant="outlined"
+          margin="normal"
+          value={formData.firstName}
+          onChange={handleChange('firstName')}
+          error={!!formErrors.firstName}
+          helperText={formErrors.firstName}
+          fullWidth
+        />
+        <TextField
+          label="Last Name"
+          variant="outlined"
+          margin="normal"
+          value={formData.lastName}
+          onChange={handleChange('lastName')}
+          error={!!formErrors.lastName}
+          helperText={formErrors.lastName}
+          fullWidth
+        />
+        <Button
+          variant="contained"
+          color="primary"
+          sx={{ mt: 2 }}
+          onClick={handleRegister}
+          fullWidth
+        >
+          Register
+        </Button>
+        <Button
+          variant="outlined"
+          color="secondary"
+          sx={{ mt: 1 }}
+          onClick={() => navigate('/login')}
+          fullWidth
+        >
+          Back
+        </Button>
+      </Box>
     </Box>
   );
 };

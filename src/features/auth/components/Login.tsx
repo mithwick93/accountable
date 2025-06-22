@@ -25,7 +25,8 @@ const Login = () => {
     }
   }, [navigate, from]);
 
-  const handleLogin = async () => {
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
     try {
       await AuthService.login(username, password);
 
@@ -47,7 +48,7 @@ const Login = () => {
   };
 
   return (
-    <>
+    <form onSubmit={handleLogin}>
       <Box
         display="flex"
         flexDirection="column"
@@ -55,46 +56,84 @@ const Login = () => {
         justifyContent="center"
         minHeight="100vh"
         bgcolor="background.default"
-        px={3}
+        px={2}
       >
-        <img src={logoLight} className="App-logo" alt="logo" />
-        <Typography variant="h2" gutterBottom>
-          AccountAble
-        </Typography>
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {error}
-          </Alert>
-        )}
-        <TextField
-          label="Username"
-          variant="outlined"
-          margin="normal"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-        />
-        <TextField
-          label="Password"
-          type="password"
-          variant="outlined"
-          margin="normal"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-        <Button
-          variant="contained"
-          color="primary"
-          sx={{ mt: 2 }}
-          onClick={handleLogin}
+        <Box
+          width="100%"
+          maxWidth={400}
+          display="flex"
+          flexDirection="column"
+          alignItems="center"
         >
-          Login
-        </Button>
-        <Typography variant="body2" sx={{ mt: 2 }}>
-          {`Don't have an account? `}
-          <Link href="/register">Register</Link>
-        </Typography>
+          <img src={logoLight} className="App-logo" alt="logo" />
+          <Typography variant="h2" gutterBottom>
+            AccountAble
+          </Typography>
+          {error && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {error}
+            </Alert>
+          )}
+          <TextField
+            label="Username"
+            variant="outlined"
+            margin="normal"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            required
+            fullWidth
+          />
+          <TextField
+            label="Password"
+            type="password"
+            variant="outlined"
+            margin="normal"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            fullWidth
+          />
+          <Typography variant="body2" sx={{ mt: 1, width: '100%' }}>
+            <Link
+              component="button"
+              variant="body2"
+              onClick={(event) => {
+                event.preventDefault();
+                navigate('/forgot-password');
+              }}
+              underline="hover"
+            >
+              Forgot password?
+            </Link>
+          </Typography>
+          <Button
+            type="submit"
+            variant="contained"
+            color="primary"
+            sx={{ mt: 2 }}
+            fullWidth
+          >
+            Login
+          </Button>
+          <Box display="flex" alignItems="center" sx={{ mt: 2 }}>
+            <Typography variant="body2" sx={{ mr: 1 }}>
+              New to Accountable?
+            </Typography>
+            <Link
+              component="button"
+              variant="body2"
+              onClick={(event) => {
+                event.preventDefault();
+                navigate('/register');
+              }}
+              underline="hover"
+            >
+              Join Now
+            </Link>
+          </Box>
+        </Box>
       </Box>
-    </>
+    </form>
   );
 };
 
