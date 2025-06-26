@@ -1,6 +1,6 @@
 import { Alert, Box, Button, Link, TextField, Typography } from '@mui/material';
 import { jwtDecode } from 'jwt-decode';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import logoLight from '../../../assets/logo-light.svg';
@@ -10,6 +10,15 @@ import log from '../../../utils/logger';
 import './Login.css';
 import { TokenStorage } from '../../../utils/TokenStorage';
 
+declare global {
+  interface Window {
+    google: any;
+  }
+}
+
+const clientId =
+  '1074180315800-kq62ql1u44dtrbduh56tiu0mcvpfupa5.apps.googleusercontent.com';
+
 const Login = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -18,12 +27,51 @@ const Login = () => {
   const location = useLocation();
   const from = location.state?.from?.pathname || '/';
 
+  const handleGoogleResponse = useCallback(
+    async (response: any) => {
+      try {
+        const idToken = response.credential;
+        await AuthService.googleLogin(idToken);
+
+        const accessToken = TokenStorage.getAccessToken();
+        if (accessToken) {
+          const decodedToken: LoggedInUser = jwtDecode(accessToken);
+          toast.success(
+            `Welcome, ${decodedToken.firstName} ${decodedToken.lastName}!`,
+          );
+          navigate(from, { replace: true });
+        }
+      } catch (e) {
+        setError('Google login failed');
+        log.error('Google login error: ', e);
+      }
+    },
+    [navigate, from],
+  );
+
   useEffect(() => {
     const accessToken = TokenStorage.getAccessToken();
     if (accessToken) {
       navigate(from, { replace: true });
     }
-  }, [navigate, from]);
+
+    if (window.google) {
+      window.google.accounts.id.initialize({
+        // eslint-disable-next-line camelcase
+        client_id: clientId,
+        callback: handleGoogleResponse,
+      });
+
+      window.google.accounts.id.renderButton(
+        document.getElementById('googleSignInDiv'),
+        {
+          theme: 'filled_blue',
+          size: 'large',
+          type: 'standard',
+        },
+      );
+    }
+  }, [navigate, from, handleGoogleResponse]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -115,6 +163,7 @@ const Login = () => {
           >
             Login
           </Button>
+          <div id="googleSignInDiv" style={{ marginTop: '1rem' }}></div>
           <Box display="flex" alignItems="center" sx={{ mt: 2 }}>
             <Typography variant="body2" sx={{ mr: 1 }}>
               New to Accountable?

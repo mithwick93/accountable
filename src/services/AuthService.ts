@@ -16,6 +16,16 @@ export class AuthService {
     TokenStorage.setRefreshToken(refreshToken);
   }
 
+  static async googleLogin(idToken: string): Promise<void> {
+    const response = await axios.post(`${API_BASE_URL}/auth/google-login`, {
+      idToken,
+    });
+
+    const { accessToken, refreshToken } = response.data;
+    TokenStorage.setAccessToken(accessToken);
+    TokenStorage.setRefreshToken(refreshToken);
+  }
+
   static async register(data: {
     username: string;
     password: string;
