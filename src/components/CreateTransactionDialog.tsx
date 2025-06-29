@@ -2,6 +2,7 @@ import { Add as AddIcon, Remove as RemoveIcon } from '@mui/icons-material';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import CalculateIcon from '@mui/icons-material/Calculate';
 import CloseIcon from '@mui/icons-material/Close';
+import DocumentScannerIcon from '@mui/icons-material/DocumentScanner';
 import KeyboardDoubleArrowDownIcon from '@mui/icons-material/KeyboardDoubleArrowDown';
 import KeyboardDoubleArrowRightIcon from '@mui/icons-material/KeyboardDoubleArrowRight';
 import {
@@ -30,7 +31,7 @@ import Radio from '@mui/material/Radio';
 import RadioGroup from '@mui/material/RadioGroup';
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
-import { DialogProps } from '@toolpad/core/useDialogs';
+import { DialogProps, useDialogs } from '@toolpad/core/useDialogs';
 import React, { useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useData } from '../context/DataContext';
@@ -58,6 +59,7 @@ import {
 import { notifyBackendError } from '../utils/notifications';
 import NumberInput from './NumberInput';
 import SlideUpTransition from './SlideUpTransition';
+import UploadTransactionImageDialog from './UploadTransactionImageDialog';
 
 type FormStateType = {
   updateAccounts: boolean;
@@ -78,6 +80,7 @@ type FormStateType = {
 };
 
 const CreateTransactionDialog = ({ onClose, open }: DialogProps) => {
+  const dialogs = useDialogs();
   const { settings, update, loading: settingsLoading } = useSettings();
   const { currencies, loading: staticDataLoading } = useStaticData();
   const {
@@ -529,22 +532,57 @@ const CreateTransactionDialog = ({ onClose, open }: DialogProps) => {
       );
     }
 
+    const handleOnScanClick = () => async () => {
+      const extractedTransaction = await dialogs.open(
+        UploadTransactionImageDialog,
+      );
+
+      if (extractedTransaction) {
+        setFormValues({
+          ...initialFormValues,
+          ...(extractedTransaction.name
+            ? { name: extractedTransaction.name }
+            : {}),
+          ...(extractedTransaction.amount
+            ? { amount: extractedTransaction.amount }
+            : {}),
+        });
+      }
+    };
+
     return (
       <>
-        <Autocomplete
-          options={templates}
-          autoComplete
-          getOptionLabel={(option) => option.name}
-          groupBy={(option) =>
-            option.type.charAt(0).toUpperCase() +
-            option.type.slice(1).toLowerCase()
-          }
-          renderInput={(params) => <TextField {...params} label="Template" />}
-          sx={{ mt: 1 }}
-          onChange={(_event: any, newValue: TransactionTemplate | null) => {
-            handleSetFromTemplate(newValue);
-          }}
-        />
+        <Box>
+          <Typography variant="subtitle1" sx={{ mb: 1 }}>
+            Quick Actions
+          </Typography>
+          <Stack direction="column" spacing={1} alignItems="left">
+            <Autocomplete
+              options={templates}
+              autoComplete
+              getOptionLabel={(option) => option.name}
+              groupBy={(option) =>
+                option.type.charAt(0).toUpperCase() +
+                option.type.slice(1).toLowerCase()
+              }
+              renderInput={(params) => (
+                <TextField {...params} label="Template" />
+              )}
+              onChange={(_event: any, newValue: TransactionTemplate | null) => {
+                handleSetFromTemplate(newValue);
+              }}
+            />
+            <Button
+              variant="outlined"
+              startIcon={<DocumentScannerIcon />}
+              sx={{ maxWidth: 100 }}
+              onClick={handleOnScanClick()}
+            >
+              Scan
+            </Button>
+          </Stack>
+        </Box>
+        <Divider />
         <FormControl required error={!!validationErrors?.type}>
           <FormLabel id="controlled-radio-buttons-group">Type</FormLabel>
           <RadioGroup
@@ -1116,7 +1154,7 @@ const CreateTransactionDialog = ({ onClose, open }: DialogProps) => {
                   color="primary"
                 />
               }
-              label="Update accounts"
+              label="Sync accounts"
             />
             <IconButton onClick={handleClose}>
               <CloseIcon />
