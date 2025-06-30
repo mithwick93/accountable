@@ -621,6 +621,8 @@ const InstallmentPlans: React.FC = () => {
       installmentByCurrency,
       paidByCurrency,
       balanceByCurrency,
+      balancePercent,
+      paidPercent,
     ],
   );
 
