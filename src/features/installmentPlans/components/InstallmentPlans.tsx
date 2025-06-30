@@ -113,6 +113,8 @@ const InstallmentPlans: React.FC = () => {
     installmentByCurrency,
     paidByCurrency,
     balanceByCurrency,
+    paidPercent,
+    balancePercent,
   } = useMemo(() => {
     const totals = installmentPlans.reduce(
       (acc, installmentPlan) => {
@@ -121,6 +123,7 @@ const InstallmentPlans: React.FC = () => {
           installmentAmount,
           totalInstallments,
           installmentsPaid,
+          status,
         } = installmentPlan;
 
         if (!acc[currency]) {
@@ -130,6 +133,10 @@ const InstallmentPlans: React.FC = () => {
             paid: 0,
             balance: 0,
           };
+        }
+
+        if (status !== 'ACTIVE') {
+          return acc;
         }
 
         acc[currency].total += installmentAmount;
@@ -152,7 +159,7 @@ const InstallmentPlans: React.FC = () => {
       ([currencyA], [currencyB]) => currencyA.localeCompare(currencyB),
     );
 
-    return {
+    const val = {
       totalByCurrency: Object.fromEntries(
         sortedEntries.map(([currency, values]) => [currency, values.total]),
       ),
@@ -169,6 +176,21 @@ const InstallmentPlans: React.FC = () => {
         sortedEntries.map(([currency, values]) => [currency, values.balance]),
       ),
     };
+
+    const paidPercent: Record<string, number> = {};
+    const balancePercent: Record<string, number> = {};
+
+    for (const currency of Object.keys(val.totalByCurrency)) {
+      const total = val.totalByCurrency[currency] || 0;
+      paidPercent[currency] = total
+        ? (val.paidByCurrency[currency] / total) * 100
+        : 0;
+      balancePercent[currency] = total
+        ? (val.balanceByCurrency[currency] / total) * 100
+        : 0;
+    }
+
+    return { ...val, paidPercent, balancePercent };
   }, [installmentPlans]);
 
   const columns = useMemo<MRT_ColumnDef<MRT_RowData>[]>(
@@ -334,7 +356,7 @@ const InstallmentPlans: React.FC = () => {
                 variant="caption"
                 sx={{ fontWeight: 'bold' }}
               >
-                {formatNumber(total)}
+                {formatNumber(total, 2, 2)}
               </Typography>
             ))}
           </Box>
@@ -343,9 +365,9 @@ const InstallmentPlans: React.FC = () => {
       {
         accessorKey: 'installment',
         header: 'Installment',
-        minSize: 125,
-        size: 125,
-        maxSize: 125,
+        minSize: 100,
+        size: 100,
+        maxSize: 100,
         muiTableHeadCellProps: {
           align: 'right',
         },
@@ -378,7 +400,7 @@ const InstallmentPlans: React.FC = () => {
                 variant="caption"
                 sx={{ fontWeight: 'bold' }}
               >
-                {formatNumber(total)}
+                {formatNumber(total, 2, 2)}
               </Typography>
             ))}
           </Box>
@@ -387,9 +409,9 @@ const InstallmentPlans: React.FC = () => {
       {
         accessorKey: 'paid',
         header: 'Paid',
-        minSize: 100,
-        size: 100,
-        maxSize: 100,
+        minSize: 125,
+        size: 125,
+        maxSize: 125,
         muiTableHeadCellProps: {
           align: 'right',
         },
@@ -423,7 +445,8 @@ const InstallmentPlans: React.FC = () => {
                 variant="caption"
                 sx={{ fontWeight: 'bold' }}
               >
-                {formatNumber(total)}
+                {formatNumber(total, 2, 2)} (
+                {formatNumber(paidPercent[currency], 0, 0)}%)
               </Typography>
             ))}
           </Box>
@@ -432,9 +455,9 @@ const InstallmentPlans: React.FC = () => {
       {
         accessorKey: 'balance',
         header: 'Balance',
-        minSize: 100,
-        size: 100,
-        maxSize: 100,
+        minSize: 125,
+        size: 125,
+        maxSize: 125,
         muiTableHeadCellProps: {
           align: 'right',
         },
@@ -469,52 +492,24 @@ const InstallmentPlans: React.FC = () => {
                 variant="caption"
                 sx={{ fontWeight: 'bold' }}
               >
-                {formatNumber(total)}
+                {formatNumber(total, 2, 2)} (
+                {formatNumber(balancePercent[currency], 0, 0)}%)
               </Typography>
             ))}
           </Box>
         ),
       },
       {
-        accessorKey: 'totalInstallments',
-        header: 'Total Installments',
-        minSize: 125,
-        size: 125,
-        maxSize: 125,
-        muiTableHeadCellProps: {
-          align: 'right',
-        },
-        muiTableBodyCellProps: {
-          align: 'right',
-        },
-        muiEditTextFieldProps: {
-          type: 'number',
-          slotProps: {
-            htmlInput: {
-              min: 1,
-            },
-          },
-          required: true,
-          error: !!validationErrors?.totalInstallments,
-          helperText: validationErrors?.totalInstallments,
-          onFocus: () =>
-            setValidationErrors({
-              ...validationErrors,
-              totalInstallments: undefined,
-            }),
-        },
-      },
-      {
         accessorKey: 'installmentsPaid',
         header: 'Paid Installments',
-        minSize: 125,
-        size: 125,
-        maxSize: 125,
+        minSize: 100,
+        size: 100,
+        maxSize: 100,
         muiTableHeadCellProps: {
-          align: 'right',
+          align: 'left',
         },
         muiTableBodyCellProps: {
-          align: 'right',
+          align: 'center',
         },
         muiEditTextFieldProps: {
           type: 'number',
@@ -533,6 +528,36 @@ const InstallmentPlans: React.FC = () => {
             }),
         },
       },
+      {
+        accessorKey: 'totalInstallments',
+        header: 'Total Installments',
+        minSize: 100,
+        size: 100,
+        maxSize: 100,
+        muiTableHeadCellProps: {
+          align: 'left',
+        },
+        muiTableBodyCellProps: {
+          align: 'center',
+        },
+        muiEditTextFieldProps: {
+          type: 'number',
+          slotProps: {
+            htmlInput: {
+              min: 1,
+            },
+          },
+          required: true,
+          error: !!validationErrors?.totalInstallments,
+          helperText: validationErrors?.totalInstallments,
+          onFocus: () =>
+            setValidationErrors({
+              ...validationErrors,
+              totalInstallments: undefined,
+            }),
+        },
+      },
+
       {
         accessorKey: 'interestRate',
         header: 'Interest Rate',
@@ -762,6 +787,17 @@ const InstallmentPlans: React.FC = () => {
         display: 'none',
       },
     },
+    muiTableBodyRowProps: ({ row }) => ({
+      sx:
+        row.original.status === 'SETTLED'
+          ? {
+              backgroundColor: (theme) =>
+                theme.palette.action.disabledBackground,
+              color: (theme) => theme.palette.text.disabled,
+              fontStyle: 'italic',
+            }
+          : {},
+    }),
     renderDetailPanel: ({ row }) => (
       <Box
         sx={{
