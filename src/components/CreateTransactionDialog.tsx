@@ -546,6 +546,9 @@ const CreateTransactionDialog = ({ onClose, open }: DialogProps) => {
           ...(extractedTransaction.amount
             ? { amount: extractedTransaction.amount }
             : {}),
+          ...(extractedTransaction.category
+            ? { categoryId: extractedTransaction.category.id }
+            : {}),
         });
       }
     };
