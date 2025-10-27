@@ -15,10 +15,10 @@ import {
 import { DialogsProvider, useDialogs } from '@toolpad/core/useDialogs';
 import React from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
-import CreateTransactionDialog from '../components/CreateTransactionDialog';
 import CurrencyRatesDialog from '../components/CurrencyRatesDialog';
 import ErrorBoundary from '../components/ErrorBoundary';
 import ToolbarActions from '../components/ToolbarActions';
+import TransactionDialog from '../components/TransactionDialog';
 import { CurrencyRatesProvider } from '../context/CurrencyRatesContext';
 import { DataProvider } from '../context/DataContext';
 import { SettingsProvider } from '../context/SettingsContext';
@@ -53,7 +53,7 @@ const CustomPageToolbar = () => {
       <Tooltip title="Create Transaction">
         <IconButton
           onClick={async () => {
-            await dialogs.open(CreateTransactionDialog);
+            await dialogs.open(TransactionDialog);
           }}
           color="primary"
         >

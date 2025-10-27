@@ -79,7 +79,7 @@ type FormStateType = {
   toLiabilityId?: number;
 };
 
-const CreateTransactionDialog = ({ onClose, open }: DialogProps) => {
+const TransactionDialog = ({ onClose, open }: DialogProps) => {
   const dialogs = useDialogs();
   const { settings, update, loading: settingsLoading } = useSettings();
   const { currencies, loading: staticDataLoading } = useStaticData();
@@ -1183,4 +1183,4 @@ const CreateTransactionDialog = ({ onClose, open }: DialogProps) => {
   );
 };
 
-export default CreateTransactionDialog;
+export default TransactionDialog;
