@@ -1,4 +1,5 @@
 import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
 import FormatClearIcon from '@mui/icons-material/FormatClear';
 import {
   Avatar,
@@ -21,6 +22,7 @@ import Typography from '@mui/material/Typography';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFnsV3';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { ColumnFilter } from '@tanstack/table-core/src/features/ColumnFiltering';
+import { useDialogs } from '@toolpad/core/useDialogs';
 import { format } from 'date-fns';
 import { enGB } from 'date-fns/locale';
 import {
@@ -33,12 +35,14 @@ import {
 import React, { useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import DateRangeSelector from '../../../components/DateRangeSelector';
+import TransactionDialog from '../../../components/TransactionDialog';
 import { useData } from '../../../context/DataContext';
 import { useSettings } from '../../../context/SettingsContext';
 import { useStaticData } from '../../../context/StaticDataContext';
 import { useUser } from '../../../context/UserContext';
 import apiClient from '../../../services/ApiService';
 import { SharedTransaction } from '../../../types/SharedTransaction';
+import { Transaction } from '../../../types/Transaction';
 import {
   formatCurrency,
   formatNumber,
@@ -199,6 +203,7 @@ const Transactions: React.FC = () => {
   const { settings, update, loading: settingsLoading } = useSettings();
   const theme = useTheme();
   const [deleting, setDeleting] = useState(false);
+  const dialogs = useDialogs();
 
   const loading =
     userLoading || staticDataLoading || dataLoading || settingsLoading;
@@ -773,6 +778,19 @@ const Transactions: React.FC = () => {
       },
       columnFilters: columnFilters,
     },
+    displayColumnDefOptions: {
+      'mrt-row-actions': {
+        size: 75,
+        minSize: 75,
+        maxSize: 75,
+        muiTableHeadCellProps: {
+          sx: { width: 75, maxWidth: 75 },
+        },
+        muiTableBodyCellProps: {
+          sx: { width: 75, maxWidth: 75 },
+        },
+      },
+    },
     renderTopToolbarCustomActions: () => (
       <Box
         sx={{
@@ -901,9 +919,23 @@ const Transactions: React.FC = () => {
       });
     },
     renderRowActions: ({ row }) => (
-      <Box sx={{ display: 'flex', gap: '1rem' }}>
+      <Box sx={{ display: 'flex' }}>
+        <Tooltip title="Edit">
+          <IconButton
+            size="small"
+            onClick={async () => {
+              await dialogs.open(
+                TransactionDialog,
+                row?.original as Transaction,
+              );
+            }}
+          >
+            <EditIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
         <Tooltip title="Delete">
           <IconButton
+            size="small"
             color="error"
             onClick={async () => {
               if (
@@ -915,7 +947,7 @@ const Transactions: React.FC = () => {
               }
             }}
           >
-            <DeleteIcon />
+            <DeleteIcon fontSize="small" />
           </IconButton>
         </Tooltip>
       </Box>

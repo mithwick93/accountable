@@ -41,10 +41,12 @@ import { useUser } from '../context/UserContext';
 import apiClient from '../services/ApiService';
 import { Asset } from '../types/Asset';
 import { Liability } from '../types/Liability';
+import { LoggedInUser } from '../types/LoggedInUser';
 import { PaymentSystem } from '../types/PaymentSystem';
 import { PaymentSystemCredit } from '../types/PaymentSystemCredit';
 import { PaymentSystemDebit } from '../types/PaymentSystemDebit';
 import { SharedTransactionRequest } from '../types/SharedTransactionRequest';
+import { Transaction } from '../types/Transaction';
 import { TransactionCategory } from '../types/TransactionCategory';
 import { TransactionTemplate } from '../types/TransactionTemplate';
 import { User } from '../types/User';
@@ -79,7 +81,65 @@ type FormStateType = {
   toLiabilityId?: number;
 };
 
-const TransactionDialog = ({ onClose, open }: DialogProps) => {
+const getInitialFormValues = (
+  updateAccounts: boolean,
+  transaction: Transaction | undefined,
+  loggedInUser: LoggedInUser | null,
+  baseCurrency: string,
+) => {
+  const isEditMode = !!transaction;
+  return isEditMode
+    ? {
+        updateAccounts: updateAccounts,
+        userId: transaction.user.id,
+        type: transaction.type,
+        name: transaction.name,
+        description: transaction.description,
+        categoryId: transaction.category.id,
+        categoryDisplayName: transaction.category.name,
+        currency: transaction.currency,
+        amount: transaction.amount,
+        charges: undefined,
+        date:
+          transaction.date?.split?.('T')?.[0] ??
+          new Date().toISOString().split('T')[0],
+        toAssetId: transaction.toAsset?.id,
+        fromAssetId: transaction.fromAsset?.id,
+        fromPaymentSystemId:
+          transaction.fromPaymentSystemCredit?.id ||
+          transaction.fromPaymentSystemDebit?.id ||
+          undefined,
+        toLiabilityId: transaction.toLiability?.id,
+      }
+    : {
+        type: 'EXPENSE',
+        userId: loggedInUser?.sub,
+        updateAccounts: updateAccounts,
+        currency: baseCurrency,
+        date: new Date().toISOString().split('T')[0],
+      };
+};
+
+const getInitialSharedTransactions = (transaction: Transaction | undefined) => {
+  if (!transaction || !transaction.sharedTransactions) {
+    return [];
+  }
+
+  return transaction.sharedTransactions.map((sharedTransaction) => ({
+    id: sharedTransaction.id,
+    userId: sharedTransaction.user.id,
+    share: sharedTransaction.share,
+    paidAmount: sharedTransaction.paidAmount,
+    isSettled: sharedTransaction.isSettled,
+  }));
+};
+
+const TransactionDialog = ({
+  onClose,
+  open,
+  payload: transaction,
+}: DialogProps<Transaction | undefined>) => {
+  const isEditMode = !!transaction;
   const dialogs = useDialogs();
   const { settings, update, loading: settingsLoading } = useSettings();
   const { currencies, loading: staticDataLoading } = useStaticData();
@@ -112,19 +172,19 @@ const TransactionDialog = ({ onClose, open }: DialogProps) => {
   );
   const baseCurrency = settings?.currency || 'USD';
   const updateAccounts = settings?.transactions.updateAccounts ?? false;
-  const initialFormValues: FormStateType = {
-    type: 'EXPENSE',
-    userId: loggedInUser?.sub,
-    updateAccounts: updateAccounts,
-    currency: baseCurrency,
-    date: new Date().toISOString().split('T')[0],
-  };
+  const initialFormValues = getInitialFormValues(
+    updateAccounts,
+    transaction,
+    loggedInUser,
+    baseCurrency,
+  );
+  const initialSharedTransactions = getInitialSharedTransactions(transaction);
 
   const [formValues, setFormValues] =
     useState<FormStateType>(initialFormValues);
   const [sharedTransactions, setSharedTransactions] = useState<
     SharedTransactionRequest[]
-  >([]);
+  >(initialSharedTransactions);
   const [validationErrors, setValidationErrors] = useState<
     Record<string, string | undefined>
   >({});
@@ -301,8 +361,16 @@ const TransactionDialog = ({ onClose, open }: DialogProps) => {
     const areSharedTransactionsValid = validateSharedTransactions();
     if (isFormValid && areSharedTransactionsValid) {
       try {
-        await apiClient.post('/transactions', getRequestPayload());
-        toast.success('Transaction created successfully');
+        if (isEditMode && transaction?.id) {
+          await apiClient.put(
+            `/transactions/${transaction.id}`,
+            getRequestPayload(),
+          );
+          toast.success('Transaction updated successfully');
+        } else {
+          await apiClient.post('/transactions', getRequestPayload());
+          toast.success('Transaction created successfully');
+        }
 
         const searchParameters: Record<string, any> =
           settings?.transactions?.search?.parameters || {};
@@ -313,7 +381,12 @@ const TransactionDialog = ({ onClose, open }: DialogProps) => {
         );
         handleClose();
       } catch (error: any) {
-        notifyBackendError('Error creating transaction', error);
+        notifyBackendError(
+          isEditMode
+            ? 'Error updating transaction'
+            : 'Error creating transaction',
+          error,
+        );
       }
     }
   };
@@ -498,12 +571,15 @@ const TransactionDialog = ({ onClose, open }: DialogProps) => {
     }
 
     if (sharedTransactions.length > 0) {
-      payload.sharedTransactions = sharedTransactions.map((transaction) => ({
-        userId: transaction.userId,
-        share: transaction.share || 0,
-        paidAmount: transaction.paidAmount || 0,
-        isSettled: transaction.isSettled || false,
-      }));
+      payload.sharedTransactions = sharedTransactions.map(
+        (sharedTransaction) => ({
+          id: sharedTransaction.id || null,
+          userId: sharedTransaction.userId,
+          share: sharedTransaction.share || 0,
+          paidAmount: sharedTransaction.paidAmount || 0,
+          isSettled: sharedTransaction.isSettled || false,
+        }),
+      );
     }
 
     return payload;
@@ -513,13 +589,31 @@ const TransactionDialog = ({ onClose, open }: DialogProps) => {
     () => userOptions.find((user) => `${user.id}` === `${formValues.userId}`),
     [userOptions, formValues.userId],
   );
-
   const selectedCategory = React.useMemo(
     () =>
       categoryOptions.find(
         (category) => `${category.id}` === `${formValues.categoryId}`,
       ),
     [categoryOptions, formValues.categoryId],
+  );
+  const selectedFromPaymentSystem = React.useMemo(
+    () => paymentSystems.find((ps) => ps.id === formValues.fromPaymentSystemId),
+    [paymentSystems, formValues.fromPaymentSystemId],
+  );
+  const selectedToAsset = React.useMemo(
+    () => assets.find((asset) => asset.id === formValues.toAssetId),
+    [assets, formValues.toAssetId],
+  );
+  const selectedFromAsset = React.useMemo(
+    () => assets.find((asset) => asset.id === formValues.fromAssetId),
+    [assets, formValues.fromAssetId],
+  );
+  const selectedToLiability = React.useMemo(
+    () =>
+      liabilities.find(
+        (liability) => liability.id === formValues.toLiabilityId,
+      ),
+    [liabilities, formValues.toLiabilityId],
   );
 
   // eslint-disable-next-line complexity
@@ -555,38 +649,47 @@ const TransactionDialog = ({ onClose, open }: DialogProps) => {
 
     return (
       <>
-        <Box>
-          <Typography variant="subtitle1" sx={{ mb: 1 }}>
-            Quick Actions
-          </Typography>
-          <Stack direction="column" spacing={1} alignItems="left">
-            <Autocomplete
-              options={templates}
-              autoComplete
-              getOptionLabel={(option) => option.name}
-              groupBy={(option) =>
-                option.type.charAt(0).toUpperCase() +
-                option.type.slice(1).toLowerCase()
-              }
-              renderInput={(params) => (
-                <TextField {...params} label="Template" />
-              )}
-              onChange={(_event: any, newValue: TransactionTemplate | null) => {
-                handleSetFromTemplate(newValue);
-              }}
-            />
-            <Button
-              variant="outlined"
-              startIcon={<DocumentScannerIcon />}
-              sx={{ maxWidth: 100 }}
-              onClick={handleOnScanClick()}
-            >
-              Scan
-            </Button>
-          </Stack>
-        </Box>
-        <Divider />
-        <FormControl required error={!!validationErrors?.type}>
+        {!isEditMode && (
+          <Box>
+            <Typography variant="subtitle1" sx={{ mb: 1 }}>
+              Quick Actions
+            </Typography>
+            <Stack direction="column" spacing={1} alignItems="left">
+              <Autocomplete
+                options={templates}
+                autoComplete
+                getOptionLabel={(option) => option.name}
+                groupBy={(option) =>
+                  option.type.charAt(0).toUpperCase() +
+                  option.type.slice(1).toLowerCase()
+                }
+                renderInput={(params) => (
+                  <TextField {...params} label="Template" />
+                )}
+                onChange={(
+                  _event: any,
+                  newValue: TransactionTemplate | null,
+                ) => {
+                  handleSetFromTemplate(newValue);
+                }}
+              />
+              <Button
+                variant="outlined"
+                startIcon={<DocumentScannerIcon />}
+                sx={{ maxWidth: 100 }}
+                onClick={handleOnScanClick()}
+              >
+                Scan
+              </Button>
+            </Stack>
+          </Box>
+        )}
+        {!isEditMode && <Divider />}
+        <FormControl
+          required
+          error={!!validationErrors?.type}
+          disabled={isEditMode}
+        >
           <FormLabel id="controlled-radio-buttons-group">Type</FormLabel>
           <RadioGroup
             value={formValues.type}
@@ -737,6 +840,7 @@ const TransactionDialog = ({ onClose, open }: DialogProps) => {
             {formValues.type === 'EXPENSE' && (
               <>
                 <Autocomplete
+                  value={selectedFromPaymentSystem || null}
                   options={paymentSystems.filter(
                     (paymentSystem) =>
                       paymentSystem.currency === formValues.currency,
@@ -976,6 +1080,7 @@ const TransactionDialog = ({ onClose, open }: DialogProps) => {
             )}
             {formValues.type === 'INCOME' && (
               <Autocomplete
+                value={selectedToAsset || null}
                 options={assets.filter(
                   (asset) => asset.currency === formValues.currency,
                 )}
@@ -1008,6 +1113,7 @@ const TransactionDialog = ({ onClose, open }: DialogProps) => {
             {formValues.type === 'TRANSFER' && (
               <>
                 <Autocomplete
+                  value={selectedFromAsset || null}
                   options={assets.filter(
                     (asset) =>
                       asset.id !== formValues.toAssetId &&
@@ -1039,6 +1145,7 @@ const TransactionDialog = ({ onClose, open }: DialogProps) => {
                   onFocus={() => handleFocus('fromAssetId')}
                 />
                 <Autocomplete
+                  value={selectedToAsset || null}
                   options={assets.filter(
                     (asset) =>
                       asset.id !== formValues.fromAssetId &&
@@ -1070,6 +1177,7 @@ const TransactionDialog = ({ onClose, open }: DialogProps) => {
                   onFocus={() => handleFocus('toAssetId')}
                 />
                 <Autocomplete
+                  value={selectedToLiability || null}
                   options={liabilities.filter(
                     (liability) => liability.currency === formValues.currency,
                   )}
@@ -1128,7 +1236,7 @@ const TransactionDialog = ({ onClose, open }: DialogProps) => {
             alignItems: 'center',
           }}
         >
-          Add Transaction
+          {isEditMode ? 'Edit Transaction' : 'Add Transaction'}
           <Box
             sx={{
               display: 'flex-end',
@@ -1176,7 +1284,7 @@ const TransactionDialog = ({ onClose, open }: DialogProps) => {
         </Button>
         <Box sx={{ width: '1rem' }} />
         <Button onClick={handleSave} variant="contained">
-          Save
+          {isEditMode ? 'Update' : 'Save'}
         </Button>
       </DialogActions>
     </Dialog>
