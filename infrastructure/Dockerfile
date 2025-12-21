@@ -6,7 +6,7 @@ COPY infrastructure/ssl/server.crt /etc/nginx/certs/
 COPY infrastructure/ssl/server.key /etc/nginx/certs/
 
 # Copy the React app build into the Nginx directory
-COPY build /usr/share/nginx/html
+COPY dist /usr/share/nginx/html
 
 # Copy the Nginx configuration file into the container
 COPY infrastructure/nginx.conf /etc/nginx/conf.d/default.conf

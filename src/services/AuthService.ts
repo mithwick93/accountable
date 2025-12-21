@@ -2,7 +2,7 @@ import axios from 'axios';
 import log from '../utils/logger';
 import { TokenStorage } from '../utils/TokenStorage';
 
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 export class AuthService {
   static async login(username: string, password: string): Promise<void> {

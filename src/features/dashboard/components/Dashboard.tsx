@@ -53,6 +53,7 @@ const NetSummary: React.FC<NetSummaryProps> = ({
 
   useEffect(() => {
     const netTotal = calculateTotalInBaseCurrency(totals, currencyRates);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setNetValue(netTotal);
   }, [totals, currencyRates]);
 

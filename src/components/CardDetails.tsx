@@ -47,10 +47,8 @@ export type CardDetailsProps = {
   };
 };
 
-const getCardLogo = (cardNumber: string) => {
-  const issuer = Payment.fns.cardType(cardNumber);
-  return cardTypeLogos[issuer] || cardTypeLogos.default;
-};
+const getCardIssuer = (cardNumber: string): string =>
+  Payment.fns.cardType(cardNumber) || 'default';
 
 const CardField: React.FC<{
   label: string;
@@ -113,7 +111,9 @@ const CardDetails: React.FC<CardDetailsProps> = ({ card }) => {
   const cardExpired = isCardExpired(card.expiryDate);
   const maskedCardNumber = `**** **** **** ${card.cardNumber.slice(-4)}`;
   const maskedCVV = '***';
-  const IssuerLogo = getCardLogo(card.cardNumber);
+
+  const issuer = getCardIssuer(card.cardNumber);
+  const IssuerLogo = cardTypeLogos[issuer] ?? cardTypeLogos.default;
 
   return (
     <Card>
