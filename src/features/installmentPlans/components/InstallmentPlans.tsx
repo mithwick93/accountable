@@ -63,8 +63,69 @@ const createPayload = (installmentPlan: Record<string, any>) => {
   if (installmentPlan.endDate) {
     payload.endDate = installmentPlan.endDate;
   }
+  // new optional fixed per-installment amount
+  if (installmentPlan.fixedInstallmentAmount !== undefined) {
+    payload.fixedInstallmentAmount = installmentPlan.fixedInstallmentAmount;
+  }
 
   return payload;
+};
+
+// Helpers to support both "even split" and "fixed per installment" modes
+const toNumber = (v: any) => {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : 0;
+};
+
+const getPerInstallment = (plan: any) => {
+  const fixed = toNumber(plan.fixedInstallmentAmount);
+  const total = toNumber(plan.installmentAmount);
+  const n = Math.max(1, toNumber(plan.totalInstallments));
+  if (fixed > 0) {
+    return fixed;
+  }
+  return n > 0 ? total / n : 0;
+};
+
+const getLastInstallment = (plan: any) => {
+  const fixed = toNumber(plan.fixedInstallmentAmount);
+  const total = toNumber(plan.installmentAmount);
+  const n = Math.max(1, toNumber(plan.totalInstallments));
+  if (fixed > 0) {
+    // last = total - fixed * (n-1)
+    const last = total - fixed * (n - 1);
+    return last > 0 ? last : 0;
+  }
+  // even split: last equals the regular installment (may be fractional)
+  return n > 0 ? total / n : 0;
+};
+
+const getPaidAmount = (plan: any) => {
+  const total = toNumber(plan.installmentAmount);
+  const n = Math.max(0, toNumber(plan.totalInstallments));
+  const paidCount = Math.max(0, Math.min(toNumber(plan.installmentsPaid), n));
+  const fixed = toNumber(plan.fixedInstallmentAmount);
+
+  if (n === 0) {
+    return 0;
+  }
+  if (fixed > 0) {
+    if (paidCount >= n) {
+      return total;
+    }
+    // paidCount applies to first paidCount installments, none of which are the last unless paidCount === n
+    return fixed * paidCount;
+  }
+  // even split
+  const per = total / Math.max(1, n);
+  return per * paidCount;
+};
+
+const getBalanceAmount = (plan: any) => {
+  const total = toNumber(plan.installmentAmount);
+  const paid = getPaidAmount(plan);
+  const balance = total - paid;
+  return balance > 0 ? balance : 0;
 };
 
 const InstallmentPlans: React.FC = () => {
@@ -118,13 +179,7 @@ const InstallmentPlans: React.FC = () => {
   } = useMemo(() => {
     const totals = installmentPlans.reduce(
       (acc, installmentPlan) => {
-        const {
-          currency,
-          installmentAmount,
-          totalInstallments,
-          installmentsPaid,
-          status,
-        } = installmentPlan;
+        const { currency } = installmentPlan;
 
         if (!acc[currency]) {
           acc[currency] = {
@@ -135,17 +190,19 @@ const InstallmentPlans: React.FC = () => {
           };
         }
 
-        if (status !== 'ACTIVE') {
+        if (installmentPlan.status !== 'ACTIVE') {
           return acc;
         }
 
-        acc[currency].total += installmentAmount;
-        acc[currency].installment += installmentAmount / totalInstallments;
-        acc[currency].paid +=
-          (installmentAmount / totalInstallments) * installmentsPaid;
-        acc[currency].balance +=
-          (installmentAmount / totalInstallments) *
-          (totalInstallments - installmentsPaid);
+        const installmentAmt = toNumber(installmentPlan.installmentAmount);
+        const perInstallment = getPerInstallment(installmentPlan);
+        const paid = getPaidAmount(installmentPlan);
+        const balance = getBalanceAmount(installmentPlan);
+
+        acc[currency].total += installmentAmt;
+        acc[currency].installment += perInstallment;
+        acc[currency].paid += paid;
+        acc[currency].balance += balance;
 
         return acc;
       },
@@ -374,16 +431,17 @@ const InstallmentPlans: React.FC = () => {
         muiTableBodyCellProps: {
           align: 'right',
         },
-        Cell: ({ cell }) => (
-          <Box component="span">
-            {formatNumber(
-              cell.row.original.installmentAmount /
-                cell.row.original.totalInstallments,
-              2,
-              2,
-            )}
-          </Box>
-        ),
+        Cell: ({ cell }) => {
+          const plan = cell.row.original as any;
+          const per = getPerInstallment(plan);
+          const last = getLastInstallment(plan);
+          // show per-installment and if last differs show it
+          const display =
+            Math.abs(per - last) > 1e-9
+              ? `${formatNumber(per, 2, 2)} / last: ${formatNumber(last, 2, 2)}`
+              : `${formatNumber(per, 2, 2)}`;
+          return <Box component="span">{display}</Box>;
+        },
         Edit: () => null,
         Footer: () => (
           <Box
@@ -420,13 +478,7 @@ const InstallmentPlans: React.FC = () => {
         },
         Cell: ({ cell }) => (
           <Box component="span">
-            {formatNumber(
-              (cell.row.original.installmentAmount /
-                cell.row.original.totalInstallments) *
-                cell.row.original.installmentsPaid,
-              2,
-              2,
-            )}
+            {formatNumber(getPaidAmount(cell.row.original), 2, 2)}
           </Box>
         ),
         Edit: () => null,
@@ -466,14 +518,7 @@ const InstallmentPlans: React.FC = () => {
         },
         Cell: ({ cell }) => (
           <Box component="span">
-            {formatNumber(
-              (cell.row.original.installmentAmount /
-                cell.row.original.totalInstallments) *
-                (cell.row.original.totalInstallments -
-                  cell.row.original.installmentsPaid),
-              2,
-              2,
-            )}
+            {formatNumber(getBalanceAmount(cell.row.original), 2, 2)}
           </Box>
         ),
         Edit: () => null,
@@ -628,6 +673,7 @@ const InstallmentPlans: React.FC = () => {
 
   const validateInstallmentPlan = (
     installmentPlan: Record<LiteralUnion<string>, any>,
+    // eslint-disable-next-line complexity
   ) => {
     const errors: Record<string, string | undefined> = {};
     if (!installmentPlan.name) {
@@ -665,6 +711,28 @@ const InstallmentPlans: React.FC = () => {
       errors.installmentsPaid =
         'Installments paid must be between 0 and total installments';
     }
+
+    // fixedInstallmentAmount validation if provided
+    if (
+      installmentPlan.fixedInstallmentAmount !== undefined &&
+      installmentPlan.fixedInstallmentAmount !== null &&
+      installmentPlan.fixedInstallmentAmount !== ''
+    ) {
+      const fixed = toNumber(installmentPlan.fixedInstallmentAmount);
+      if (fixed <= 0) {
+        errors.fixedInstallmentAmount =
+          'Fixed installment amount must be greater than 0';
+      } else {
+        const total = toNumber(installmentPlan.installmentAmount);
+        const n = Math.max(1, toNumber(installmentPlan.totalInstallments));
+        // ensure the fixed scheme is consistent: fixed*(n-1) <= total
+        if (fixed * (n - 1) > total) {
+          errors.fixedInstallmentAmount =
+            'Fixed amount too large for given total and installments';
+        }
+      }
+    }
+
     if (!installmentPlan.startDate) {
       errors.startDate = 'Start date is required';
     } else {
