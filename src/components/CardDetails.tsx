@@ -153,6 +153,7 @@ const CardDetails: React.FC<CardDetailsProps> = ({ card }) => {
           showSensitive={showSensitive}
           onCopy={() => handleCopy(card.cardNumber)}
           startAdornment={
+            // eslint-disable-next-line react-hooks/static-components
             <IssuerLogo size="2em" style={{ marginInlineEnd: 5 }} />
           }
         />

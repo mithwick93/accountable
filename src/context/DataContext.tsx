@@ -94,7 +94,6 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState<boolean>(true);
 
   const fetchData = useCallback(
-    // eslint-disable-next-line complexity
     async (
       dataTypes: DATA_TYPES[] = [
         'assets',
@@ -105,6 +104,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         'templates',
       ],
       options: Record<string, any> = {},
+      // eslint-disable-next-line complexity
     ) => {
       setLoading(true);
       try {
