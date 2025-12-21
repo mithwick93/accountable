@@ -9,6 +9,7 @@ export type InstallmentPlan = {
   installmentAmount: number;
   totalInstallments: number;
   installmentsPaid: number;
+  fixedInstallmentAmount?: number;
   interestRate?: number;
   startDate: string;
   endDate?: string;
