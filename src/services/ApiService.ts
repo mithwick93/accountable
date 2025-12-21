@@ -4,7 +4,7 @@ import { toast } from 'react-toastify';
 import { TokenStorage } from '../utils/TokenStorage';
 import { AuthService } from './AuthService';
 
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
