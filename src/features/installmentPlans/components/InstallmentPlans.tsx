@@ -6,7 +6,9 @@ import {
   Button,
   DialogActions,
   DialogContent,
+  FormControlLabel,
   IconButton,
+  Switch,
   Tooltip,
   Typography,
 } from '@mui/material';
@@ -167,6 +169,7 @@ const InstallmentPlans: React.FC = () => {
   const [updating, setUpdating] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
+  const [showNonActive, setShowNonActive] = useState(false);
   const loading = dataLoading || staticDataLoading;
   const currencyCodes = useMemo(
     () => currencies?.map((currency) => currency.code) ?? [],
@@ -182,14 +185,20 @@ const InstallmentPlans: React.FC = () => {
     [liabilities],
   );
 
+  const filteredPlans = useMemo(
+    () =>
+      showNonActive
+        ? installmentPlans
+        : installmentPlans.filter((plan) => plan.status === 'ACTIVE'),
+    [installmentPlans, showNonActive],
+  );
+
   const installmentCurrencies = useMemo(
     () =>
-      Array.from(
-        new Set(
-          installmentPlans.map((installmentPlan) => installmentPlan.currency),
-        ),
-      ).sort((a, b) => a.localeCompare(b)),
-    [installmentPlans],
+      Array.from(new Set(filteredPlans.map((plan) => plan.currency))).sort(
+        (a, b) => a.localeCompare(b),
+      ),
+    [filteredPlans],
   );
 
   const {
@@ -890,7 +899,7 @@ const InstallmentPlans: React.FC = () => {
 
   const table = useMaterialReactTable({
     columns,
-    data: installmentPlans,
+    data: filteredPlans,
     enableStickyHeader: true,
     enableStickyFooter: true,
     enableEditing: true,
@@ -999,15 +1008,27 @@ const InstallmentPlans: React.FC = () => {
     },
     onCreatingRowCancel: () => setValidationErrors({}),
     renderTopToolbarCustomActions: ({ table }) => (
-      <Button
-        variant="outlined"
-        onClick={() => {
-          table.setCreatingRow(true);
-        }}
-        startIcon={<AddIcon />}
-      >
-        Create
-      </Button>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+        <Button
+          variant="outlined"
+          onClick={() => {
+            table.setCreatingRow(true);
+          }}
+          startIcon={<AddIcon />}
+        >
+          Create
+        </Button>
+        <FormControlLabel
+          control={
+            <Switch
+              size="small"
+              checked={showNonActive}
+              onChange={(e) => setShowNonActive(e.target.checked)}
+            />
+          }
+          label="Show non-active"
+        />
+      </Box>
     ),
     renderCreateRowDialogContent: ({ table, row, internalEditComponents }) => (
       <>
