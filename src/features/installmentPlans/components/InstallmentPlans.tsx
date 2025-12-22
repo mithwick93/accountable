@@ -105,13 +105,9 @@ const createPayload = (installmentPlan: Record<string, any>) => {
     installmentPlan.fixedInstallmentAmount !== undefined &&
     installmentPlan.fixedInstallmentAmount !== null &&
     installmentPlan.fixedInstallmentAmount !== '';
-  const totalInstallmentsProvided =
-    installmentPlan.totalInstallments !== undefined &&
-    installmentPlan.totalInstallments !== null &&
-    installmentPlan.totalInstallments !== '';
 
   let { totalInstallments } = installmentPlan;
-  if (fixedProvided && !totalInstallmentsProvided) {
+  if (fixedProvided) {
     const fixed = toNumber(installmentPlan.fixedInstallmentAmount);
     if (fixed > 0) {
       const total = toNumber(installmentPlan.installmentAmount);
@@ -202,7 +198,7 @@ const InstallmentPlans: React.FC = () => {
     paidPercent,
     balancePercent,
   } = useMemo(() => {
-    const totals = installmentPlans.reduce(
+    const totals = filteredPlans.reduce(
       (acc, installmentPlan) => {
         const { currency } = installmentPlan;
 
@@ -213,10 +209,6 @@ const InstallmentPlans: React.FC = () => {
             paid: 0,
             balance: 0,
           };
-        }
-
-        if (installmentPlan.status !== 'ACTIVE') {
-          return acc;
         }
 
         const installmentAmt = toNumber(installmentPlan.installmentAmount);
@@ -273,7 +265,7 @@ const InstallmentPlans: React.FC = () => {
     }
 
     return { ...val, paidPercent, balancePercent };
-  }, [installmentPlans]);
+  }, [filteredPlans]);
 
   const columns = useMemo<MRT_ColumnDef<MRT_RowData>[]>(
     // eslint-disable-next-line complexity
@@ -623,11 +615,11 @@ const InstallmentPlans: React.FC = () => {
               min: 0,
             },
           },
-          required: false,
+          required: true,
           error: !!validationErrors?.totalInstallments,
           helperText:
             validationErrors?.totalInstallments ??
-            'Specify either total installments or fixed installment amount (one only).',
+            'If fixed installment amount is provided it will override this field',
           onFocus: () =>
             setValidationErrors({
               ...validationErrors,
@@ -773,19 +765,30 @@ const InstallmentPlans: React.FC = () => {
       installmentPlan.totalInstallments !== null &&
       installmentPlan.totalInstallments !== '';
 
-    if (fixedProvided && totalInstallmentsProvided) {
-      errors.fixedInstallmentAmount =
-        'Provide only one of fixed installment amount or total installments';
-      errors.totalInstallments =
-        'Provide only one of total installments or fixed installment amount';
-    }
-
-    if (!installmentPlan.totalInstallments && !fixedProvided) {
+    // totalInstallments is required only when fixed amount is NOT provided
+    if (!totalInstallmentsProvided && !fixedProvided) {
       errors.totalInstallments = 'Total installments amount is required';
-    } else if (installmentPlan.totalInstallments) {
+    } else if (totalInstallmentsProvided) {
       if (parseInt(installmentPlan.totalInstallments) <= 0) {
         errors.totalInstallments = 'Total installments must be greater than 0';
       }
+    }
+
+    // Determine an effective totalInstallments for validating installmentsPaid.
+    // If fixedProvided, compute the totalInstallments that will be derived.
+    const totalAmountNum = toNumber(installmentPlan.installmentAmount);
+    let effectiveTotalInstallments: number | undefined = undefined;
+    if (fixedProvided) {
+      const fixedNum = toNumber(installmentPlan.fixedInstallmentAmount);
+      effectiveTotalInstallments = Math.max(
+        1,
+        Math.ceil(totalAmountNum / Math.max(1, fixedNum)),
+      );
+    } else if (totalInstallmentsProvided) {
+      effectiveTotalInstallments = Math.max(
+        1,
+        parseInt(installmentPlan.totalInstallments, 10),
+      );
     }
 
     if (
@@ -793,15 +796,16 @@ const InstallmentPlans: React.FC = () => {
       parseInt(installmentPlan.installmentsPaid) !== 0
     ) {
       errors.installmentsPaid = 'Installments paid amount is required';
-    } else if (
-      parseInt(installmentPlan.installmentsPaid) < 0 ||
-      parseInt(installmentPlan.installmentsPaid) >
-        (installmentPlan.totalInstallments
-          ? parseInt(installmentPlan.totalInstallments)
-          : Number.MAX_SAFE_INTEGER)
-    ) {
-      errors.installmentsPaid =
-        'Installments paid must be between 0 and total installments';
+    } else {
+      const paidInt = parseInt(installmentPlan.installmentsPaid);
+      if (
+        paidInt < 0 ||
+        (effectiveTotalInstallments !== undefined &&
+          paidInt > effectiveTotalInstallments)
+      ) {
+        errors.installmentsPaid =
+          'Installments paid must be between 0 and total installments';
+      }
     }
 
     if (fixedProvided) {
@@ -810,8 +814,11 @@ const InstallmentPlans: React.FC = () => {
         errors.fixedInstallmentAmount =
           'Fixed installment amount must be greater than 0';
       } else {
-        const total = toNumber(installmentPlan.installmentAmount);
-        const n = Math.max(1, toNumber(installmentPlan.totalInstallments));
+        const total = totalAmountNum;
+        // compute n from provided totalInstallments if present, otherwise derive it
+        const n = totalInstallmentsProvided
+          ? Math.max(1, toNumber(installmentPlan.totalInstallments))
+          : Math.max(1, Math.ceil(total / fixed));
         // ensure the fixed scheme is consistent: fixed*(n-1) <= total
         if (fixed * (n - 1) > total) {
           errors.fixedInstallmentAmount =
