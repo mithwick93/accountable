@@ -42,13 +42,94 @@ const statusOptions = [
   { label: 'Settled', value: 'SETTLED' },
 ];
 
+const toNumber = (v: any) => {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : 0;
+};
+
+const getFixedTotalN = (plan: any) => {
+  const fixed = toNumber(plan.fixedInstallmentAmount);
+  const total = toNumber(plan.installmentAmount);
+  const n = Math.max(1, toNumber(plan.totalInstallments));
+
+  return { fixed, total, n };
+};
+
+const getPerInstallment = (plan: any) => {
+  const { fixed, total, n } = getFixedTotalN(plan);
+
+  if (fixed > 0) {
+    return fixed;
+  }
+
+  return n > 0 ? total / n : 0;
+};
+
+const getLastInstallment = (plan: any) => {
+  const { fixed, total, n } = getFixedTotalN(plan);
+
+  if (fixed > 0) {
+    const last = total - fixed * (n - 1);
+    return last > 0 ? last : 0;
+  }
+
+  return n > 0 ? total / n : 0;
+};
+
+const getPaidAmount = (plan: any) => {
+  const fixed = toNumber(plan.fixedInstallmentAmount);
+  const total = toNumber(plan.installmentAmount);
+  const n = Math.max(0, toNumber(plan.totalInstallments));
+  const paidCount = Math.max(0, Math.min(toNumber(plan.installmentsPaid), n));
+
+  if (n === 0) {
+    return 0;
+  }
+
+  if (fixed > 0) {
+    if (paidCount >= n) {
+      return total;
+    }
+
+    return fixed * paidCount;
+  }
+
+  const per = total / Math.max(1, n);
+  return per * paidCount;
+};
+
+const getBalanceAmount = (plan: any) => {
+  const total = toNumber(plan.installmentAmount);
+  const paid = getPaidAmount(plan);
+  const balance = total - paid;
+  return balance > 0 ? balance : 0;
+};
+
 const createPayload = (installmentPlan: Record<string, any>) => {
+  const fixedProvided =
+    installmentPlan.fixedInstallmentAmount !== undefined &&
+    installmentPlan.fixedInstallmentAmount !== null &&
+    installmentPlan.fixedInstallmentAmount !== '';
+  const totalInstallmentsProvided =
+    installmentPlan.totalInstallments !== undefined &&
+    installmentPlan.totalInstallments !== null &&
+    installmentPlan.totalInstallments !== '';
+
+  let { totalInstallments } = installmentPlan;
+  if (fixedProvided && !totalInstallmentsProvided) {
+    const fixed = toNumber(installmentPlan.fixedInstallmentAmount);
+    if (fixed > 0) {
+      const total = toNumber(installmentPlan.installmentAmount);
+      totalInstallments = Math.max(1, Math.ceil(total / fixed));
+    }
+  }
+
   const payload: any = {
     name: installmentPlan.name,
     liabilityId: installmentPlan.liabilityId,
     currency: installmentPlan.currency,
     installmentAmount: installmentPlan.installmentAmount,
-    totalInstallments: installmentPlan.totalInstallments,
+    totalInstallments: totalInstallments,
     installmentsPaid: installmentPlan.installmentsPaid,
     startDate: installmentPlan.startDate,
     status: installmentPlan.status,
@@ -63,69 +144,11 @@ const createPayload = (installmentPlan: Record<string, any>) => {
   if (installmentPlan.endDate) {
     payload.endDate = installmentPlan.endDate;
   }
-  // new optional fixed per-installment amount
-  if (installmentPlan.fixedInstallmentAmount !== undefined) {
+  if (installmentPlan.fixedInstallmentAmount) {
     payload.fixedInstallmentAmount = installmentPlan.fixedInstallmentAmount;
   }
 
   return payload;
-};
-
-// Helpers to support both "even split" and "fixed per installment" modes
-const toNumber = (v: any) => {
-  const n = Number(v);
-  return Number.isFinite(n) ? n : 0;
-};
-
-const getPerInstallment = (plan: any) => {
-  const fixed = toNumber(plan.fixedInstallmentAmount);
-  const total = toNumber(plan.installmentAmount);
-  const n = Math.max(1, toNumber(plan.totalInstallments));
-  if (fixed > 0) {
-    return fixed;
-  }
-  return n > 0 ? total / n : 0;
-};
-
-const getLastInstallment = (plan: any) => {
-  const fixed = toNumber(plan.fixedInstallmentAmount);
-  const total = toNumber(plan.installmentAmount);
-  const n = Math.max(1, toNumber(plan.totalInstallments));
-  if (fixed > 0) {
-    // last = total - fixed * (n-1)
-    const last = total - fixed * (n - 1);
-    return last > 0 ? last : 0;
-  }
-  // even split: last equals the regular installment (may be fractional)
-  return n > 0 ? total / n : 0;
-};
-
-const getPaidAmount = (plan: any) => {
-  const total = toNumber(plan.installmentAmount);
-  const n = Math.max(0, toNumber(plan.totalInstallments));
-  const paidCount = Math.max(0, Math.min(toNumber(plan.installmentsPaid), n));
-  const fixed = toNumber(plan.fixedInstallmentAmount);
-
-  if (n === 0) {
-    return 0;
-  }
-  if (fixed > 0) {
-    if (paidCount >= n) {
-      return total;
-    }
-    // paidCount applies to first paidCount installments, none of which are the last unless paidCount === n
-    return fixed * paidCount;
-  }
-  // even split
-  const per = total / Math.max(1, n);
-  return per * paidCount;
-};
-
-const getBalanceAmount = (plan: any) => {
-  const total = toNumber(plan.installmentAmount);
-  const paid = getPaidAmount(plan);
-  const balance = total - paid;
-  return balance > 0 ? balance : 0;
 };
 
 const InstallmentPlans: React.FC = () => {
@@ -589,12 +612,14 @@ const InstallmentPlans: React.FC = () => {
           type: 'number',
           slotProps: {
             htmlInput: {
-              min: 1,
+              min: 0,
             },
           },
-          required: true,
+          required: false,
           error: !!validationErrors?.totalInstallments,
-          helperText: validationErrors?.totalInstallments,
+          helperText:
+            validationErrors?.totalInstallments ??
+            'Specify either total installments or fixed installment amount (one only).',
           onFocus: () =>
             setValidationErrors({
               ...validationErrors,
@@ -602,7 +627,44 @@ const InstallmentPlans: React.FC = () => {
             }),
         },
       },
-
+      {
+        accessorKey: 'fixedInstallmentAmount',
+        header: 'Fixed Installment',
+        minSize: 120,
+        size: 120,
+        maxSize: 120,
+        muiTableHeadCellProps: {
+          align: 'right',
+        },
+        muiTableBodyCellProps: {
+          align: 'right',
+        },
+        Cell: ({ cell }) => (
+          <Box component="span">
+            {cell.row.original.fixedInstallmentAmount
+              ? formatNumber(cell.row.original.fixedInstallmentAmount, 2, 2)
+              : '-'}
+          </Box>
+        ),
+        muiEditTextFieldProps: {
+          type: 'number',
+          slotProps: {
+            htmlInput: {
+              min: 0,
+            },
+          },
+          required: false,
+          error: !!validationErrors?.fixedInstallmentAmount,
+          helperText:
+            validationErrors?.fixedInstallmentAmount ??
+            'Specify either fixed amount or total installments (one only).',
+          onFocus: () =>
+            setValidationErrors({
+              ...validationErrors,
+              fixedInstallmentAmount: undefined,
+            }),
+        },
+      },
       {
         accessorKey: 'interestRate',
         header: 'Interest Rate',
@@ -693,11 +755,31 @@ const InstallmentPlans: React.FC = () => {
     } else if (parseFloat(installmentPlan.installmentAmount) <= 0) {
       errors.installmentAmount = 'Installment amount must be greater than 0';
     }
-    if (!installmentPlan.totalInstallments) {
-      errors.totalInstallments = 'Total installments amount is required';
-    } else if (parseInt(installmentPlan.totalInstallments) <= 0) {
-      errors.totalInstallments = 'Total installments must be greater than 0';
+
+    const fixedProvided =
+      installmentPlan.fixedInstallmentAmount !== undefined &&
+      installmentPlan.fixedInstallmentAmount !== null &&
+      installmentPlan.fixedInstallmentAmount !== '';
+    const totalInstallmentsProvided =
+      installmentPlan.totalInstallments !== undefined &&
+      installmentPlan.totalInstallments !== null &&
+      installmentPlan.totalInstallments !== '';
+
+    if (fixedProvided && totalInstallmentsProvided) {
+      errors.fixedInstallmentAmount =
+        'Provide only one of fixed installment amount or total installments';
+      errors.totalInstallments =
+        'Provide only one of total installments or fixed installment amount';
     }
+
+    if (!installmentPlan.totalInstallments && !fixedProvided) {
+      errors.totalInstallments = 'Total installments amount is required';
+    } else if (installmentPlan.totalInstallments) {
+      if (parseInt(installmentPlan.totalInstallments) <= 0) {
+        errors.totalInstallments = 'Total installments must be greater than 0';
+      }
+    }
+
     if (
       !installmentPlan.installmentsPaid &&
       parseInt(installmentPlan.installmentsPaid) !== 0
@@ -706,18 +788,15 @@ const InstallmentPlans: React.FC = () => {
     } else if (
       parseInt(installmentPlan.installmentsPaid) < 0 ||
       parseInt(installmentPlan.installmentsPaid) >
-        parseInt(installmentPlan.totalInstallments)
+        (installmentPlan.totalInstallments
+          ? parseInt(installmentPlan.totalInstallments)
+          : Number.MAX_SAFE_INTEGER)
     ) {
       errors.installmentsPaid =
         'Installments paid must be between 0 and total installments';
     }
 
-    // fixedInstallmentAmount validation if provided
-    if (
-      installmentPlan.fixedInstallmentAmount !== undefined &&
-      installmentPlan.fixedInstallmentAmount !== null &&
-      installmentPlan.fixedInstallmentAmount !== ''
-    ) {
+    if (fixedProvided) {
       const fixed = toNumber(installmentPlan.fixedInstallmentAmount);
       if (fixed <= 0) {
         errors.fixedInstallmentAmount =
