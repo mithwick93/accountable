@@ -49,62 +49,55 @@ const toNumber = (v: any) => {
   return Number.isFinite(n) ? n : 0;
 };
 
-const getFixedTotalN = (plan: any) => {
-  const fixed = toNumber(plan.fixedInstallmentAmount);
-  const total = toNumber(plan.installmentAmount);
-  const n = Math.max(1, toNumber(plan.totalInstallments));
+const getPerInstallment = (plan: InstallmentPlan) => {
+  const fixedInstallmentAmount = toNumber(plan.fixedInstallmentAmount);
+  const totalAmount = toNumber(plan.installmentAmount);
+  const totalInstallments = Math.max(1, toNumber(plan.totalInstallments));
+  const isLastInstallment = plan.installmentsPaid === totalInstallments - 1;
 
-  return { fixed, total, n };
-};
+  if (fixedInstallmentAmount > 0) {
+    if (isLastInstallment) {
+      const lastInstallment =
+        totalAmount - fixedInstallmentAmount * (totalInstallments - 1);
+      return lastInstallment > 0 ? lastInstallment : 0;
+    }
 
-const getPerInstallment = (plan: any) => {
-  const { fixed, total, n } = getFixedTotalN(plan);
-
-  if (fixed > 0) {
-    return fixed;
+    return fixedInstallmentAmount;
   }
 
-  return n > 0 ? total / n : 0;
+  return totalInstallments > 0 ? totalAmount / totalInstallments : 0;
 };
 
-const getLastInstallment = (plan: any) => {
-  const { fixed, total, n } = getFixedTotalN(plan);
+const getPaidAmount = (plan: InstallmentPlan) => {
+  const fixedInstallmentAmount = toNumber(plan.fixedInstallmentAmount);
+  const totalAmount = toNumber(plan.installmentAmount);
+  const totalInstallments = Math.max(0, toNumber(plan.totalInstallments));
+  const paidCount = Math.max(
+    0,
+    Math.min(toNumber(plan.installmentsPaid), totalInstallments),
+  );
 
-  if (fixed > 0) {
-    const last = total - fixed * (n - 1);
-    return last > 0 ? last : 0;
-  }
-
-  return n > 0 ? total / n : 0;
-};
-
-const getPaidAmount = (plan: any) => {
-  const fixed = toNumber(plan.fixedInstallmentAmount);
-  const total = toNumber(plan.installmentAmount);
-  const n = Math.max(0, toNumber(plan.totalInstallments));
-  const paidCount = Math.max(0, Math.min(toNumber(plan.installmentsPaid), n));
-
-  if (n === 0) {
+  if (totalInstallments === 0) {
     return 0;
   }
 
-  if (fixed > 0) {
-    if (paidCount >= n) {
-      return total;
+  if (fixedInstallmentAmount > 0) {
+    if (paidCount >= totalInstallments) {
+      return totalAmount;
     }
 
-    return fixed * paidCount;
+    return fixedInstallmentAmount * paidCount;
   }
 
-  const per = total / Math.max(1, n);
+  const per = totalAmount / Math.max(1, totalInstallments);
   return per * paidCount;
 };
 
-const getBalanceAmount = (plan: any) => {
-  const total = toNumber(plan.installmentAmount);
-  const paid = getPaidAmount(plan);
-  const balance = total - paid;
-  return balance > 0 ? balance : 0;
+const getBalanceAmount = (plan: InstallmentPlan) => {
+  const totalAmount = toNumber(plan.installmentAmount);
+  const paidAmount = getPaidAmount(plan);
+  const balanceAmount = totalAmount - paidAmount;
+  return balanceAmount > 0 ? balanceAmount : 0;
 };
 
 const createPayload = (installmentPlan: Record<string, any>) => {
@@ -464,15 +457,13 @@ const InstallmentPlans: React.FC = () => {
           align: 'right',
         },
         Cell: ({ cell }) => {
-          const plan = cell.row.original as any;
-          const per = getPerInstallment(plan);
-          const last = getLastInstallment(plan);
-          // show per-installment and if last differs show it
-          const display =
-            Math.abs(per - last) > 1e-9
-              ? `${formatNumber(per, 2, 2)} / last: ${formatNumber(last, 2, 2)}`
-              : `${formatNumber(per, 2, 2)}`;
-          return <Box component="span">{display}</Box>;
+          const per = formatNumber(
+            getPerInstallment(cell.row.original as InstallmentPlan),
+            2,
+            2,
+          );
+
+          return <Box component="span">{per}</Box>;
         },
         Edit: () => null,
         Footer: () => (
@@ -510,7 +501,11 @@ const InstallmentPlans: React.FC = () => {
         },
         Cell: ({ cell }) => (
           <Box component="span">
-            {formatNumber(getPaidAmount(cell.row.original), 2, 2)}
+            {formatNumber(
+              getPaidAmount(cell.row.original as InstallmentPlan),
+              2,
+              2,
+            )}
           </Box>
         ),
         Edit: () => null,
@@ -550,7 +545,11 @@ const InstallmentPlans: React.FC = () => {
         },
         Cell: ({ cell }) => (
           <Box component="span">
-            {formatNumber(getBalanceAmount(cell.row.original), 2, 2)}
+            {formatNumber(
+              getBalanceAmount(cell.row.original as InstallmentPlan),
+              2,
+              2,
+            )}
           </Box>
         ),
         Edit: () => null,
