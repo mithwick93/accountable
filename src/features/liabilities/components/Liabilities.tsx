@@ -754,6 +754,9 @@ const Liabilities: React.FC = () => {
         }}
       >
         <Typography>Id: {row.original.id}</Typography>
+        <Typography>
+          Status: {formatLiabilityStatus(row.original.status)}
+        </Typography>
         {row.original.description && (
           <Typography>Description: {row.original.description}</Typography>
         )}
