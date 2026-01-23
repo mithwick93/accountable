@@ -174,13 +174,14 @@ const InstallmentPlans: React.FC = () => {
     [liabilities],
   );
 
-  const filteredPlans = useMemo(
-    () =>
-      showNonActive
-        ? installmentPlans
-        : installmentPlans.filter((plan) => plan.status !== 'SETTLED'),
-    [installmentPlans, showNonActive],
-  );
+  const [filteredPlans, hiddenPlansCount] = useMemo(() => {
+    const filtered = installmentPlans.filter(
+      (plan) => plan.status !== 'SETTLED',
+    );
+    const hiddenCount = installmentPlans.length - filtered.length;
+
+    return [showNonActive ? installmentPlans : filtered, hiddenCount];
+  }, [installmentPlans, showNonActive]);
 
   const installmentCurrencies = useMemo(
     () =>
@@ -1032,7 +1033,7 @@ const InstallmentPlans: React.FC = () => {
               onChange={(e) => setShowNonActive(e.target.checked)}
             />
           }
-          label="Show non-active"
+          label={`Show Non-Active Plans (${hiddenPlansCount})`}
         />
       </Box>
     ),

@@ -93,13 +93,14 @@ const PaymentSystems: React.FC = () => {
     [currencies],
   );
 
-  const filteredPaymentSystems = useMemo(
-    () =>
-      showNonActive
-        ? paymentSystems
-        : paymentSystems.filter((paymentSystem) => paymentSystem.active),
-    [paymentSystems, showNonActive],
-  );
+  const [filteredPaymentSystems, hiddenAssetsCount] = useMemo(() => {
+    const filtered = paymentSystems.filter(
+      (paymentSystem) => paymentSystem.active,
+    );
+    const hiddenCount = paymentSystems.length - filtered.length;
+
+    return [showNonActive ? paymentSystems : filtered, hiddenCount];
+  }, [paymentSystems, showNonActive]);
 
   const columns = useMemo<MRT_ColumnDef<MRT_RowData>[]>(
     // eslint-disable-next-line complexity
@@ -682,7 +683,7 @@ const PaymentSystems: React.FC = () => {
               onChange={(e) => setShowNonActive(e.target.checked)}
             />
           }
-          label="Show non-active"
+          label={`Show Non-Active Payment Systems (${hiddenAssetsCount})`}
         />
       </Box>
     ),

@@ -85,13 +85,14 @@ const Liabilities: React.FC = () => {
     [currencies],
   );
 
-  const filteredLiabilities = useMemo(
-    () =>
-      showNonActive
-        ? liabilities
-        : liabilities.filter((liability) => liability.status === 'ACTIVE'),
-    [liabilities, showNonActive],
-  );
+  const [filteredLiabilities, hiddenAssetsCount] = useMemo(() => {
+    const filtered = liabilities.filter(
+      (liability) => liability.status === 'ACTIVE',
+    );
+    const hiddenCount = liabilities.length - filtered.length;
+
+    return [showNonActive ? liabilities : filtered, hiddenCount];
+  }, [liabilities, showNonActive]);
 
   const liabilityCurrencies = useMemo(
     () =>
@@ -794,7 +795,7 @@ const Liabilities: React.FC = () => {
               onChange={(e) => setShowNonActive(e.target.checked)}
             />
           }
-          label="Show non-active"
+          label={`Show Non-Active Liabilities (${hiddenAssetsCount})`}
         />
       </Box>
     ),

@@ -55,10 +55,12 @@ const Assets: React.FC = () => {
     [currencies],
   );
 
-  const filteredAssets = useMemo(
-    () => (showNonActive ? assets : assets.filter((asset) => asset.active)),
-    [assets, showNonActive],
-  );
+  const [filteredAssets, hiddenAssetsCount] = useMemo(() => {
+    const filtered = assets.filter((asset) => asset.active);
+    const hiddenCount = assets.length - filtered.length;
+
+    return [showNonActive ? assets : filtered, hiddenCount];
+  }, [assets, showNonActive]);
 
   const assetCurrencies = useMemo(
     () =>
@@ -481,7 +483,7 @@ const Assets: React.FC = () => {
               onChange={(e) => setShowNonActive(e.target.checked)}
             />
           }
-          label="Show non-active"
+          label={`Show Non-Active Assets (${hiddenAssetsCount})`}
         />
       </Box>
     ),
