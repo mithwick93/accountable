@@ -7,7 +7,9 @@ import {
   Chip,
   DialogActions,
   DialogContent,
+  FormControlLabel,
   IconButton,
+  Switch,
   Tooltip,
   Typography,
 } from '@mui/material';
@@ -76,18 +78,27 @@ const Liabilities: React.FC = () => {
   const [updating, setUpdating] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
+  const [showNonActive, setShowNonActive] = useState(false);
   const loading = dataLoading || staticDataLoading;
   const currencyCodes = useMemo(
     () => currencies?.map((currency) => currency.code) ?? [],
     [currencies],
   );
 
+  const filteredLiabilities = useMemo(
+    () =>
+      showNonActive
+        ? liabilities
+        : liabilities.filter((liability) => liability.status === 'ACTIVE'),
+    [liabilities, showNonActive],
+  );
+
   const liabilityCurrencies = useMemo(
     () =>
-      Array.from(new Set(liabilities.map((asset) => asset.currency))).sort(
-        (a, b) => a.localeCompare(b),
-      ),
-    [liabilities],
+      Array.from(
+        new Set(filteredLiabilities.map((asset) => asset.currency)),
+      ).sort((a, b) => a.localeCompare(b)),
+    [filteredLiabilities],
   );
 
   const {
@@ -95,7 +106,7 @@ const Liabilities: React.FC = () => {
     totalAvailableByCurrency,
     totalLimitByCurrency,
   } = useMemo(() => {
-    const totals = liabilities.reduce(
+    const totals = filteredLiabilities.reduce(
       (acc, liability) => {
         const { currency, balance, amount } = liability;
 
@@ -130,7 +141,7 @@ const Liabilities: React.FC = () => {
         sortedEntries.map(([currency, values]) => [currency, values.limit]),
       ),
     };
-  }, [liabilities]);
+  }, [filteredLiabilities]);
 
   const columns = useMemo<MRT_ColumnDef<MRT_RowData>[]>(
     // eslint-disable-next-line complexity
@@ -673,7 +684,7 @@ const Liabilities: React.FC = () => {
 
   const table = useMaterialReactTable({
     columns,
-    data: liabilities,
+    data: filteredLiabilities,
     enableStickyHeader: true,
     enableStickyFooter: true,
     enableEditing: true,
@@ -721,6 +732,17 @@ const Liabilities: React.FC = () => {
         display: 'none',
       },
     },
+    muiTableBodyRowProps: ({ row }) => ({
+      sx:
+        row.original.status !== 'ACTIVE'
+          ? {
+              backgroundColor: (theme) =>
+                theme.palette.action.disabledBackground,
+              color: (theme) => theme.palette.text.disabled,
+              fontStyle: 'italic',
+            }
+          : {},
+    }),
     renderDetailPanel: ({ row }) => (
       <Box
         sx={{
@@ -754,15 +776,27 @@ const Liabilities: React.FC = () => {
     },
     onCreatingRowCancel: () => setValidationErrors({}),
     renderTopToolbarCustomActions: ({ table }) => (
-      <Button
-        variant="outlined"
-        onClick={() => {
-          table.setCreatingRow(true);
-        }}
-        startIcon={<AddIcon />}
-      >
-        Create
-      </Button>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+        <Button
+          variant="outlined"
+          onClick={() => {
+            table.setCreatingRow(true);
+          }}
+          startIcon={<AddIcon />}
+        >
+          Create
+        </Button>
+        <FormControlLabel
+          control={
+            <Switch
+              size="small"
+              checked={showNonActive}
+              onChange={(e) => setShowNonActive(e.target.checked)}
+            />
+          }
+          label="Show non-active"
+        />
+      </Box>
     ),
     renderCreateRowDialogContent: ({ table, row, internalEditComponents }) => (
       <>

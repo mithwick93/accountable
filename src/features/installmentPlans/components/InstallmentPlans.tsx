@@ -178,7 +178,7 @@ const InstallmentPlans: React.FC = () => {
     () =>
       showNonActive
         ? installmentPlans
-        : installmentPlans.filter((plan) => plan.status === 'ACTIVE'),
+        : installmentPlans.filter((plan) => plan.status !== 'SETTLED'),
     [installmentPlans, showNonActive],
   );
 

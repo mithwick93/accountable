@@ -7,7 +7,9 @@ import {
   Chip,
   DialogActions,
   DialogContent,
+  FormControlLabel,
   IconButton,
+  Switch,
   Tooltip,
   Typography,
 } from '@mui/material';
@@ -46,22 +48,28 @@ const Assets: React.FC = () => {
   const [updating, setUpdating] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
+  const [showNonActive, setShowNonActive] = useState(false);
   const loading = dataLoading || staticDataLoading;
   const currencyCodes = useMemo(
     () => currencies?.map((currency) => currency.code) ?? [],
     [currencies],
   );
 
+  const filteredAssets = useMemo(
+    () => (showNonActive ? assets : assets.filter((asset) => asset.active)),
+    [assets, showNonActive],
+  );
+
   const assetCurrencies = useMemo(
     () =>
-      Array.from(new Set(assets.map((asset) => asset.currency))).sort((a, b) =>
-        a.localeCompare(b),
+      Array.from(new Set(filteredAssets.map((asset) => asset.currency))).sort(
+        (a, b) => a.localeCompare(b),
       ),
-    [assets],
+    [filteredAssets],
   );
 
   const totalAmountByCurrency = useMemo(() => {
-    const totals = assets.reduce(
+    const totals = filteredAssets.reduce(
       (acc, asset) => {
         const { currency, balance } = asset;
         if (!acc[currency]) {
@@ -77,7 +85,7 @@ const Assets: React.FC = () => {
         currencyA.localeCompare(currencyB),
       ),
     );
-  }, [assets]);
+  }, [filteredAssets]);
 
   const columns = useMemo<MRT_ColumnDef<MRT_RowData>[]>(
     () => [
@@ -370,7 +378,7 @@ const Assets: React.FC = () => {
 
   const table = useMaterialReactTable({
     columns,
-    data: assets,
+    data: filteredAssets,
     enableStickyHeader: true,
     enableStickyFooter: true,
     enableEditing: true,
@@ -416,6 +424,17 @@ const Assets: React.FC = () => {
         display: 'none',
       },
     },
+    muiTableBodyRowProps: ({ row }) => ({
+      sx:
+        row.original.active !== true
+          ? {
+              backgroundColor: (theme) =>
+                theme.palette.action.disabledBackground,
+              color: (theme) => theme.palette.text.disabled,
+              fontStyle: 'italic',
+            }
+          : {},
+    }),
     renderDetailPanel: ({ row }) => (
       <Box
         sx={{
@@ -444,15 +463,27 @@ const Assets: React.FC = () => {
     },
     onCreatingRowCancel: () => setValidationErrors({}),
     renderTopToolbarCustomActions: ({ table }) => (
-      <Button
-        variant="outlined"
-        onClick={() => {
-          table.setCreatingRow(true);
-        }}
-        startIcon={<AddIcon />}
-      >
-        Create
-      </Button>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+        <Button
+          variant="outlined"
+          onClick={() => {
+            table.setCreatingRow(true);
+          }}
+          startIcon={<AddIcon />}
+        >
+          Create
+        </Button>
+        <FormControlLabel
+          control={
+            <Switch
+              size="small"
+              checked={showNonActive}
+              onChange={(e) => setShowNonActive(e.target.checked)}
+            />
+          }
+          label="Show non-active"
+        />
+      </Box>
     ),
     renderCreateRowDialogContent: ({ table, row, internalEditComponents }) => (
       <>
