@@ -1144,68 +1144,76 @@ const TransactionDialog = ({
                   }}
                   onFocus={() => handleFocus('fromAssetId')}
                 />
-                <Autocomplete
-                  value={selectedToAsset || null}
-                  options={assets.filter(
-                    (asset) =>
-                      asset.id !== formValues.fromAssetId &&
-                      asset.currency === formValues.currency,
-                  )}
-                  autoComplete
-                  getOptionLabel={(option) => option.name}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      label="To Asset"
-                      required
-                      error={!!validationErrors?.toAssetId}
-                      helperText={validationErrors?.toAssetId}
-                    />
-                  )}
-                  renderOption={(props, option) => {
-                    const { key, ...optionProps } = props;
-                    return (
-                      <Box key={key} component="li" {...optionProps}>
-                        {option.name} (
-                        {formatCurrency(option.balance, option.currency)})
-                      </Box>
-                    );
-                  }}
-                  onChange={(_event: any, newValue: Asset | null) => {
-                    handleAutoCompleteChange('toAssetId', newValue?.id);
-                  }}
-                  onFocus={() => handleFocus('toAssetId')}
-                />
-                <Autocomplete
-                  value={selectedToLiability || null}
-                  options={liabilities.filter(
-                    (liability) => liability.currency === formValues.currency,
-                  )}
-                  autoComplete
-                  getOptionLabel={(option) => option.name}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      label="To Liability"
-                      required
-                      error={!!validationErrors?.toLiabilityId}
-                      helperText={validationErrors?.toLiabilityId}
-                    />
-                  )}
-                  renderOption={(props, option) => {
-                    const { key, ...optionProps } = props;
-                    return (
-                      <Box key={key} component="li" {...optionProps}>
-                        {option.name} (
-                        {formatCurrency(option.balance, option.currency)})
-                      </Box>
-                    );
-                  }}
-                  onChange={(_event: any, newValue: Liability | null) => {
-                    handleAutoCompleteChange('toLiabilityId', newValue?.id);
-                  }}
-                  onFocus={() => handleFocus('toLiabilityId')}
-                />
+                {['Account to account', 'Invest'].includes(
+                  selectedCategory?.name || '',
+                ) && (
+                  <Autocomplete
+                    value={selectedToAsset || null}
+                    options={assets.filter(
+                      (asset) =>
+                        asset.id !== formValues.fromAssetId &&
+                        asset.currency === formValues.currency,
+                    )}
+                    autoComplete
+                    getOptionLabel={(option) => option.name}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="To Asset"
+                        required
+                        error={!!validationErrors?.toAssetId}
+                        helperText={validationErrors?.toAssetId}
+                      />
+                    )}
+                    renderOption={(props, option) => {
+                      const { key, ...optionProps } = props;
+                      return (
+                        <Box key={key} component="li" {...optionProps}>
+                          {option.name} (
+                          {formatCurrency(option.balance, option.currency)})
+                        </Box>
+                      );
+                    }}
+                    onChange={(_event: any, newValue: Asset | null) => {
+                      handleAutoCompleteChange('toAssetId', newValue?.id);
+                    }}
+                    onFocus={() => handleFocus('toAssetId')}
+                  />
+                )}
+                {['Liability Settlement'].includes(
+                  selectedCategory?.name || '',
+                ) && (
+                  <Autocomplete
+                    value={selectedToLiability || null}
+                    options={liabilities.filter(
+                      (liability) => liability.currency === formValues.currency,
+                    )}
+                    autoComplete
+                    getOptionLabel={(option) => option.name}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="To Liability"
+                        required
+                        error={!!validationErrors?.toLiabilityId}
+                        helperText={validationErrors?.toLiabilityId}
+                      />
+                    )}
+                    renderOption={(props, option) => {
+                      const { key, ...optionProps } = props;
+                      return (
+                        <Box key={key} component="li" {...optionProps}>
+                          {option.name} (
+                          {formatCurrency(option.balance, option.currency)})
+                        </Box>
+                      );
+                    }}
+                    onChange={(_event: any, newValue: Liability | null) => {
+                      handleAutoCompleteChange('toLiabilityId', newValue?.id);
+                    }}
+                    onFocus={() => handleFocus('toLiabilityId')}
+                  />
+                )}
               </>
             )}
           </>
