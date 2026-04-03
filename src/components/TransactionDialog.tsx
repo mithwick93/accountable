@@ -59,6 +59,10 @@ import {
   getTransactionsFetchOptions,
 } from '../utils/common';
 import { notifyBackendError } from '../utils/notifications';
+import {
+  isAssetTransferCategory,
+  isLiabilitySettlementCategory,
+} from '../utils/categoryConfig';
 import NumberInput from './NumberInput';
 import SlideUpTransition from './SlideUpTransition';
 import UploadTransactionImageDialog from './UploadTransactionImageDialog';
@@ -1144,9 +1148,7 @@ const TransactionDialog = ({
                   }}
                   onFocus={() => handleFocus('fromAssetId')}
                 />
-                {['Account to account', 'Invest'].includes(
-                  selectedCategory?.name || '',
-                ) && (
+                {isAssetTransferCategory(selectedCategory?.id) && (
                   <Autocomplete
                     value={selectedToAsset || null}
                     options={assets.filter(
@@ -1180,9 +1182,7 @@ const TransactionDialog = ({
                     onFocus={() => handleFocus('toAssetId')}
                   />
                 )}
-                {['Liability Settlement'].includes(
-                  selectedCategory?.name || '',
-                ) && (
+                {isLiabilitySettlementCategory(selectedCategory?.id) && (
                   <Autocomplete
                     value={selectedToLiability || null}
                     options={liabilities.filter(
