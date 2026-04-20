@@ -142,10 +142,12 @@ const getInitialSharedTransactions = (transaction: Transaction | undefined) => {
   }));
 };
 
+// TODO: Refactor this component into smaller components to reduce complexity and improve readability
 const TransactionDialog = ({
   onClose,
   open,
   payload: transaction,
+  // eslint-disable-next-line complexity
 }: DialogProps<Transaction | undefined>) => {
   const isEditMode = !!transaction;
   const dialogs = useDialogs();
@@ -1252,9 +1254,9 @@ const TransactionDialog = ({
       fullWidth
       onClose={handleClose}
       open={open}
-      TransitionComponent={SlideUpTransition}
       keepMounted
       aria-describedby="alert-dialog-slide-description"
+      slots={{ transition: SlideUpTransition }}
     >
       <DialogTitle>
         <Box
