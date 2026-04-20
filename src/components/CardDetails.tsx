@@ -29,7 +29,9 @@ import {
   isCardExpired,
 } from '../utils/cardUtils';
 
-const cardTypeLogos: Record<string, IconType> = {
+const cardTypeLogos: Readonly<
+  Record<'amex' | 'mastercard' | 'visa' | 'default', IconType>
+> = {
   amex: LiaCcAmex,
   mastercard: LiaCcMastercard,
   visa: LiaCcVisa,
@@ -113,7 +115,9 @@ const CardDetails: React.FC<CardDetailsProps> = ({ card }) => {
   const maskedCVV = '***';
 
   const issuer = getCardIssuer(card.cardNumber);
-  const IssuerLogo = cardTypeLogos[issuer] ?? cardTypeLogos.default;
+  const IssuerLogo = cardTypeLogos[
+    issuer in cardTypeLogos ? (issuer as keyof typeof cardTypeLogos) : 'default'
+  ] as React.ComponentType<any>;
 
   return (
     <Card>
