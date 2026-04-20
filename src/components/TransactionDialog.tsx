@@ -51,6 +51,10 @@ import { TransactionCategory } from '../types/TransactionCategory';
 import { TransactionTemplate } from '../types/TransactionTemplate';
 import { User } from '../types/User';
 import {
+  isAssetTransferCategory,
+  isLiabilitySettlementCategory,
+} from '../utils/categoryConfig';
+import {
   formatCurrency,
   getActiveAssets,
   getActiveLiabilities,
@@ -59,16 +63,13 @@ import {
   getTransactionsFetchOptions,
 } from '../utils/common';
 import { notifyBackendError } from '../utils/notifications';
-import {
-  isAssetTransferCategory,
-  isLiabilitySettlementCategory,
-} from '../utils/categoryConfig';
 import NumberInput from './NumberInput';
 import SlideUpTransition from './SlideUpTransition';
 import UploadTransactionImageDialog from './UploadTransactionImageDialog';
 
 type FormStateType = {
   updateAccounts: boolean;
+  bulkAddMode: boolean;
   userId?: string;
   type?: string;
   name?: string;
@@ -87,6 +88,7 @@ type FormStateType = {
 
 const getInitialFormValues = (
   updateAccounts: boolean,
+  bulkAddMode: boolean,
   transaction: Transaction | undefined,
   loggedInUser: LoggedInUser | null,
   baseCurrency: string,
@@ -95,6 +97,7 @@ const getInitialFormValues = (
   return isEditMode
     ? {
         updateAccounts: updateAccounts,
+        bulkAddMode: false,
         userId: transaction.user.id,
         type: transaction.type,
         name: transaction.name,
@@ -119,6 +122,7 @@ const getInitialFormValues = (
         type: 'EXPENSE',
         userId: loggedInUser?.sub,
         updateAccounts: updateAccounts,
+        bulkAddMode: bulkAddMode,
         currency: baseCurrency,
         date: new Date().toISOString().split('T')[0],
       };
@@ -176,8 +180,10 @@ const TransactionDialog = ({
   );
   const baseCurrency = settings?.currency || 'USD';
   const updateAccounts = settings?.transactions.updateAccounts ?? false;
+  const bulkAddMode = settings?.transactions.bulkAddMode ?? false;
   const initialFormValues = getInitialFormValues(
     updateAccounts,
+    bulkAddMode,
     transaction,
     loggedInUser,
     baseCurrency,
@@ -383,7 +389,21 @@ const TransactionDialog = ({
           ['assets', 'liabilities', 'paymentSystems', 'transactions'],
           getTransactionsFetchOptions(searchParameters, startDate, endDate),
         );
-        handleClose();
+
+        if (!isEditMode && formValues.bulkAddMode) {
+          setFormValues({
+            ...formValues,
+            amount: undefined,
+            charges: undefined,
+            name: '',
+          });
+          setSharedTransactions([]);
+          setValidationErrors({});
+          setSharedTransactionValidationErrors([]);
+          setSharedTransactionCommonValidationErrors([]);
+        } else {
+          handleClose();
+        }
       } catch (error: any) {
         notifyBackendError(
           isEditMode
@@ -1275,6 +1295,31 @@ const TransactionDialog = ({
               }
               label="Sync accounts"
             />
+            {!isEditMode && (
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={formValues.bulkAddMode}
+                    onChange={(event) => {
+                      update({
+                        ...settings,
+                        transactions: {
+                          ...(settings?.transactions || {}),
+                          bulkAddMode: event.target.checked,
+                        },
+                      });
+                      setFormValues({
+                        ...formValues,
+                        bulkAddMode: event.target.checked,
+                      });
+                    }}
+                    name="bulkAddMode"
+                    color="primary"
+                  />
+                }
+                label="Bulk add"
+              />
+            )}
             <IconButton onClick={handleClose}>
               <CloseIcon />
             </IconButton>
