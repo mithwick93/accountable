@@ -109,7 +109,7 @@ const getInitialFormValues = (
         charges: undefined,
         date:
           transaction.date?.split?.('T')?.[0] ??
-          new Date().toISOString().split('T')[0],
+          new Date().toLocaleDateString('en-CA'),
         toAssetId: transaction.toAsset?.id,
         fromAssetId: transaction.fromAsset?.id,
         fromPaymentSystemId:
@@ -124,7 +124,7 @@ const getInitialFormValues = (
         updateAccounts: updateAccounts,
         bulkAddMode: bulkAddMode,
         currency: baseCurrency,
-        date: new Date().toISOString().split('T')[0],
+        date: new Date().toLocaleDateString('en-CA'),
       };
 };
 
