@@ -1,9 +1,9 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import PWAPrompt from 'react-ios-pwa-prompt';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { Slide, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { registerSW } from 'virtual:pwa-register';
 import App from './App';
 import MainLayout from './layouts/MainLayout';
 import AssetsPage from './pages/AssetsPage';
@@ -24,7 +24,6 @@ import TransactionTemplatesPage from './pages/TransactionTemplatesPage';
 import VerifyEmailPage from './pages/VerifyEmailPage';
 import reportWebVitals from './reportWebVitals';
 import './index.css';
-import * as serviceWorkerRegistration from './serviceWorkerRegistration';
 
 const router = createBrowserRouter([
   {
@@ -118,29 +117,13 @@ root.render(
       theme="colored"
       transition={Slide}
     />
-    <PWAPrompt promptOnVisit={1} timesToShow={3} />
   </React.StrictMode>,
 );
 
-// If you want your app to work offline and load faster, you can change
-// unregister() to register() below. Note this comes with some pitfalls.
-// Learn more about service workers: https://cra.link/PWA
-serviceWorkerRegistration.register({
-  onUpdate: (registration?: ServiceWorkerRegistration) => {
-    if (registration?.waiting) {
-      const shouldReload = window.confirm(
-        'A new version is available. Reload now?',
-      );
-      if (shouldReload) {
-        registration.waiting.postMessage({ type: 'SKIP_WAITING' });
-
-        registration.waiting.addEventListener('statechange', (event: Event) => {
-          const sw = event.target as ServiceWorker;
-          if (sw.state === 'activated') {
-            window.location.reload();
-          }
-        });
-      }
+registerSW({
+  onNeedRefresh() {
+    if (confirm('New version available. Reload?')) {
+      location.reload();
     }
   },
 });
